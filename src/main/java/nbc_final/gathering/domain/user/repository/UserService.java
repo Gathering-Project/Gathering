@@ -3,10 +3,13 @@ package nbc_final.gathering.domain.user.repository;
 
 
 import jakarta.security.auth.message.AuthException;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.config.JwtUtil;
+import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
 import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
+import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
@@ -24,6 +27,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
+    // 유저 회원가입
     @Transactional
     public SignUpResponseDto signup(SignupRequestDto signupRequest) {
 
@@ -52,21 +56,21 @@ public class UserService {
         return new SignUpResponseDto(bearerToken);
     }
 
+    // 유저 로그인
+    public LoginResponseDto login(LoginRequestDto requestDto, HttpServletResponse response) {
+        User user = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(
+                () -> new IllegalArgumentException("가입되지 않은 유저입니다."));
 
+        // 로그인 시 이메일과 비밀번호가 일치하지 않을 경우 401을 반환합니다.
+        if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+        }
 
-//    public SigninResponse signin(SigninRequest signinRequest) {
-//        User user = userRepository.findByEmail(signinRequest.getEmail()).orElseThrow(
-//                () -> new InvalidRequestException("가입되지 않은 유저입니다."));
-//
-//        // 로그인 시 이메일과 비밀번호가 일치하지 않을 경우 401을 반환합니다.
-//        if (!passwordEncoder.matches(signinRequest.getPassword(), user.getPassword())) {
-//            throw new AuthException("잘못된 비밀번호입니다.");
-//        }
-//
-//        String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getNickname());
-//
-//        return new SigninResponse(bearerToken);
-//    }
+        String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole(), user.getNickname());
+        jwtUtil.addJwtToCookie(bearerToken, response);
+
+        return new LoginResponseDto(bearerToken);
+    }
 
 
 

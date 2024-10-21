@@ -55,7 +55,7 @@ public class JwtUtil {
                         .setSubject(String.valueOf(userId))
                         .claim("email", email)
                         .claim("userRole", userRole)
-                        .claim("nickName", nickName) // Lv 1 - 2 : JWT에 유저 닉네임 추가
+                        .claim("nickName", nickName)
                         .setExpiration(new Date(date.getTime() + TOKEN_TIME))
                         .setIssuedAt(date) // 발급일
                         .signWith(key, signatureAlgorithm) // 암호화 알고리즘
@@ -63,8 +63,7 @@ public class JwtUtil {
     }
 
 
-    //생성된 JWT를 cookie에 저장
-    // JWT Cookie 에 저장
+    //생성된 JWT cookie에 저장해서 응답 객체에 반환
     public void addJwtToCookie(String token, HttpServletResponse res) {
         try {
             token = URLEncoder.encode(token, "utf-8").replaceAll("\\+", "%20"); // Cookie Value 에는 공백이 불가능해서 encoding 진행
@@ -91,10 +90,6 @@ public class JwtUtil {
         }
         return null;
     }
-
-
-
-
 
 
     public String substringToken(String tokenValue) throws ServerException {
