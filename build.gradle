@@ -34,6 +34,20 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 //    runtimeOnly 'com.h2database:h2'
+
+    // Spring-Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    // bcrypt
+    implementation 'at.favre.lib:bcrypt:0.10.2'
+
+    // jwt
+    compileOnly group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
+    runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
+    runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
+
+
 }
 
 tasks.named('test') {
