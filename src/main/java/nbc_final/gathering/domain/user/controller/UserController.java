@@ -4,16 +4,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.response.ApiResponse;
+import nbc_final.gathering.domain.user.dto.request.GetUserRequestDto;
 import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
 import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
+import nbc_final.gathering.domain.user.dto.response.GetUserResponseDto;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
 import nbc_final.gathering.domain.user.repository.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,6 +31,12 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(@RequestBody @Valid LoginRequestDto requestDto, HttpServletResponse response) {
         LoginResponseDto res = userService.login(requestDto, response);
+        return ResponseEntity.ok(ApiResponse.createSuccess(res));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<GetUserResponseDto>> getUser(@RequestBody @Valid GetUserRequestDto requestDto) {
+        GetUserResponseDto res = userService.getUser(requestDto.getEmail());
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
     }
 }
