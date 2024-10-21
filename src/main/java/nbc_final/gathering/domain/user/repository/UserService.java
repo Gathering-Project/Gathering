@@ -7,8 +7,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.config.JwtUtil;
+import nbc_final.gathering.domain.user.dto.request.GetUserRequestDto;
 import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
 import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
+import nbc_final.gathering.domain.user.dto.response.GetUserResponseDto;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
 import nbc_final.gathering.domain.user.entity.User;
@@ -71,6 +73,15 @@ public class UserService {
 
         return new LoginResponseDto(bearerToken);
     }
+
+    // 유저 정보 조회
+    public GetUserResponseDto getUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow();
+
+        return GetUserResponseDto.of(user);
+    }
+
 
 
 
