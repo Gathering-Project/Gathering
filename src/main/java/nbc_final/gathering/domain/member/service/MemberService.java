@@ -32,94 +32,90 @@ public class MemberService {
     public MemberResponseDto requestToJoin(AuthUser authUser, Long gatheringId) {
         User user = findUserById(authUser);
 
-        Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 소모임을 찾을 수 없습니다."));
+        // Gathering 조회
+        Gathering savedGathering = gatheringRepository.findById(gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
 
-        if (memberRepository.existsByUserAndGathering(user, gathering)) {
-            throw new IllegalArgumentException("이미 이 소모임에 가입 신청을 하였습니다.");
+        // 이미 가입된 멤버인지 확인
+        if (memberRepository.existsByUserAndGathering(user, savedGathering)) {
+            throw new ResponseCodeException(ResponseCode.ALREADY_REQUESTED);  // ResponseCode 확인해주세요
         }
 
-        Member member = new Member(user, gathering, MemberRole.USER, MemberStatus.APPROVED);
-        gathering.getMembers().add(member);
-
+        // 새로운 멤버 생성
+        Member member = new Member(user, savedGathering, MemberRole.USER, MemberStatus.PENDING);
         memberRepository.save(member);
 
         return new MemberResponseDto(member);
     }
 
-    @Transactional
-    public MemberResponseDto approveMember(AuthUser authUser, Long memberId) {
-
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 멤버를 찾을 수 없습니다."));
-
-        Gathering gathering = member.getGathering();
-
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
-        Member hostMember = memberRepository.findByUserAndGathering(user, gathering)
-                .orElseThrow(() -> new IllegalArgumentException("소모임의 HOST가 아닙니다."));
-
-        if (hostMember.getRole() != MemberRole.HOST) {
-            throw new IllegalArgumentException("HOST 권한이 있는 사용자만 승인할 수 있습니다.");
-        }
-
-        member.approve();
-
-        return new MemberResponseDto(member);
-    }
-
-    public List<MemberResponseDto> getAllMembers(AuthUser authUser, Long gatheringId) {
-
-        if (!memberRepository.existsByUserIdAndGatheringId(authUser.getUserId(), gatheringId)) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
-
-        List<Member> members = memberRepository.findAllByGatheringId(gatheringId);
-
-        return members.stream()
-                .map(MemberResponseDto::new)
-                .collect(Collectors.toList());
-    }
-
-    public MemberResponseDto getMemberById(AuthUser authUser, Long gatheringId, Long memberId) {
-
-        if (!memberRepository.existsByUserIdAndGatheringId(authUser.getUserId(), gatheringId)) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
-
-        Member member = memberRepository.findByIdAndGatheringId(memberId, gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
-
-        return new MemberResponseDto(member);
-    }
-
-    @Transactional
-    public Member updateMemberRole(Long memberId, MemberRole role) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 멤버가 존재하지 않습니다."));
-
-        if (member.getRole() != MemberRole.HOST) {
-            throw new IllegalArgumentException("HOST 권한을 가진 사용자만 수정할 수 있습니다.");
-        }
-
-        member.setRole(role);
-        return member;
-    }
-
-    @Transactional
-    public void removeMember(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 멤버가 존재하지 않습니다."));
-
-        if (member.getRole() != MemberRole.HOST) {
-            throw new IllegalArgumentException("HOST 권한을 가진 사용자만 삭제할 수 있습니다.");
-        }
-
-        memberRepository.delete(member);
-    }
-
+//    @Transactional
+//    public MemberResponseDto approveMember(AuthUser authUser, Long memberId) {
+//        Member member = memberRepository.findById(memberId)
+//                .orElseThrow(() -> new IllegalArgumentException("해당 멤버를 찾을 수 없습니다."));
+//
+//        Gathering gathering = member.getGathering();
+//
+//        User user = userRepository.findById(authUser.getUserId())
+//                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+//
+//        Member hostMember = memberRepository.findByUserAndGathering(user, gathering)
+//                .orElseThrow(() -> new IllegalArgumentException("소모임의 HOST가 아닙니다."));
+//
+//        if (hostMember.getRole() != MemberRole.HOST) {
+//            throw new IllegalArgumentException("HOST 권한이 있는 사용자만 승인할 수 있습니다.");
+//        }
+//
+//        member.approve();
+//        return new MemberResponseDto(member);
+//    }
+//
+//    public List<MemberResponseDto> getAllMembers(AuthUser authUser, Long gatheringId) {
+//        if (!memberRepository.existsByUserIdAndGatheringId(authUser.getUserId(), gatheringId)) {
+//            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+//        }
+//
+//        List<Member> members = memberRepository.findAllByGatheringId(gatheringId);
+//        return members.stream()
+//                .map(MemberResponseDto::new)
+//                .collect(Collectors.toList());
+//    }
+//
+//    public MemberResponseDto getMemberById(AuthUser authUser, Long gatheringId, Long memberId) {
+//        if (!memberRepository.existsByUserIdAndGatheringId(authUser.getUserId(), gatheringId)) {
+//            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+//        }
+//
+//        Member member = memberRepository.findByIdAndGatheringId(memberId, gatheringId)
+//                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+//
+//        return new MemberResponseDto(member);
+//    }
+//
+//    @Transactional
+//    public Member updateMemberRole(Long memberId, MemberRole role) {
+//        Member member = memberRepository.findById(memberId)
+//                .orElseThrow(() -> new IllegalArgumentException("해당 멤버가 존재하지 않습니다."));
+//
+//        if (member.getRole() != MemberRole.HOST) {
+//            throw new IllegalArgumentException("HOST 권한을 가진 사용자만 수정할 수 있습니다.");
+//        }
+//
+//        member.setRole(role);
+//        return member;
+//    }
+//
+//    @Transactional
+//    public void removeMember(Long memberId) {
+//        Member member = memberRepository.findById(memberId)
+//                .orElseThrow(() -> new IllegalArgumentException("해당 멤버가 존재하지 않습니다."));
+//
+//        if (member.getRole() != MemberRole.HOST) {
+//            throw new IllegalArgumentException("HOST 권한을 가진 사용자만 삭제할 수 있습니다.");
+//        }
+//
+//        memberRepository.delete(member);
+//    }
+//
     private User findUserById(AuthUser authUser) {
         return userRepository.findById(authUser.getUserId()).orElseThrow(
                 () -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
