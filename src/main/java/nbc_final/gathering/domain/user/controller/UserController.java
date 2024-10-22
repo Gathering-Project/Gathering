@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
-import nbc_final.gathering.common.response.ApiResponse;
+import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
@@ -22,47 +22,69 @@ public class UserController {
     private final UserService userService;
 
 
+    /**
+     * 유저 회원가입
+     * @param requestDto
+     * @return
+     */
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignUpResponseDto>> signup(@RequestBody @Valid SignupRequestDto requestDto) {
         SignUpResponseDto res = userService.signup(requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
     }
 
+    /**
+     * 유저 로그인
+     * @param requestDto
+     * @param response
+     * @return
+     */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(@RequestBody @Valid LoginRequestDto requestDto, HttpServletResponse response) {
         LoginResponseDto res = userService.login(requestDto, response);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<UserGetResponseDto>> getUser(@RequestBody @Valid UserGetRequestDto requestDto) {
-        UserGetResponseDto res = userService.getUser(requestDto.getEmail());
+
+    @GetMapping("/userId")
+    public ResponseEntity<ApiResponse<UserGetResponseDto>> getUser(@PathVariable Long id) {
+        UserGetResponseDto res = userService.getUser(id);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
     }
 
+    /**
+     * 유저 회원 탈퇴
+     * @param authUser
+     * @param requestDto
+     * @return
+     */
     @DeleteMapping
     public ResponseEntity<ApiResponse<Void>> deleteUser(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid UserDeleteRequestDto requestDto) {
         userService.deleteUser(authUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 
+    /**
+     * 유저 비밀번호 변경
+     * @param authUser
+     * @param requestDto
+     * @return
+     */
     @PutMapping("/password")
     public ResponseEntity<ApiResponse<Void>> changePassword(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid UserChangePwRequestDto requestDto) {
         userService.changePassword(requestDto, authUser.getUserId());
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 
+    /**
+     * 유저 정보 수정
+     * @param authUser
+     * @param requestDto
+     * @return
+     */
     @PutMapping
     public ResponseEntity<ApiResponse<UserGetResponseDto>> updateMyInfo(@AuthenticationPrincipal AuthUser authUser, @RequestBody UserUpdateRequestDto requestDto) {
         UserGetResponseDto res = userService.updateInfo(authUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
     }
-
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserGetResponseDto>> getMyInfo(@AuthenticationPrincipal AuthUser authUser) {
-        UserGetResponseDto res = userService.getMyInfo(authUser.getUserId());
-        return ResponseEntity.ok(ApiResponse.createSuccess(res));
-    }
-
-
 }
