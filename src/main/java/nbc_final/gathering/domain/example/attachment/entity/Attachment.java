@@ -8,23 +8,23 @@ import nbc_final.gathering.domain.user.entity.User;
 
 @Entity
 @Getter
-@Table(name= "attachments")
+@Table(name = "attachments")
 @NoArgsConstructor
 public class Attachment extends TimeStamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name= "attachment_id")
+    @Column(name = "attachment_id")
     private Long id;
 
     @Column(nullable = false)
     private String profileImagePath; // S3 저장된 이미지의 URL을 저장
 
-    @ManyToOne(fetch =  FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-//    @ManyToOne
+    //    @ManyToOne
 //    @JoinColumn(name = "group_id")
 //    private Group group
 
