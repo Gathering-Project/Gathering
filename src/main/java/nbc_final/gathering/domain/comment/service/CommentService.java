@@ -34,7 +34,7 @@ public class CommentService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
 
         //댓글 작성자 확인
-        boolean isMember = gathering.getMembers().contains(userId) || gathering.getLeader().getId().equals(userId);
+        boolean isMember = gathering.getMembers().contains(userId) || gathering.getId().equals(userId);
         ;
         if (!isMember) {
             throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
@@ -85,7 +85,7 @@ public class CommentService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
 
         //사용자가 소모임의 멤버인지 확인
-        boolean isMember = gathering.getMembers().contains(userId) || gathering.getLeader().getId().equals(userId);
+        boolean isMember = gathering.getMembers().contains(userId) || gathering.getId().equals(userId);
         if (!isMember) {
             throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
         }
@@ -93,12 +93,12 @@ public class CommentService {
         //댓글 작성자인지 확인
         if (!comment.getUser().getId().equals(userId)) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-
-            //댓글 수정
-            comment.setContent(commentUpdateRequestDto.getContent());
-            commentRepository.save(comment);
-
         }
+
+        //댓글 수정
+        comment.updateContent(commentUpdateRequestDto.getContent());
+        commentRepository.save(comment);
+
         return new CommentUpdateResponseDto(
                 comment.getId(),
                 comment.getContent(),
@@ -118,14 +118,14 @@ public class CommentService {
             ;
 
             //사용자가 소모임의 멤버인지 확인
-            boolean isMember = gathering.getMembers().contains(userId) || gathering.getLeader().getId().equals(userId);
+            boolean isMember = gathering.getMembers().contains(userId) || gathering.getId().equals(userId);
             if (!isMember) {
                 throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
             }
 
             //삭제 권한 확인
             boolean isAuthor = comment.getUser().getId().equals(userId);
-            boolean isLeader = gathering.getLeader().getId().equals(userId);
+            boolean isLeader = gathering.getId().equals(userId);
             if (!isAuthor || !isLeader) {
                 throw new ResponseCodeException(ResponseCode.FORBIDDEN);
             }

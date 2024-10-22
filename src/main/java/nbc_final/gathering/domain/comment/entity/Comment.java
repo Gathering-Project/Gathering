@@ -21,7 +21,7 @@ public class Comment extends TimeStamped {
     @Column(name = "comment_id")
     private Long id;
 
-    @Column(name = "comment_content", nullable = false, length = 200)
+    @Column(name = "comment_contents", nullable = false, length = 200)
     private String content;
 
     private LocalDateTime createdAt;
