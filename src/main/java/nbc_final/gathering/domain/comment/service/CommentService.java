@@ -9,7 +9,10 @@ import nbc_final.gathering.domain.comment.dto.response.CommentSaveResponseDto;
 import nbc_final.gathering.domain.comment.dto.response.CommentUpdateResponseDto;
 import nbc_final.gathering.domain.comment.entity.Comment;
 import nbc_final.gathering.domain.comment.repository.CommentRepository;
+import nbc_final.gathering.domain.gathering.entity.Gathering;
+import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.user.entity.User;
+import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +30,7 @@ public class CommentService {
     @Transactional
     public CommentSaveResponseDto saveComment(CommentSaveRequestDto commentSaveRequestDto, Long gatheringId, Long userId, Long eventId) {
         //소모임 존재 여부 확인
-        Gathering gathering = groupRepository.findById(gatheringId)
+        Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
 
         //댓글 작성자 확인
@@ -38,7 +41,7 @@ public class CommentService {
         }
 
         // 유저 내에서 유저의 권한을 확인 -> READ 권한만 있는지 확인
-        boolean isReadOnly = userRepository.existsByMemberIdAndUserIdAndUserRole(userId, eventId, UserRole.READ);
+        boolean isReadOnly = userRepository.existsByMemberIdAndUserIdAndUserRole(userId, eventId, UserRole.ROLE_USER);
         if (isReadOnly) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
@@ -110,7 +113,7 @@ public class CommentService {
                     .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_COMMENT));
 
             //소모임 존재 여부 확인
-            Gathering gathering = groupRepository.findById(groupId)
+            Gathering gathering = gatheringRepository.findById(groupId)
                     .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
             ;
 
