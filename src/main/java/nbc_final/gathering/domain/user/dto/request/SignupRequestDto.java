@@ -1,24 +1,21 @@
 package nbc_final.gathering.domain.user.dto.request;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import nbc_final.gathering.domain.user.enums.InterestType;
-import nbc_final.gathering.domain.user.enums.MbtiType;
-
-import java.util.List;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class SignupRequestDto {
 
-    @NotBlank
-    private String location; // 사용자 거주 지역
     private String nickname;
 
-    @Email @NotBlank
+    @Email
+    @NotBlank
     private String email;
 
     @NotBlank
@@ -28,14 +25,6 @@ public class SignupRequestDto {
     )
     private String password;
 
-    @NotNull
-//    private List<InterestType> interestTypes;
-    private InterestType interestType;
-
-    @NotNull
-    private MbtiType mbtiType;
-
     @NotBlank
     private String userRole;
-
 }
