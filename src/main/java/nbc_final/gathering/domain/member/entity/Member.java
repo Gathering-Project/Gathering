@@ -29,17 +29,25 @@ public class Member extends TimeStamped {
   @JoinColumn(name = "gathering_id", nullable = false)
   private Gathering gathering;
 
-  @Enumerated(EnumType.STRING) // 사용자 역할을 문자열로 저장
+  @Enumerated(EnumType.STRING)
   private MemberRole role;
 
   @Enumerated(EnumType.STRING)
   private MemberStatus status;
 
+  public Member(User user, Gathering gathering, MemberRole role) {
+    this.user = user;
+    this.gathering = gathering;
+    this.role = role;
+    this.status = MemberStatus.PENDING;  // 기본값 PENDING 설정
+  }
+
+  // 네 가지 인자를 받는 기존 생성자
   public Member(User user, Gathering gathering, MemberRole role, MemberStatus status) {
     this.user = user;
     this.gathering = gathering;
     this.role = role;
-    this.status = MemberStatus.PENDING;
+    this.status = status;
   }
 
   public void approve() {
