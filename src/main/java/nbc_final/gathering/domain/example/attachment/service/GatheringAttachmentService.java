@@ -6,28 +6,29 @@ import io.jsonwebtoken.io.IOException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
-import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.example.attachment.entity.Attachment;
 import nbc_final.gathering.domain.example.attachment.repository.AttachmentRepository;
+import nbc_final.gathering.domain.gathering.entity.Gathering;
+import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class UserAttachmentService {
+public class GatheringAttachmentService {
 
     private final AmazonS3 amazonS3;
     private final AttachmentRepository attachmentRepository;
+    private final GatheringRepository gatheringRepository;
     private final UserRepository userRepository;
 
     @Value("${cloud.aws.s3.bucket}")
@@ -37,42 +38,53 @@ public class UserAttachmentService {
     private static final List<String> SUPPORTED_FILE_TYPES = Arrays.asList("image/jpeg", "image/png", "image/jpg");
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-    // 유저 프로필 등록
+    // 모임 프로필 등록
     @Transactional
-    public String userUploadFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException {
+    public String gatheringUploadFile(AuthUser authUser, Long gatheringId, MultipartFile file) throws IOException, java.io.IOException {
         validateFile(file);
 
-        User user =userRepository.findById(authUser.getUserId())
-                .orElseThrow(()-> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+        // Gathering 객체를 조회
+        Gathering gathering = gatheringRepository.findById(gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
 
+        // S3에 파일 업로드 후 URL 반환
         String fileUrl = uploadToS3(file);
 
-        user.setProfileImagePath(fileUrl);
-        userRepository.save(user);
+        // Gathering 엔티티의 gatheringImage 필드를 업데이트
+        gathering.setGatheringImage(fileUrl);
 
-        saveAttachment(authUser, fileUrl);
+        gatheringRepository.save(gathering);
+
+        saveGatheringAttachment(authUser, gathering, fileUrl);
         return fileUrl;
     }
 
-    // 유저 이미지 수정
+    // 모임 이미지 수정
     @Transactional
-    public String userUpdateFile (MultipartFile file, AuthUser user) throws IOException, java.io.IOException {
+    public String gatheringUpdateFile (AuthUser authUser, Long gatheringId, MultipartFile file) throws IOException, java.io.IOException {
         validateFile(file);
 
-        // 기존 첨부 파일 찾기
-        Attachment existingAttachment = attachmentRepository.findByUser(user);
+        // Gathering 객체를 조회
+        Gathering gathering = gatheringRepository.findById(gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+
+        Attachment existingAttachment = attachmentRepository.findByUserAndGathering(authUser, gathering);
         if (existingAttachment != null) {
             deleteFromS3(existingAttachment.getProfileImagePath());
         }
 
-        return userUploadFile(user, file);
+        return gatheringUploadFile(authUser,gatheringId, file);
     }
 
-    // 유저 이미지 삭제
+    // 모임 이미지 삭제
     @Transactional
-    public void userDeleteFile(AuthUser authUser) {
+    public void gatheringDeleteFile(AuthUser authUser, Long gatheringId) {
+        // gatheringId를 사용하여 Gathering 엔티티를 조회
+        Gathering gathering = gatheringRepository.findById(gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+
         // 기존 파일 찾기
-        Attachment existingAttachment = attachmentRepository.findByUser(authUser);
+        Attachment existingAttachment = attachmentRepository.findByUserAndGathering(authUser, gathering);
         if (existingAttachment != null) {
             deleteFromS3(existingAttachment.getProfileImagePath());
             attachmentRepository.delete(existingAttachment);
@@ -82,11 +94,11 @@ public class UserAttachmentService {
     // 유저 이미지 예외처리
     private void validateFile(MultipartFile file) {
         if (!SUPPORTED_FILE_TYPES.contains(file.getContentType())) {
-            throw new IllegalArgumentException("지원하지 않는 파일 형식입니다.");
+            throw new ResponseCodeException(ResponseCode.NOT_SERVICE);
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException(("파일 크기가 너무 큽니다."));
+            throw new ResponseCodeException(ResponseCode.TOO_LARGE_SIZE_FILE);
         }
     }
 
@@ -108,17 +120,25 @@ public class UserAttachmentService {
         return fileUrl;
     }
 
-    private void saveAttachment(AuthUser authUser, String fileUrl) {
+    private void saveGatheringAttachment(AuthUser authUser, Gathering gathering, String fileUrl) {
 
-        // userId를 이용해 User 엔티티를 조회
+        // gathering이 제대로 전달되는지 확인
+        if (gathering == null) {
+            throw new IllegalArgumentException("Gathering cannot be null");
+        }
+
+        // User 엔티티 조회
         User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user id: " + authUser.getUserId()));
+
+        if (user == null || gathering == null) {
+            throw new IllegalArgumentException("User or Gathering cannot be null.");
+        }
 
         Attachment attachment = new Attachment();
-        attachment.setUser(user);
+        attachment.setUser(user);  // AuthUser에서 userId 설정
         attachment.setProfileImagePath(fileUrl);
+        attachment.setGathering(gathering);
         attachmentRepository.save(attachment);
     }
 }
-
-

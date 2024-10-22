@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
+import nbc_final.gathering.domain.example.attachment.entity.Attachment;
 import nbc_final.gathering.domain.user.enums.InterestType;
 import nbc_final.gathering.domain.user.enums.MbtiType;
 import nbc_final.gathering.domain.user.enums.UserRole;
@@ -59,8 +60,8 @@ public class User extends TimeStamped {
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 //    private List<Event> events = new ArrayList<>();
 
-//    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-//    private Attachment attachment;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Attachment attachment;
 
 
     @Builder
@@ -92,6 +93,10 @@ public class User extends TimeStamped {
 
     public void updateIsDeleted() {
         this.isDeleted = true;
+    }
+
+    public void setProfileImagePath(String profileImagePath){
+        this.profileImagePath = profileImagePath;
     }
 
 }

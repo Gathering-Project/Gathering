@@ -1,13 +1,11 @@
 package nbc_final.gathering.domain.example.attachment.controller;
 
-
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.example.attachment.dto.AttachmentResponseDto;
-import nbc_final.gathering.domain.example.attachment.repository.AttachmentRepository;
-import nbc_final.gathering.domain.example.attachment.service.UserAttachmentService;
-import org.springframework.context.annotation.Lazy;
+import nbc_final.gathering.domain.example.attachment.service.GatheringAttachmentService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -15,42 +13,42 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
-
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-public class UserAttachmentController {
+public class GatheringAttachmentController {
 
-    private final UserAttachmentService attachmentService;
-    private final AttachmentRepository attachmentRepository;
+    private final GatheringAttachmentService attachmentService;
 
-    @PostMapping("/users/upload/userFile")
-    public ResponseEntity<?> userUploadFile(
+    @PostMapping(value = "/gatherings/{gatheringId}/upload/userFile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> gatheringUploadFile(
             @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long gatheringId,
             @RequestPart("file") MultipartFile file
     ) throws IOException {
-        String fileUrl = String.valueOf(attachmentService.userUploadFile(authUser, file));
+        String fileUrl = attachmentService.gatheringUploadFile(authUser, gatheringId, file);
         AttachmentResponseDto responseDto = new AttachmentResponseDto(fileUrl);
         return ResponseEntity.ok(ApiResponse.createSuccess(responseDto));
     }
 
-    @PutMapping("/users/uploadUpdate/userFile")
-    public ResponseEntity<?> userUpdateFile(
+    @PutMapping("/gatherings/{gatheringId}/uploadUpdate/userFile")
+    public ResponseEntity<?> gatheringUpdateFile(
             @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long gatheringId,
             @RequestPart("file") MultipartFile file
     ) throws IOException {
-        String fileUrl = String.valueOf(attachmentService.userUpdateFile(file, authUser));
+        String fileUrl = attachmentService.gatheringUpdateFile(authUser, gatheringId, file);
         AttachmentResponseDto responseDto = new AttachmentResponseDto(fileUrl);
         return ResponseEntity.ok(ApiResponse.createSuccess(responseDto));
     }
 
-    @DeleteMapping("/users/delete/userFile")
-    public ResponseEntity<?> userDeleteFile(
-            @AuthenticationPrincipal AuthUser authUser
+    @DeleteMapping("/gatherings/{gatheringId}/delete/userFile")
+    public ResponseEntity<?> gatheringDeleteFile(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long gatheringId
     ) {
-        attachmentRepository.findByUser(authUser);
+        attachmentService.gatheringDeleteFile(authUser, gatheringId);
         return ResponseEntity.noContent().build();
     }
 }
-
 
