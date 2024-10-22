@@ -36,8 +36,6 @@ public class ExampleController {
 
 
 
-
-
     // 반환 데이터 존재 X
     @GetMapping("/ex2")
     public ResponseEntity<ApiResponse<Void>> example2() {

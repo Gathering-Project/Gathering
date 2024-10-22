@@ -51,7 +51,7 @@ public class User extends TimeStamped {
 //    private byte[] profileImage; //
 
     // 이미지 파일 경로
-//    private String profileImagePath;
+    private String profileImagePath;
 
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 //    private List<Member> members = new ArrayList<>();
@@ -90,10 +90,9 @@ public class User extends TimeStamped {
         this.nickname = nickname;
     }
 
-
-
-
-
+    public void updateIsDeleted() {
+        this.isDeleted = true;
+    }
 
 }
 
