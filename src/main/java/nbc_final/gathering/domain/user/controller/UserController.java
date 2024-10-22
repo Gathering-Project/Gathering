@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.response.ApiResponse;
 import nbc_final.gathering.domain.user.dto.request.*;
-import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
+import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -58,8 +58,11 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
     }
 
-
-
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserGetResponseDto>> getMyInfo(@AuthenticationPrincipal AuthUser authUser) {
+        UserGetResponseDto res = userService.getMyInfo(authUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.createSuccess(res));
+    }
 
 
 }

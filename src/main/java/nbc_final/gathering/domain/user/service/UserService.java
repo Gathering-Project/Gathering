@@ -5,11 +5,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.config.JwtUtil;
-import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.domain.user.dto.request.*;
-import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
+import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
@@ -137,6 +136,15 @@ public class UserService {
         return UserGetResponseDto.of(user);
     }
 
+    // 내 정보 조회
+    public UserGetResponseDto getMyInfo(Long myId) {
+        User user = userRepository.findById(myId)
+                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 유저입니다."));
+
+        return UserGetResponseDto.of(user);
+
+    }
+
 
     // 탈퇴 계정인지 검증
     private static void checkDeletedUser(User user) {
@@ -149,15 +157,15 @@ public class UserService {
     // 새 비밀번호 검증
     private static void validateNewPassword(UserChangePwRequestDto requestDto) {
         if (
-                // 비밀번호에 알파벳 포함 여부 확인 (대소문자 포함)
+            // 비밀번호에 알파벳 포함 여부 확인 (대소문자 포함)
                 !requestDto.getNewPassword().matches(".*[A-Za-z].*") ||
-                // 비밀번호에 숫자 포함 여부 확인
-                !requestDto.getNewPassword().matches(".*\\d.*") ||
-                // 비밀번호에 특수 문자 포함 여부 확인
-                !requestDto.getNewPassword().matches(".*[\\p{Punct}].*") ||
-                // 비밀번호 길이가 8자 이상 20자 이하인지 확인
-                requestDto.getNewPassword().length() < 8 ||
-                requestDto.getNewPassword().length() > 20
+                        // 비밀번호에 숫자 포함 여부 확인
+                        !requestDto.getNewPassword().matches(".*\\d.*") ||
+                        // 비밀번호에 특수 문자 포함 여부 확인
+                        !requestDto.getNewPassword().matches(".*[\\p{Punct}].*") ||
+                        // 비밀번호 길이가 8자 이상 20자 이하인지 확인
+                        requestDto.getNewPassword().length() < 8 ||
+                        requestDto.getNewPassword().length() > 20
         ) {
             throw new IllegalArgumentException("새 비밀번호는 8자 이상이어야 하고, 숫자와 영문자를 포함해야 합니다.");
         }

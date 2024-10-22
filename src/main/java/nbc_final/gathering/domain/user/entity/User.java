@@ -100,7 +100,6 @@ public class User extends TimeStamped {
     }
 
     public void updateInfo(UserUpdateRequestDto requestDto) {
-        this.email = requestDto.getEmail();
         this.location = requestDto.getLocation();
         this.nickname = requestDto.getNickname();
         this.mbtiType = requestDto.getMbtiType();
