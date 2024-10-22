@@ -46,12 +46,9 @@ public class UserService {
         UserRole userRole = UserRole.of(signupRequest.getUserRole());
 
         User newUser = User.builder()
-                .location(signupRequest.getLocation())
                 .nickname(signupRequest.getNickname())
                 .email(signupRequest.getEmail())
                 .password(encodedPassword)
-                .interestType(signupRequest.getInterestType())
-                .mbtiType(signupRequest.getMbtiType())
                 .userRole(userRole)
                 .build();
 

@@ -11,7 +11,6 @@ import nbc_final.gathering.domain.user.enums.MbtiType;
 import nbc_final.gathering.domain.user.enums.UserRole;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -24,8 +23,7 @@ public class User extends TimeStamped {
     @Column(name = "user_id")
     private Long id;
 
-    @Column(nullable = false)
-    private String location; // ? 주소가 낫나????
+    private String location;
 
     private String nickname;
 
@@ -63,23 +61,16 @@ public class User extends TimeStamped {
 //    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 //    private Attachment attachment;
 
-
     @Builder
     public User(
-            String location,
             String nickname,
             String email,
             String password,
-            InterestType interestType,
-            MbtiType mbtiType,
             UserRole userRole
     ) {
-        this.location = location;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
-        this.interestType = interestType;
-        this.mbtiType = mbtiType;
         this.userRole = userRole;
     }
 
@@ -92,6 +83,7 @@ public class User extends TimeStamped {
     }
 
     public void updateIsDeleted() {
+        this.withdrawalDate = LocalDateTime.now();
         this.isDeleted = true;
     }
 
