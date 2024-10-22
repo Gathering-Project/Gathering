@@ -1,11 +1,12 @@
 package nbc_final.gathering.domain.comment.service;
 
 import lombok.RequiredArgsConstructor;
-import nbc_final.gathering.common.exception.ErrorCode;
-import nbc_final.gathering.domain.comment.dto.request.CommentSaveRequest;
-import nbc_final.gathering.domain.comment.dto.request.CommentUpdateRequest;
-import nbc_final.gathering.domain.comment.dto.response.CommentSaveResponse;
-import nbc_final.gathering.domain.comment.dto.response.CommentUpdateResponse;
+import nbc_final.gathering.common.exception.ResponseCode;
+import nbc_final.gathering.common.exception.ResponseCodeException;
+import nbc_final.gathering.domain.comment.dto.request.CommentSaveRequestDto;
+import nbc_final.gathering.domain.comment.dto.request.CommentUpdateRequestDto;
+import nbc_final.gathering.domain.comment.dto.response.CommentSaveResponseDto;
+import nbc_final.gathering.domain.comment.dto.response.CommentUpdateResponseDto;
 import nbc_final.gathering.domain.comment.entity.Comment;
 import nbc_final.gathering.domain.comment.repository.CommentRepository;
 import nbc_final.gathering.domain.user.entity.User;
@@ -20,44 +21,44 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
-    private final GroupRepository groupRepository;
+    private final GatheringRepository gatheringRepository;
     private final EventRepository eventRepository;
 
     @Transactional
-    public CommentSaveResponse saveComment(CommentSaveRequest commentSaveRequest, Long groupId, Long userId, Long eventId) {
+    public CommentSaveResponseDto saveComment(CommentSaveRequestDto commentSaveRequestDto, Long gatheringId, Long userId, Long eventId) {
         //소모임 존재 여부 확인
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Not Found"));
+        Gathering gathering = groupRepository.findById(gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
 
         //댓글 작성자 확인
-        boolean isMember = group.getMembers().contains(userId) || group.getLeader().getId().equals(userId);
+        boolean isMember = gathering.getMembers().contains(userId) || gathering.getLeader().getId().equals(userId);
         ;
         if (!isMember) {
-            throw new IllegalArgumentException("Not Found");
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
         }
 
         // 유저 내에서 유저의 권한을 확인 -> READ 권한만 있는지 확인
-        boolean isReadOnly = workspaceMemberRepository.existsByMemberIdAndWorkspaceIdAndMemberRole(userId, workspaceId, MemberRole.READ);
+        boolean isReadOnly = userRepository.existsByMemberIdAndUserIdAndUserRole(userId, eventId, UserRole.READ);
         if (isReadOnly) {
-            throw new IllegalArgumentException("Not Found");
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
 
         //이벤트 존재 여부 확인
         Event event = EventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("Not Found"));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
         //댓글 작성자 존재 여부 확인
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Not Found"));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 
         //댓글 생성
-        Comment comment = new Comment(commentSaveRequest.getContent(), event, userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Not Found")));
+        Comment comment = new Comment(commentSaveRequestDto.getContent(), event, userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_COMMENT)));
         commentRepository.save(comment);
 
-        CommentSaveResponse a = null;
+        CommentSaveResponseDto a = null;
         try {
-            a = new CommentSaveResponse(comment.getId(),
+            a = new CommentSaveResponseDto(comment.getId(),
                     comment.getContent(),
                     comment.getId(),
                     comment.getCreatedAt());
@@ -70,32 +71,32 @@ public class CommentService {
 
 
     @Transactional
-    public CommentUpdateResponse updateComment(CommentUpdateRequest commentUpdateRequest, Long commentId, Long userId, Long groupId, Long eventId) {
+    public CommentUpdateResponseDto updateComment(CommentUpdateRequestDto commentUpdateRequestDto, Long commentId, Long userId, Long groupId, Long eventId) {
         //댓글 존재 여부 확인
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("Not Found"));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_COMMENT));
         ;
 
         //소모임 존재 여부 확인
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Not Found"));
+        Gathering gathering = gatheringRepository.findById(groupId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
 
         //사용자가 소모임의 멤버인지 확인
-        boolean isMember = group.getMembers().contains(userId) || group.getLeader().getId().equals(userId);
+        boolean isMember = gathering.getMembers().contains(userId) || gathering.getLeader().getId().equals(userId);
         if (!isMember) {
-            throw new IllegalArgumentException("Not Found");
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
         }
 
         //댓글 작성자인지 확인
         if (!comment.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("Not Found");
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
 
             //댓글 수정
-            comment.setContent(commentUpdateRequest.getContent());
+            comment.setContent(commentUpdateRequestDto.getContent());
             commentRepository.save(comment);
 
         }
-        return new CommentUpdateResponse(
+        return new CommentUpdateResponseDto(
                 comment.getId(),
                 comment.getContent(),
                 comment.getCreatedAt(),
@@ -106,28 +107,27 @@ public class CommentService {
         public void deleteComment(Long commentId, Long userId, Long groupId, Long eventId) {
             //댓글 존재 여부 확인
             Comment comment = commentRepository.findById(commentId)
-                    .orElseThrow(() -> new IllegalArgumentException("Not Found"));
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_COMMENT));
 
             //소모임 존재 여부 확인
-            Group group = groupRepository.findById(groupId)
-                    .orElseThrow(() -> new IllegalArgumentException("Not Found"));
+            Gathering gathering = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
             ;
 
             //사용자가 소모임의 멤버인지 확인
-            boolean isMember = group.getMembers().contains(userId) || group.getLeader().getId().equals(userId);
+            boolean isMember = gathering.getMembers().contains(userId) || gathering.getLeader().getId().equals(userId);
             if (!isMember) {
-                throw new IllegalArgumentException("Not Found");
+                throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
             }
 
             //삭제 권한 확인
             boolean isAuthor = comment.getUser().getId().equals(userId);
-            boolean isLeader = group.getLeader().getId().equals(userId);
+            boolean isLeader = gathering.getLeader().getId().equals(userId);
             if (!isAuthor || !isLeader) {
-                throw new IllegalArgumentException("Not Found");
+                throw new ResponseCodeException(ResponseCode.FORBIDDEN);
             }
 
             //댓글 삭제
             commentRepository.delete(comment);
         }
     }
-}

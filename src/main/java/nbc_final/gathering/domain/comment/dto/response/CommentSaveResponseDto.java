@@ -5,16 +5,16 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-public class CommentUpdateResponse {
+public class CommentSaveResponseDto {
     private final Long id;
     private final String content;
+    private final Long userId;
     private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
 
-    public CommentUpdateResponse(Long id, String content, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public CommentSaveResponseDto(Long id, String content, Long userId, LocalDateTime createdAt) {
         this.id = id;
         this.content = content;
+        this.userId = userId;
         this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 }
