@@ -3,13 +3,13 @@ package nbc_final.gathering.domain.user.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import nbc_final.gathering.common.response.ApiResponse;
-import nbc_final.gathering.domain.user.dto.request.UserGetRequestDto;
+import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
 import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
-import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
+import nbc_final.gathering.domain.user.dto.request.UserGetRequestDto;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
+import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.repository.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,8 +36,8 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<UserGetResponseDto>> getUser(@RequestBody @Valid UserGetRequestDto requestDto) {
-        UserGetResponseDto res = userService.getUser(requestDto.getEmail());
-        return ResponseEntity.ok(ApiResponse.createSuccess(res));
+        UserGetResponseDto userResponse = userService.getUser(requestDto.getEmail());
+        return ResponseEntity.ok(ApiResponse.createSuccess(userResponse));
     }
 
     @DeleteMapping
