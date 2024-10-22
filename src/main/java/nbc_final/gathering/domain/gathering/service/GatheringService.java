@@ -37,7 +37,7 @@ public class GatheringService {
     // 그룹 생성
     Gathering savedGathering = new Gathering(gatheringRequestDto.getTitle(),
         gatheringRequestDto.getDescription(),
-        "임의 이미지 URL",
+        gatheringRequestDto.getGatheringImage(),
         1, gatheringRequestDto.getGatheringMaxCount(),
         BigDecimal.valueOf(50), gatheringRequestDto.getLocation()
     );
@@ -67,14 +67,13 @@ public class GatheringService {
 
     // 유저가 조회하고자 하는 ID 소모임 조회
     for (Member member : members) {
-      Gathering gathering = member.getGathering(); // Member에 소모임 참조가 있어야 함
+      Gathering gathering = member.getGathering();
       if (gathering != null && gathering.getId().equals(gatheringId)) {
         return new GatheringResponseDto(gathering);
       }
     }
     throw new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING);
   }
-
 
   ////////////////////// 에러 처리를 위한 메서드 ///////////////////////
 
