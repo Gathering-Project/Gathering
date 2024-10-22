@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AttachmentRepository extends JpaRepository<Attachment, Long> {
     Attachment findByUser(AuthUser user);
-    Attachment findByUserAndGroup(AuthUser user, Long groupId);
+    //Attachment findByUserAndGroup(AuthUser user, Long groupId);
 }

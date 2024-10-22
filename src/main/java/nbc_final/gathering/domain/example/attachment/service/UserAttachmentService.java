@@ -33,16 +33,16 @@ public class UserAttachmentService {
 
     // 유저 프로필 등록
     @Transactional
-    public String userUploadFile(User user, MultipartFile file) throws IOException, java.io.IOException {
+    public String userUploadFile(AuthUser user, MultipartFile file) throws IOException, java.io.IOException {
         validateFile(file);
-        String fileUrl = uploadToS3(file, user);
+        String fileUrl = uploadToS3(file);
         saveAttachment(user, fileUrl);
         return fileUrl;
     }
 
     // 유저 이미지 수정
     @Transactional
-    public String userUploadFile (MultipartFile file, AuthUser user) throws IOException {
+    public String userUpdateFile (MultipartFile file, AuthUser user) throws IOException, java.io.IOException {
         validateFile(file);
 
         Attachment existingAttachment = attachmentRepository.findByUser(user);
@@ -50,14 +50,14 @@ public class UserAttachmentService {
             deleteFromS3(existingAttachment.getProfileImagePath());
         }
 
-        return userUploadFile(file, user);
+        return userUploadFile(user, file);
     }
 
     // 유저 이미지 삭제
     @Transactional
-    public void userDeleteFile(AuthUser authUser, Long groupId) {
+    public void userDeleteFile(AuthUser authUser) {
         // 기존 파일 찾기
-        Attachment existingAttachment = attachmentRepository.findByUserAndGroup(authUser, groupId);
+        Attachment existingAttachment = attachmentRepository.findByUser(authUser);
         if (existingAttachment != null) {
             deleteFromS3(existingAttachment.getProfileImagePath());
             attachmentRepository.delete(existingAttachment);
@@ -81,7 +81,7 @@ public class UserAttachmentService {
         amazonS3.deleteObject(bucketName, fileName);
     }
 
-    private String uploadToS3(MultipartFile file, User user) throws IOException, java.io.IOException {
+    private String uploadToS3(MultipartFile file) throws IOException, java.io.IOException {
         String fileName = file.getOriginalFilename();
         String fileUrl = "https://" + bucketName + "/profile-images/" + fileName;
 
@@ -93,10 +93,14 @@ public class UserAttachmentService {
         return fileUrl;
     }
 
-    private void saveAttachment(User user, String fileUrl) {
+    private void saveAttachment(AuthUser user, String fileUrl) {
         Attachment attachment = new Attachment(user, fileUrl);
+        attachment.setUser(user.getUserId());  // AuthUser에서 실제 User 객체를 가져와 설정
+        attachment.setProfileImagePath(fileUrl);  // 파일 URL 설정
         attachmentRepository.save(attachment);
     }
+
+
 }
 
 

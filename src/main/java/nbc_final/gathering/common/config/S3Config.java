@@ -29,9 +29,4 @@ public class S3Config {
                 .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
                 .build();
     }
-
-    @Bean
-    public String BucketName() {
-        return BucketName();
-    }
 }
