@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-
-
+    
     /**
      * 유저 회원가입
+     *
      * @param requestDto
      * @return
      */
@@ -35,6 +35,7 @@ public class UserController {
 
     /**
      * 유저 로그인
+     *
      * @param requestDto
      * @param response
      * @return
@@ -46,14 +47,20 @@ public class UserController {
     }
 
 
-    @GetMapping("/userId")
-    public ResponseEntity<ApiResponse<UserGetResponseDto>> getUser(@PathVariable Long id) {
-        UserGetResponseDto res = userService.getUser(id);
+    /**유저 조회
+     *
+     * @param userId
+     * @return
+     */
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UserGetResponseDto>> getUser(@PathVariable Long userId) {
+        UserGetResponseDto res = userService.getUser(userId);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
     }
 
     /**
      * 유저 회원 탈퇴
+     *
      * @param authUser
      * @param requestDto
      * @return
@@ -66,6 +73,7 @@ public class UserController {
 
     /**
      * 유저 비밀번호 변경
+     *
      * @param authUser
      * @param requestDto
      * @return
@@ -78,6 +86,7 @@ public class UserController {
 
     /**
      * 유저 정보 수정
+     *
      * @param authUser
      * @param requestDto
      * @return

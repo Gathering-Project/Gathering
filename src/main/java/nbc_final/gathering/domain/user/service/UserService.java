@@ -172,7 +172,7 @@ public class UserService {
                         requestDto.getNewPassword().length() < 8 ||
                         requestDto.getNewPassword().length() > 20
         ) {
-            throw new IllegalArgumentException("새 비밀번호는 8자 이상이어야 하고, 숫자와 영문자를 포함해야 합니다.");
+            throw new ResponseCodeException(ResponseCode.INVALID_PASSWORD);
         }
     }
 
