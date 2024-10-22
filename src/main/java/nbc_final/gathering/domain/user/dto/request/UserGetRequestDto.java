@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class GetUserRequestDto {
+public class UserGetRequestDto {
     private String email;
 }

@@ -8,7 +8,7 @@ import nbc_final.gathering.domain.user.enums.MbtiType;
 
 @Getter
 @AllArgsConstructor
-public class GetUserResponseDto {
+public class UserGetResponseDto {
 
     private Long userId;
     private String location;
@@ -17,8 +17,8 @@ public class GetUserResponseDto {
     private InterestType interestType;
     private MbtiType mbtiType;
 
-    public static GetUserResponseDto of(User user) {
-        return new GetUserResponseDto(
+    public static UserGetResponseDto of(User user) {
+        return new UserGetResponseDto(
                 user.getId(),
                 user.getLocation(),
                 user.getNickname(),
