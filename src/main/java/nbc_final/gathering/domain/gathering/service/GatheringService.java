@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -39,10 +40,10 @@ public class GatheringService {
         "임의 이미지 URL",
         1, gatheringRequestDto.getGatheringMaxCount(),
         BigDecimal.valueOf(50), gatheringRequestDto.getLocation()
-        );
+    );
 
     // 주최자 추가
-    Member member = new Member(user, savedGathering,  Role.HOST);
+    Member member = new Member(user, savedGathering, Role.HOST);
     savedGathering.getMembers().add(member);
 
     // 그룹 저장
@@ -51,13 +52,28 @@ public class GatheringService {
 
     return new GatheringResponseDto(savedGathering);
   }
-/*
-  {
-    title: "소모임 제목",
-    description: "소모임 설명",
-    groupMaxCount: 10
+
+  /*
+    {
+      title: "소모임 제목",
+      description: "소모임 설명",
+      groupMaxCount: 10
+    }
+  */
+  // 소모임 단건 조회 로직
+  public GatheringResponseDto getGathering(AuthUser authUser, Long gatheringId) {
+
+    List<Member> members = findMembersByUserId(authUser);
+
+    // 유저가 조회하고자 하는 ID 소모임 조회
+    for (Member member : members) {
+      Gathering gathering = member.getGathering(); // Member에 소모임 참조가 있어야 함
+      if (gathering != null && gathering.getId().equals(gatheringId)) {
+        return new GatheringResponseDto(gathering);
+      }
+    }
+    throw new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING);
   }
-*/
 
 
   ////////////////////// 에러 처리를 위한 메서드 ///////////////////////
@@ -66,4 +82,16 @@ public class GatheringService {
     return userRepository.findById(authUser.getUserId()).orElseThrow(
         () -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
   }
+
+  private List<Member> findMembersByUserId(AuthUser authUser) {
+    List<Member> members = memberRepository.findByUserId(authUser.getUserId());
+
+    if (members.isEmpty()) {
+      throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
+    }
+    return members;
+  }
+
+
+
 }

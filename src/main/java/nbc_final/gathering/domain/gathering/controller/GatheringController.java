@@ -21,7 +21,7 @@ public class GatheringController {
   // 반환 데이터 존재 O
   @PostMapping
   public ResponseEntity<ApiResponse<GatheringResponseDto>> createGroup(@AuthenticationPrincipal AuthUser authUser,
-                                                          @RequestBody @Valid GatheringRequestDto gatheringRequestDto) {
+                                                                       @RequestBody @Valid GatheringRequestDto gatheringRequestDto) {
 
     GatheringResponseDto res = gatheringService.createGroup(authUser, gatheringRequestDto);
     return ResponseEntity.ok(ApiResponse.createSuccess(res));
@@ -32,7 +32,7 @@ public class GatheringController {
   “status” : 200,
   “message” : “정상 처리 되었습니다.”,
   “data” : {
-     “groupId” : 1,
+     “gatheringId” : 1,
      “title” : “소모임 제목”,
      “description” : “소모임 설명”,
      “groupMaxCount” : “소모임 최대 인원”,
@@ -40,19 +40,28 @@ public class GatheringController {
     }
   }
   */
-/*
-
-  @GetMapping("/{groupId}")
+  // 반환 데이터 존재 O
+  @GetMapping("/{gatheringId}")
   public ResponseEntity<ApiResponse<GatheringResponseDto>> getGathering(@AuthenticationPrincipal AuthUser authUser,
-                                                   @PathVariable Long groupId) {
+                                                                        @PathVariable @Valid Long gatheringId) {
 
-    GatheringResponseDto res = groupService.getGathering(authUser, groupId)
+    GatheringResponseDto res = gatheringService.getGathering(authUser, gatheringId);
 
     return ResponseEntity.ok(ApiResponse.createSuccess(res));
   }
-*/
-
-
+/*
+  {
+  “status” : 200,
+  “message” : “정상 처리 되었습니다.”,
+  “data” : {
+     “gathringId” : 1,
+     “title” : “소모임 제목”,
+     “description” : “소모임 설명”,
+     “gathringMaxCount” : “소모임 최대 인원”,
+     “gathringImage” :  “이미지.png”
+   }
+  }
+  */
 
 
 }
