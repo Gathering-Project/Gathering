@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
+import nbc_final.gathering.domain.user.dto.request.UserUpdateRequestDto;
 import nbc_final.gathering.domain.user.enums.InterestType;
 import nbc_final.gathering.domain.user.enums.MbtiType;
 import nbc_final.gathering.domain.user.enums.UserRole;
@@ -96,6 +97,15 @@ public class User extends TimeStamped {
 
     public void changePassword(String newPassword) {
         this.password = newPassword;
+    }
+
+    public void updateInfo(UserUpdateRequestDto requestDto) {
+        this.email = requestDto.getEmail();
+        this.location = requestDto.getLocation();
+        this.nickname = requestDto.getNickname();
+        this.mbtiType = requestDto.getMbtiType();
+        this.interestType = requestDto.getInterestType();
+
     }
 
 }

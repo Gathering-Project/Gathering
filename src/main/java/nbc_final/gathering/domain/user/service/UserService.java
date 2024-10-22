@@ -5,9 +5,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.config.JwtUtil;
-import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
-import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
-import nbc_final.gathering.domain.user.dto.request.UserChangePwRequestDto;
+import nbc_final.gathering.common.dto.AuthUser;
+import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
@@ -33,7 +32,11 @@ public class UserService {
     public SignUpResponseDto signup(SignupRequestDto signupRequest) {
 
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
-            throw new IllegalArgumentException("이미 존재하거나 탈퇴한 이메일입니다.");
+            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+        }
+
+        if (userRepository.findByEmailAndIsDeletedTrue(signupRequest.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("이미 탈퇴한 이메일입니다.");
         }
 
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
@@ -64,8 +67,8 @@ public class UserService {
             throw new IllegalArgumentException("이미 탈퇴한 이메일입니다.");
         }
 
-        User user = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(
-                () -> new IllegalArgumentException("가입되지 않은 유저입니다."));
+        User user = userRepository.findByEmail(requestDto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 유저입니다."));
 
         // 로그인 시 이메일과 비밀번호가 일치하지 않을 경우 401을 반환합니다.
         if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
@@ -78,16 +81,16 @@ public class UserService {
         return new LoginResponseDto(bearerToken);
     }
 
+    // 유저 회원 탈퇴
     @Transactional
-    public void deleteUser(LoginRequestDto requestDto) {
+    public void deleteUser(Long userId, UserDeleteRequestDto requestDto) {
 
-        if (userRepository.findByEmailAndIsDeletedTrue(requestDto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이미 탈퇴한 이메일입니다.");
-        }
-        User user = userRepository.findByEmail(requestDto.getEmail())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
-        // 로그인 시 이메일과 비밀번호가 일치하지 않을 경우 401을 반환합니다.
+        checkDeletedUser(user);
+
+        // 로그인 시 이메일과 비밀번호가 일치하지 않을 경우
         if (!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("잘못된 비밀번호입니다.");
         }
@@ -123,6 +126,26 @@ public class UserService {
         user.changePassword(passwordEncoder.encode(requestDto.getNewPassword()));
     }
 
+    // 내 정보 업데이트(수정)
+    @Transactional
+    public UserGetResponseDto updateInfo(Long userId, UserUpdateRequestDto requestDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 유저입니다."));
+
+        user.updateInfo(requestDto); // 유저 정보 갱신
+
+        return UserGetResponseDto.of(user);
+    }
+
+
+    // 탈퇴 계정인지 검증
+    private static void checkDeletedUser(User user) {
+        if (user.isDeleted()) {
+            throw new IllegalArgumentException("이미 탈퇴한 계정입니다.");
+        }
+    }
+
+
     // 새 비밀번호 검증
     private static void validateNewPassword(UserChangePwRequestDto requestDto) {
         if (
@@ -136,7 +159,7 @@ public class UserService {
                 requestDto.getNewPassword().length() < 8 ||
                 requestDto.getNewPassword().length() > 20
         ) {
-            throw new IllegalArgumentException("새 비밀번호는 8자 이상이어야 하고, 숫자와 대문자를 포함해야 합니다.");
+            throw new IllegalArgumentException("새 비밀번호는 8자 이상이어야 하고, 숫자와 영문자를 포함해야 합니다.");
         }
     }
 

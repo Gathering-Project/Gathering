@@ -5,10 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.response.ApiResponse;
-import nbc_final.gathering.domain.user.dto.request.UserChangePwRequestDto;
-import nbc_final.gathering.domain.user.dto.request.UserGetRequestDto;
-import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
-import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
+import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
@@ -44,8 +41,8 @@ public class UserController {
     }
 
     @DeleteMapping
-    public ResponseEntity<ApiResponse<Void>> deleteUser(@RequestBody @Valid LoginRequestDto requestDto) {
-        userService.deleteUser(requestDto);
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid UserDeleteRequestDto requestDto) {
+        userService.deleteUser(authUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 
@@ -54,6 +51,14 @@ public class UserController {
         userService.changePassword(requestDto, authUser.getUserId());
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
+
+    @PutMapping
+    public ResponseEntity<ApiResponse<UserGetResponseDto>> updateMyInfo(@AuthenticationPrincipal AuthUser authUser, @RequestBody UserUpdateRequestDto requestDto) {
+        UserGetResponseDto res = userService.updateInfo(authUser.getUserId(), requestDto);
+        return ResponseEntity.ok(ApiResponse.createSuccess(res));
+    }
+
+
 
 
 
