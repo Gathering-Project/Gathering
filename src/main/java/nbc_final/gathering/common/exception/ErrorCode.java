@@ -6,6 +6,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
 
+    // 400 error
+    INTERNET_SERVER_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR,"서버 에러가 발생했습니다."),
+
     EXAMPLE_EXCEPTION(HttpStatus.BAD_REQUEST.value(), "예시 예외입니당.");
 
 
