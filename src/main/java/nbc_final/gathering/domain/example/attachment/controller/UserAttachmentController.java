@@ -5,9 +5,7 @@ import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.example.attachment.dto.AttachmentResponseDto;
-import nbc_final.gathering.domain.example.attachment.repository.AttachmentRepository;
 import nbc_final.gathering.domain.example.attachment.service.UserAttachmentService;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +20,6 @@ import java.io.IOException;
 public class UserAttachmentController {
 
     private final UserAttachmentService attachmentService;
-    private final AttachmentRepository attachmentRepository;
 
     /**
      * 사용자 프로필 이미지를 업로드
@@ -54,7 +51,7 @@ public class UserAttachmentController {
             @AuthenticationPrincipal AuthUser authUser,
             @RequestPart("file") MultipartFile file
     ) throws IOException {
-        AttachmentResponseDto responseDto = attachmentService.userUpdateFile(file, authUser);
+        AttachmentResponseDto responseDto = attachmentService.userUpdateFile(authUser, file);
         return ResponseEntity.ok(ApiResponse.createSuccess(responseDto));
     }
 

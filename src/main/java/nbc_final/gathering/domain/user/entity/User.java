@@ -100,6 +100,10 @@ public class User extends TimeStamped {
 
     }
 
+    public void setProfileImagePath(String profileImagePath) {
+        this.profileImagePath = profileImagePath;
+    }
+
 }
 
 

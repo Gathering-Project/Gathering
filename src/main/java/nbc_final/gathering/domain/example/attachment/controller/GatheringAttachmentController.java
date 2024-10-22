@@ -29,7 +29,7 @@ public class GatheringAttachmentController {
      * @return 업로드된 파일 정보가 담긴 응답 객체
      * @throws IOException 파일 처리 중 예외 발생 시
      */
-    @PostMapping(value = "/{gatheringId}/upload/userFile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("gatherings/{gatheringId}/upload/userFile")
     public ResponseEntity<?> gatheringUploadFile(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId,
@@ -48,7 +48,7 @@ public class GatheringAttachmentController {
      * @return 수정된 파일 정보가 담긴 응답 객체
      * @throws IOException 파일 처리 중 예외 발생 시
      */
-    @PutMapping(value = "/{gatheringId}/uploadUpdate/userFile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping("gatherings/{gatheringId}/uploadUpdate/userFile")
     public ResponseEntity<?> gatheringUpdateFile(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId,
@@ -65,7 +65,7 @@ public class GatheringAttachmentController {
      * @param gatheringId 모임 ID
      * @return 응답 없음 (HTTP 204 No Content)
      */
-    @DeleteMapping("/{gatheringId}/delete/userFile")
+    @DeleteMapping("gatherings/{gatheringId}/delete/userFile")
     public ResponseEntity<?> gatheringDeleteFile(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId

@@ -41,8 +41,8 @@ public class UserAttachmentService {
     public AttachmentResponseDto userUploadFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException {
         validateFile(file);
 
-        User user =userRepository.findById(authUser.getUserId())
-                .orElseThrow(()-> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 
         String fileUrl = uploadToS3(file);
 
@@ -55,16 +55,28 @@ public class UserAttachmentService {
 
     // 유저 이미지 수정
     @Transactional
-    public AttachmentResponseDto userUpdateFile (MultipartFile file, AuthUser user) throws IOException, java.io.IOException {
+    public AttachmentResponseDto userUpdateFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException {
         validateFile(file);
 
-        // 기존 첨부 파일 찾기
-        Attachment existingAttachment = attachmentRepository.findByUser(user);
+        // User 엔티티 조회
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        // 기존 Attachment 조회 및 삭제
+        Attachment existingAttachment = attachmentRepository.findByUser(authUser);
         if (existingAttachment != null) {
             deleteFromS3(existingAttachment.getProfileImagePath());
+            attachmentRepository.delete(existingAttachment);
         }
 
-        AttachmentResponseDto responseDto = userUploadFile(user, file);
+        // 새로운 파일 업로드 및 Attachment 저장
+        String fileUrl = uploadToS3(file);
+
+        // User 엔티티 업데이트
+        user.setProfileImagePath(fileUrl);
+        userRepository.save(user);
+
+        AttachmentResponseDto responseDto = userUploadFile(authUser, file);
         return responseDto;
     }
 
