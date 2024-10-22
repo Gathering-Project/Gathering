@@ -13,14 +13,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "USERS")
+@Table(name = "users")
 @NoArgsConstructor
 @Getter
 public class User extends TimeStamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "USER_ID")
+    @Column(name = "user_id")
     private Long id;
 
     @Column(nullable = false)
@@ -45,7 +45,7 @@ public class User extends TimeStamped {
     private LocalDateTime withdrawalDate; // 탈퇴일
 
     @Enumerated(EnumType.STRING)
-    private UserRole userRole;
+    private UserRole userRole; // 운영자/일반 유저
 
 //    @Lob
 //    private byte[] profileImage; //
@@ -92,6 +92,10 @@ public class User extends TimeStamped {
 
     public void updateIsDeleted() {
         this.isDeleted = true;
+    }
+
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
     }
 
 }

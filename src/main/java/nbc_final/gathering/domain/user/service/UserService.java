@@ -1,5 +1,4 @@
-package nbc_final.gathering.domain.user.repository;
-
+package nbc_final.gathering.domain.user.service;
 
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,16 +7,16 @@ import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.config.JwtUtil;
 import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
 import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
+import nbc_final.gathering.domain.user.dto.request.UserChangePwRequestDto;
 import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
+import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -104,8 +103,48 @@ public class UserService {
         return UserGetResponseDto.of(user);
     }
 
+    // 유저 비밀번호 변경
+    @Transactional
+    public void changePassword(UserChangePwRequestDto requestDto, Long userId) {
+        validateNewPassword(requestDto);
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        if (passwordEncoder.matches(requestDto.getNewPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("새 비밀번호는 기존 비밀번호와 같을 수 없습니다.");
+        }
+
+        if (!passwordEncoder.matches(requestDto.getOldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+        }
+
+        log.info(requestDto.getNewPassword());
+        user.changePassword(passwordEncoder.encode(requestDto.getNewPassword()));
+    }
+
+    // 새 비밀번호 검증
+    private static void validateNewPassword(UserChangePwRequestDto requestDto) {
+        if (
+                // 비밀번호에 알파벳 포함 여부 확인 (대소문자 포함)
+                !requestDto.getNewPassword().matches(".*[A-Za-z].*") ||
+                // 비밀번호에 숫자 포함 여부 확인
+                !requestDto.getNewPassword().matches(".*\\d.*") ||
+                // 비밀번호에 특수 문자 포함 여부 확인
+                !requestDto.getNewPassword().matches(".*[\\p{Punct}].*") ||
+                // 비밀번호 길이가 8자 이상 20자 이하인지 확인
+                requestDto.getNewPassword().length() < 8 ||
+                requestDto.getNewPassword().length() > 20
+        ) {
+            throw new IllegalArgumentException("새 비밀번호는 8자 이상이어야 하고, 숫자와 대문자를 포함해야 합니다.");
+        }
+    }
 
 
 }
+
+
+
+
+
+

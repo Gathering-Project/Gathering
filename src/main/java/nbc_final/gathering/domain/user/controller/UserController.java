@@ -3,15 +3,18 @@ package nbc_final.gathering.domain.user.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.response.ApiResponse;
+import nbc_final.gathering.domain.user.dto.request.UserChangePwRequestDto;
 import nbc_final.gathering.domain.user.dto.request.UserGetRequestDto;
 import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
 import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
 import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
-import nbc_final.gathering.domain.user.repository.UserService;
+import nbc_final.gathering.domain.user.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -45,5 +48,13 @@ public class UserController {
         userService.deleteUser(requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
+
+    @PutMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid UserChangePwRequestDto requestDto) {
+        userService.changePassword(requestDto, authUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.createSuccess(null));
+    }
+
+
 
 }
