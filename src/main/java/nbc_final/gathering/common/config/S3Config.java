@@ -4,24 +4,21 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import lombok.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class S3Config {
 
-    @Value("${S3_PUBLIC}")
+    @org.springframework.beans.factory.annotation.Value("${cloud.aws.s3.credentials.access-key}")
     private String accessKey;
 
-    @Value("${S3_SECRET}")
+    @org.springframework.beans.factory.annotation.Value("${cloud.aws.s3.credentials.secret-key}")
     private String secretKey;
 
-    @Value("${S3_REGION}")
+    @Value("${cloud.aws.s3.region.static}")
     private String region;
-
-    @Value("${S3_BUCKET}")
-    private String bucketName;
 
 
     @Bean

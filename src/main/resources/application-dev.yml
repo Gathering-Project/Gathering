@@ -2,6 +2,17 @@ server:
   port: 8080
 
 spring:
+  cloud:
+    aws:
+      s3:
+        bucket: ${cloud.aws.s3.bucket}
+      credentials:
+        accessKey: ${cloud.aws.s3.credentials.access-key}
+        secretKey: ${cloud.aws.s3.credentials.secret-key}
+      region:
+        static: ${cloud.aws.s3.region.static}
+      stack:
+        auto: false
 
   config:
     import: optional:file:.env[.properties]
@@ -28,19 +39,6 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
       enabled: true
-
-  cloud:
-    aws:
-      s3:
-        bucket: ${S3_BUCKET}
-      credentials:
-        accessKey: ${S3_PUBLIC}
-        secretKey: ${S3_SECRET}
-      region:
-        static: ${S3_REGION}
-      stack:
-        auto: false
-
 
 jwt:
   secret:

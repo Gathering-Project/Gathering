@@ -24,6 +24,10 @@ public class Attachment extends TimeStamped {
     @JoinColumn(name = "user_id")
     private User user;
 
+    public Attachment(User user, String fileUrl) {
+        super();
+    }
+
     //    @ManyToOne
 //    @JoinColumn(name = "group_id")
 //    private Group group
