@@ -3,7 +3,7 @@ package nbc_final.gathering.domain.user.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import nbc_final.gathering.common.response.ApiResponse;
+import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.user.dto.request.GetUserRequestDto;
 import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
 import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
