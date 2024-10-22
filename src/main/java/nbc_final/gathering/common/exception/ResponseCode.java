@@ -38,7 +38,8 @@ public enum ResponseCode {
     // 첨부파일 관련 예외
     NOT_FOUND_FILE(HttpStatus.NOT_FOUND, "해당 첨부파일을 찾을 수 없습니다."),
     NOT_SERVICE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다."),
-    TOO_LARGE_SIZE_FILE(HttpStatus.PAYLOAD_TOO_LARGE, "파일 크기가 너무 큽니다.");
+    TOO_LARGE_SIZE_FILE(HttpStatus.PAYLOAD_TOO_LARGE, "파일 크기가 너무 큽니다."),
+    NOT_USER_OR_GATHERING(HttpStatus.NOT_FOUND,"유저나 소모임의 정보가 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

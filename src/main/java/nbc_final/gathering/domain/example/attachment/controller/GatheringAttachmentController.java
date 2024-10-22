@@ -20,29 +20,52 @@ public class GatheringAttachmentController {
 
     private final GatheringAttachmentService attachmentService;
 
-    @PostMapping(value = "/gatherings/{gatheringId}/upload/userFile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /**
+     * 모임 프로필 이미지 업로드
+     *
+     * @param authUser    인증된 사용자 정보
+     * @param gatheringId 모임 ID
+     * @param file        업로드할 파일(requestpart로 전달)
+     * @return 업로드된 파일 정보가 담긴 응답 객체
+     * @throws IOException 파일 처리 중 예외 발생 시
+     */
+    @PostMapping(value = "/{gatheringId}/upload/userFile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> gatheringUploadFile(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId,
             @RequestPart("file") MultipartFile file
     ) throws IOException {
-        String fileUrl = attachmentService.gatheringUploadFile(authUser, gatheringId, file);
-        AttachmentResponseDto responseDto = new AttachmentResponseDto(fileUrl);
+        AttachmentResponseDto responseDto = attachmentService.gatheringUploadFile(authUser, gatheringId, file);
         return ResponseEntity.ok(ApiResponse.createSuccess(responseDto));
     }
 
-    @PutMapping("/gatherings/{gatheringId}/uploadUpdate/userFile")
+    /**
+     * 모임 프로필 이미지 수정
+     *
+     * @param authUser    인증된 사용자 정보
+     * @param gatheringId 모임 ID
+     * @param file        수정할 파일(requestpart로 전달)
+     * @return 수정된 파일 정보가 담긴 응답 객체
+     * @throws IOException 파일 처리 중 예외 발생 시
+     */
+    @PutMapping(value = "/{gatheringId}/uploadUpdate/userFile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> gatheringUpdateFile(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId,
             @RequestPart("file") MultipartFile file
     ) throws IOException {
-        String fileUrl = attachmentService.gatheringUpdateFile(authUser, gatheringId, file);
-        AttachmentResponseDto responseDto = new AttachmentResponseDto(fileUrl);
+        AttachmentResponseDto responseDto = attachmentService.gatheringUpdateFile(authUser, gatheringId, file);
         return ResponseEntity.ok(ApiResponse.createSuccess(responseDto));
     }
 
-    @DeleteMapping("/gatherings/{gatheringId}/delete/userFile")
+    /**
+     * 모임 프로필 이미지 삭제
+     *
+     * @param authUser    인증된 사용자 정보
+     * @param gatheringId 모임 ID
+     * @return 응답 없음 (HTTP 204 No Content)
+     */
+    @DeleteMapping("/{gatheringId}/delete/userFile")
     public ResponseEntity<?> gatheringDeleteFile(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId
@@ -51,4 +74,5 @@ public class GatheringAttachmentController {
         return ResponseEntity.noContent().build();
     }
 }
+
 

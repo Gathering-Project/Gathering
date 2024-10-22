@@ -16,7 +16,4 @@ public class AttachmentResponseDto {
         this.profileImagePath = attachment.getProfileImagePath();
         this.userId = attachment.getUser().getId();
     }
-
-    public AttachmentResponseDto(String fileUrl) {
-    }
 }

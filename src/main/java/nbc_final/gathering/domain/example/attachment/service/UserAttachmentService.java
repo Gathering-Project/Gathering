@@ -6,9 +6,9 @@ import io.jsonwebtoken.io.IOException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
-import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
+import nbc_final.gathering.domain.example.attachment.dto.AttachmentResponseDto;
 import nbc_final.gathering.domain.example.attachment.entity.Attachment;
 import nbc_final.gathering.domain.example.attachment.repository.AttachmentRepository;
 import nbc_final.gathering.domain.user.entity.User;
@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,7 +38,7 @@ public class UserAttachmentService {
 
     // 유저 프로필 등록
     @Transactional
-    public String userUploadFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException {
+    public AttachmentResponseDto userUploadFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException {
         validateFile(file);
 
         User user =userRepository.findById(authUser.getUserId())
@@ -50,13 +49,13 @@ public class UserAttachmentService {
         user.setProfileImagePath(fileUrl);
         userRepository.save(user);
 
-        saveAttachment(authUser, fileUrl);
-        return fileUrl;
+        Attachment attachment = saveUserAttachment(authUser, fileUrl);
+        return new AttachmentResponseDto(attachment);
     }
 
     // 유저 이미지 수정
     @Transactional
-    public String userUpdateFile (MultipartFile file, AuthUser user) throws IOException, java.io.IOException {
+    public AttachmentResponseDto userUpdateFile (MultipartFile file, AuthUser user) throws IOException, java.io.IOException {
         validateFile(file);
 
         // 기존 첨부 파일 찾기
@@ -65,7 +64,8 @@ public class UserAttachmentService {
             deleteFromS3(existingAttachment.getProfileImagePath());
         }
 
-        return userUploadFile(user, file);
+        AttachmentResponseDto responseDto = userUploadFile(user, file);
+        return responseDto;
     }
 
     // 유저 이미지 삭제
@@ -96,6 +96,7 @@ public class UserAttachmentService {
         amazonS3.deleteObject(bucketName, fileName);
     }
 
+    // s3 업로드 메서드
     private String uploadToS3(MultipartFile file) throws IOException, java.io.IOException {
         String fileName = file.getOriginalFilename();
         String fileUrl = "https://" + bucketName + "/profile-images/" + fileName;
@@ -108,7 +109,8 @@ public class UserAttachmentService {
         return fileUrl;
     }
 
-    private void saveAttachment(AuthUser authUser, String fileUrl) {
+    // 유저 첨부파일 저장 메서드
+    private Attachment saveUserAttachment(AuthUser authUser, String fileUrl) {
 
         // userId를 이용해 User 엔티티를 조회
         User user = userRepository.findById(authUser.getUserId())
@@ -118,6 +120,7 @@ public class UserAttachmentService {
         attachment.setUser(user);
         attachment.setProfileImagePath(fileUrl);
         attachmentRepository.save(attachment);
+        return attachment;
     }
 }
 
