@@ -11,7 +11,7 @@ import nbc_final.gathering.domain.comment.entity.Comment;
 import nbc_final.gathering.domain.comment.repository.CommentRepository;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
-import nbc_final.gathering.domain.member.entity.Member;
+import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
@@ -30,6 +30,7 @@ public class CommentService {
     private final UserRepository userRepository;
     private final GatheringRepository gatheringRepository;
     private final EventRepository eventRepository;
+    private final MemberRepository memberRepository;
 
     @Transactional
     public CommentSaveResponseDto saveComment(CommentSaveRequestDto commentSaveRequestDto, Long gatheringId, Long userId, Long eventId) {
@@ -37,22 +38,15 @@ public class CommentService {
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
 
-        //댓글 작성자 확인
-        boolean isMember = gathering.getMembers().contains(userId) || gathering.getId().equals(userId);
-        ;
-        if (!isMember) {
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
-        }
-
-        // 유저 내에서 유저의 권한을 확인
-        boolean isReadOnly = userRepository.existsByMemberIdAndEventIdAndUserRole(userId, eventId, UserRole.ROLE_USER);
-        if (isReadOnly) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
-
         //이벤트 존재 여부 확인
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+
+        //멤버 확인 여부
+        boolean isMember = memberRepository.existsByUserIdAndGatheringId(userId,gatheringId);
+        if (!isMember) {
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
+        }
 
         //댓글 작성자 존재 여부 확인
         User user = userRepository.findById(userId)
@@ -62,12 +56,8 @@ public class CommentService {
         Comment comment = new Comment(commentSaveRequestDto.getContent(), event, user);
         commentRepository.save(comment);
 
-        public CommentSaveRequestDto getUser(Long userId) {
-            User user = getUserById(userId);
-            return UserGetResponseDto.of(user);
+            return CommentSaveResponseDto.of(comment);
         }
-
-    }
 
 
     @Transactional
@@ -76,14 +66,15 @@ public class CommentService {
         Comment comment = getComment(commentId);
 
         //소모임 존재 여부 확인
-        Gathering gathering = gatheringRepository.findById(groupId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+        Gathering gathering = getGathering(groupId);
 
-        //사용자가 소모임의 멤버인지 확인
-        boolean isMember = gathering.getMembers() != null && gathering.getMembers().contains(userId) || gathering.getId().equals(userId);
-        if (!isMember) {
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
-        }
+//        //이벤트 존재 여부 확인
+//        Event event = eventRepository.findById(eventId)
+//                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+
+        //댓글 작성자 존재 여부 확인
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 
         //댓글 작성자인지 확인
         if (!comment.getUser().getId().equals(userId)) {
@@ -100,6 +91,12 @@ public class CommentService {
                 comment.getUpdatedAt());
     }
 
+    private Gathering getGathering(Long groupId) {
+        Gathering gathering = gatheringRepository.findById(groupId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+        return gathering;
+    }
+
     private Comment getComment(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_COMMENT));
@@ -107,29 +104,25 @@ public class CommentService {
     }
 
     @Transactional
-        public void deleteComment(Long commentId, Long userId, Long groupId, Long eventId) {
+        public void deleteComment(Long commentId, Long userId, Long gatheringId, Long eventId) {
             //댓글 존재 여부 확인
         Comment comment = getComment(commentId);
 
         //소모임 존재 여부 확인
-            Gathering gathering = gatheringRepository.findById(groupId)
-                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
-            ;
+        Gathering gathering = getGathering1(gatheringId);
 
-            //사용자가 소모임의 멤버인지 확인
+        //        //이벤트 존재 여부 확인
+//        Event event = eventRepository.findById(eventId)
+//                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+
+        //멤버 확인
+        memberRepository.findByUserIdAndGatheringId(userId, gatheringId);
+
+        //사용자가 소모임의 멤버인지 확인
             boolean isMember = gathering.getMembers().contains(userId) || gathering.getId().equals(userId);
             if (!isMember) {
                 throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
             }
-
-//        List<Member> members = gathering.getMembers();
-//        for (Member member : members) {
-//
-//            if (member.getId().equals(userId)) {
-//
-//            }
-//
-//        }
 
 
         //삭제 권한 확인
@@ -142,4 +135,10 @@ public class CommentService {
             //댓글 삭제
             commentRepository.delete(comment);
         }
+
+    private Gathering getGathering1(Long groupId) {
+        Gathering gathering = gatheringRepository.findById(groupId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+        return gathering;
     }
+}

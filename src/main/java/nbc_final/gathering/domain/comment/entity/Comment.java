@@ -7,7 +7,6 @@ import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.user.entity.User;
 
-import java.time.LocalDateTime;
 
 
 @Entity
@@ -23,9 +22,9 @@ public class Comment extends TimeStamped {
     @Column(name = "comment_contents", nullable = false, length = 200)
     private String content;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "gathering_id")
-//    private Gathering gathering;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "gathering_id")
+    private Gathering gathering;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
