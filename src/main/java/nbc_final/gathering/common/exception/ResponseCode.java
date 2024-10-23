@@ -27,9 +27,10 @@ public enum ResponseCode {
     ALREADY_REQUESTED(HttpStatus.CONFLICT, "이미 가입 된 모임입니다."),
 
     // 소모임 관련 예외
-    NOT_FOUND_GROUP(HttpStatus.NOT_FOUND, "해당 소모임을 찾을 수 없습니다."),
+    NOT_FOUND_GATHERING(HttpStatus.NOT_FOUND, "해당 소모임을 찾을 수 없습니다."),
     INVALID_TITLE(HttpStatus.NOT_FOUND, "타이틀을 입력해주세요."),
     INVALID_MAX_COUNT(HttpStatus.NOT_FOUND, "인원 수 입력이 잘못 되었습니다."),
+
 
     // 이벤트 관련 예외
     NOT_FOUND_EVENT(HttpStatus.NOT_FOUND, "해당 이벤트를 찾을 수 없습니다."),
