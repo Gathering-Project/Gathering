@@ -23,8 +23,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
-    username: ${root}
-    password: ${1004}
+    username: ${MYSQL_NAME}
+    password: ${MYSQL_PASSWORD}
 
   jpa:
     hibernate:
@@ -46,5 +46,5 @@ spring:
 
 jwt:
   secret:
-    key: ${fb8e84eb4aab4827836f3199efc34499f4bf6c5374cc404c8851fd5de54de518de53}
+    key: ${JWT_SECRET_KEY}
 
