@@ -119,7 +119,7 @@ public class CommentService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
         //멤버 확인
-        Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
+        Member member = memberRepository.findByIdAndGatheringId(userId, gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
 
         //댓글 작성자 확인
