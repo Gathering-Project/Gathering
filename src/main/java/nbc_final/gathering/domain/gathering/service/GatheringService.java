@@ -18,7 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -53,14 +55,7 @@ public class GatheringService {
     return new GatheringResponseDto(savedGathering);
   }
 
-  /*
-    {
-      title: "소모임 제목",
-      description: "소모임 설명",
-      groupMaxCount: 10
-    }
-  */
-  // 소모임 단건 조회 로직
+  // 소모임 단 건 조회 로직
   public GatheringResponseDto getGathering(AuthUser authUser, Long gatheringId) {
 
     List<Member> members = findMembersByUserId(authUser);
@@ -73,6 +68,25 @@ public class GatheringService {
       }
     }
     throw new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING);
+  }
+
+  // 유저가 가입한 소모임 다 건 조회 로직
+  public List<GatheringResponseDto> getAllGatherings(AuthUser authUser) {
+
+    List<Member> members = memberRepository.findByUserId(authUser.getUserId());
+
+    // 각 Member가 참여한 소모임을 모두 조회
+    List<GatheringResponseDto> gatheringResponses = new ArrayList<>();
+
+    for (Member member : members) {
+      Gathering gathering = findGatheringByMember(member);
+      if (gathering != null) {
+        gatheringResponses.add(new GatheringResponseDto(gathering));
+      }
+    }
+
+    // DTO List 변환
+    return gatheringResponses;
   }
 
   ////////////////////// 에러 처리를 위한 메서드 ///////////////////////
@@ -89,6 +103,12 @@ public class GatheringService {
       throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
     }
     return members;
+  }
+
+  private Gathering findGatheringByMember(Member member) {
+    return gatheringRepository.findByMembers(member).orElseThrow(
+        () -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING)
+    );
   }
 
 
