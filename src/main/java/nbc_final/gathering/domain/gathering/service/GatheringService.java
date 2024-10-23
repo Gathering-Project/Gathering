@@ -10,6 +10,7 @@ import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.enums.Role;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
+import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.repository.UserRepository;
@@ -27,7 +28,6 @@ public class GatheringService {
   private final UserRepository userRepository;
   private final MemberRepository memberRepository;
 
-
   // 그룹 생성 로직
   @Transactional
   public GatheringResponseDto createGroup(AuthUser authUser, GatheringRequestDto gatheringRequestDto) {
@@ -43,7 +43,7 @@ public class GatheringService {
     );
 
     // 주최자 추가
-    Member member = new Member(user, savedGathering, Role.HOST);
+    Member member = new Member(user, savedGathering, MemberRole.HOST);
     savedGathering.getMembers().add(member);
 
     // 그룹 저장
