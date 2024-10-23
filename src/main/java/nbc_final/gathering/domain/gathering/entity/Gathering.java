@@ -63,8 +63,8 @@ public class Gathering extends TimeStamped {
     this.location = location;
   }
 
-  public void setGatheringImage(String gatheringImage){
-    this. gatheringImage = gatheringImage;
+  public void setGatheringImage(String gatheringImage) {
+    this.gatheringImage = gatheringImage;
   }
 
   public void updateDetails(String title,

@@ -7,7 +7,6 @@ import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
-import nbc_final.gathering.domain.gathering.enums.Role;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
@@ -20,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -114,7 +111,6 @@ public class GatheringService {
   }
 
 
-
   ////////////////////// 에러 처리를 위한 메서드 ///////////////////////
 
   private User findUserById(AuthUser authUser) {
@@ -155,7 +151,6 @@ public class GatheringService {
       throw new ResponseCodeException(ResponseCode.FORBIDDEN);
     }
   }
-
 
 
 }
