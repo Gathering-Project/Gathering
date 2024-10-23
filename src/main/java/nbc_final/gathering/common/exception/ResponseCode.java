@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 public enum ResponseCode {
 
     // 공통 응답
-    SUCCESS(HttpStatus.OK, "정상 처리되었습니다."),
     INVALID_TIMEOUT(HttpStatus.REQUEST_TIMEOUT, "다시 시도해주세요."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
 

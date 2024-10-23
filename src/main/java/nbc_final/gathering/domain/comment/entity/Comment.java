@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
+import nbc_final.gathering.domain.event.entity.Event;
+import nbc_final.gathering.domain.event.entity.QEvent;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.user.entity.User;
 
@@ -40,6 +42,7 @@ public class Comment extends TimeStamped {
         this.event = event;
         this.user = user;
     }
+
 
     //댓글 수정 메서드
     public void updateContent(String newContent){

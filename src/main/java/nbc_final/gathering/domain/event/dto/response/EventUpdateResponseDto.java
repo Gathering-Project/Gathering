@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nbc_final.gathering.domain.event.entity.Event;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor
 public class EventUpdateResponseDto {
@@ -15,6 +17,8 @@ public class EventUpdateResponseDto {
     private String location;
     private Integer maxParticipants;
     private Integer currentParticipants;
+    private LocalDateTime createdAt;
+    private LocalDateTime updateAt;
 
     public static EventUpdateResponseDto of(Event event) {
         return new EventUpdateResponseDto(
@@ -24,7 +28,9 @@ public class EventUpdateResponseDto {
                 event.getDate(),
                 event.getLocation(),
                 event.getMaxParticipants(),
-                event.getCurrentParticipants()
+                event.getCurrentParticipants(),
+                event.getCreatedAt(),
+                event.getUpdatedAt()
         );
     }
 }

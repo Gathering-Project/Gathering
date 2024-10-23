@@ -2,17 +2,10 @@ spring:
   datasource:
     url: jdbc:h2:mem:test
     username: sa
-    password:
     driverClassName: org.h2.Driver
   h2:
     console:
       enabled: true
-  config:
-    import: optional:file:.env[.properties]
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
 
   jpa:
     hibernate:
@@ -34,13 +27,11 @@ spring:
 cloud:
   aws:
     s3:
-      bucket: ${S3_BUCKET}
+      bucket: ${cloud.aws.s3.bucket}
     credentials:
-      accessKey: ${S3_PUBLIC}
-      secretKey: ${S3_SECRET}
+      accessKey: ${cloud.aws.s3.credentials.access-key}
+      secretKey: ${cloud.aws.s3.credentials.secret-key}
     region:
-      static: ${S3_REGION}
+      static: ${cloud.aws.s3.region.static}
     stack:
       auto: false
-
-slackBotToken: ${SLACKBOT_TOKEN}

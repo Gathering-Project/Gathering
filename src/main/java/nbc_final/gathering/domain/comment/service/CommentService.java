@@ -7,6 +7,8 @@ import nbc_final.gathering.domain.comment.dto.request.CommentRequestDto;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
 import nbc_final.gathering.domain.comment.entity.Comment;
 import nbc_final.gathering.domain.comment.repository.CommentRepository;
+import nbc_final.gathering.domain.event.entity.Event;
+import nbc_final.gathering.domain.event.repository.EventRepository;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
@@ -18,6 +20,8 @@ import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static nbc_final.gathering.domain.event.entity.QEvent.event;
+
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +30,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final GatheringRepository gatheringRepository;
-//    private final EventRepository eventRepository;
+    private final EventRepository eventRepository;
     private final MemberRepository memberRepository;
 
     @Transactional
@@ -35,9 +39,9 @@ public class CommentService {
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
-//        //이벤트 존재 여부 확인
-//        Event event = eventRepository.findById(eventId)
-//                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+        //이벤트 존재 여부 확인
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
         //멤버 확인 여부
         boolean isMember = memberRepository.existsByUserIdAndGatheringId(userId, gatheringId);
@@ -50,7 +54,7 @@ public class CommentService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 
         //댓글 생성
-        Comment comment = new Comment(commentSRequestDto.getContent(), event, user);
+        Comment comment = new Comment(commentRequestDto.getContent(), event, user);
         commentRepository.save(comment);
 
         return CommentResponseDto.of(comment);
@@ -65,9 +69,9 @@ public class CommentService {
         //소모임 존재 여부 확인
         Gathering gathering = getGathering(gatheringId);
 
-//        //이벤트 존재 여부 확인
-//        Event event = eventRepository.findById(eventId)
-//                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+        //이벤트 존재 여부 확인
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
         //댓글 작성자 존재 여부 확인
         User user = userRepository.findById(userId)
@@ -110,9 +114,9 @@ public class CommentService {
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(()-> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
-        //        //이벤트 존재 여부 확인
-//        Event event = eventRepository.findById(eventId)
-//                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+                //이벤트 존재 여부 확인
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
         //멤버 확인
         Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
