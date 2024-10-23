@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class EventService {
 
     private final ParticipantRepository participantRepository;
@@ -36,7 +37,6 @@ public class EventService {
     private final GatheringRepository gatheringRepository;
 
     // 이벤트 생성 (권한: 소모임 멤버 또는 어드민)
-    @Transactional
     public EventResponseDto createEvent(Long userId, Long gatheringId, EventCreateRequestDto requestDto) {
         checkAdminOrGatheringMember(userId, gatheringId);
 
@@ -57,7 +57,6 @@ public class EventService {
 
 
     // 이벤트 수정 (권한: 소모임 생성자 또는 이벤트 생성자)
-    @Transactional
     public EventUpdateResponseDto updateEvent(Long userId, Long gatheringId, Long eventId, EventUpdateRequestDto requestDto) {
 
         checkGatheringCreatorOrEventCreator(userId, eventId, gatheringId);
@@ -75,6 +74,7 @@ public class EventService {
     }
 
     // 이벤트 다건 조회 (권한: 소모임 멤버 또는 어드민)
+    @Transactional(readOnly = true)
     public EventListResponseDto getAllEvents(Long userId, Long gatheringId) {
         // 공통 권한 검증
         checkAdminOrGatheringMember(userId, gatheringId);
@@ -95,7 +95,7 @@ public class EventService {
         return EventResponseDto.of(event, userId);
     }
 
-    // 검증 권한: 어드민, 이벤트 생성자, 소모임 생성자
+    // 이벤트 삭제 (검증 권한: 어드민, 이벤트 생성자, 소모임 생성자)
     @Transactional
     public void deleteEvent(Long userId, Long gatheringId, Long eventId) {
 
@@ -107,8 +107,7 @@ public class EventService {
         eventRepository.delete(event);
     }
 
-    // 이벤트 참가 (권한: 소모임 멤버 또는 어드민)
-    @Transactional
+    // 이벤트 참가 신청 (권한: 소모임 멤버 또는 어드민)
     public void participateInEvent(Long userId, Long gatheringId, Long eventId) {
         // 공통 권한 검증
         checkAdminOrGatheringMember(userId, gatheringId);
@@ -140,7 +139,6 @@ public class EventService {
     }
 
     // 이벤트 참가 취소 (권한: 소모임 멤버 또는 어드민)
-    @Transactional
     public void cancelParticipation(Long userId, Long gatheringId, Long eventId) {
 
         checkAdminOrGatheringMember(userId, gatheringId);
@@ -152,21 +150,6 @@ public class EventService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_PARTICIPATED));
 
         event.removeParticipant(participant);
-    }
-
-
-
-    // 공통 권한 검증 (권한: 소모임 멤버 또는 어드민)
-    private void checkAdminOrGatheringMember(Long userId, Long gatheringId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
-        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
-        boolean isGatheringMember = eventRepositoryCustom.isUserInGathering(gatheringId, userId);
-
-        if (!isAdmin && !isGatheringMember) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
     }
 
     // 이벤트 참가자 조회 (권한: 소모임 멤버 또는 어드민)
@@ -182,6 +165,23 @@ public class EventService {
         return participants.stream()
                 .map(ParticipantResponseDto::from)
                 .collect(Collectors.toList());
+    }
+
+
+
+
+
+    // 공통 권한 검증 (권한: 소모임 멤버 또는 어드민)
+    private void checkAdminOrGatheringMember(Long userId, Long gatheringId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        boolean isGatheringMember = eventRepositoryCustom.isUserInGathering(gatheringId, userId);
+
+        if (!isAdmin && !isGatheringMember) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
     }
 
     // 삭제 기능 (권한: 어드민, 이벤트 생성자, 소모임 생성자)
