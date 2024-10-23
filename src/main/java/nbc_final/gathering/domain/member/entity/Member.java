@@ -39,7 +39,7 @@ public class Member extends TimeStamped {
     this.user = user;
     this.gathering = gathering;
     this.role = role;
-    this.status = MemberStatus.PENDING;  // 기본값 PENDING 설정
+    this.status = MemberStatus.PENDING;
   }
 
   // 네 가지 인자를 받는 기존 생성자
@@ -56,5 +56,13 @@ public class Member extends TimeStamped {
 
   public void setRole(MemberRole role) {
     this.role = role;
+  }
+
+  public void reject() {
+    if (this.status == MemberStatus.PENDING) {
+      this.status = MemberStatus.REJECTED;
+    } else {
+      throw new IllegalStateException("Only pending members can be rejected.");
+    }
   }
 }
