@@ -69,9 +69,14 @@ public class GatheringAttachmentService {
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
 
-        Attachment existingAttachment = attachmentRepository.findByUserAndGathering(authUser, gathering);
-        if (existingAttachment != null) {
-            deleteFromS3(existingAttachment.getProfileImagePath());
+        // AuthUser에서 User 엔티티 조회
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        List<Attachment> existingAttachment = attachmentRepository.findByUserAndGathering(user, gathering);
+        for (Attachment attachment : existingAttachment) {
+            deleteFromS3(attachment.getProfileImagePath());
+            attachmentRepository.delete(attachment);
         }
         AttachmentResponseDto responseDto = gatheringUploadFile(authUser, gatheringId, file);
         return responseDto;
@@ -84,11 +89,15 @@ public class GatheringAttachmentService {
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
 
+        // AuthUser에서 User 엔티티 조회
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
         // 기존 파일 찾기
-        Attachment existingAttachment = attachmentRepository.findByUserAndGathering(authUser, gathering);
-        if (existingAttachment != null) {
-            deleteFromS3(existingAttachment.getProfileImagePath());
-            attachmentRepository.delete(existingAttachment);
+        List<Attachment> existingAttachment = attachmentRepository.findByUserAndGathering(user, gathering);
+        for (Attachment attachment : existingAttachment) {
+            deleteFromS3(attachment.getProfileImagePath());
+            attachmentRepository.delete(attachment);
         }
     }
 
@@ -109,6 +118,7 @@ public class GatheringAttachmentService {
         amazonS3.deleteObject(bucketName, fileName);
     }
 
+    // s3업로드 메서드
     private String uploadToS3(MultipartFile file) throws IOException, java.io.IOException {
         String fileName = file.getOriginalFilename();
         String fileUrl = "https://" + bucketName + "/profile-images/" + fileName;
