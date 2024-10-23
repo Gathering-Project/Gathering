@@ -11,7 +11,7 @@ public class ApiResponse<T> {
 
     // 성공 응답 생성
     public static <T> ApiResponse<T> createSuccess(T data) {
-        return new ApiResponse<>(HttpStatus.OK.value(), "요청이 성공적으로 처리되었습니다.", data);
+        return new ApiResponse<>(HttpStatus.OK.value(), "정상 처리되었습니다.", data);
     }
 
     // 에러 응답 생성 (상태 코드와 메시지를 함께 반환)
