@@ -10,6 +10,4 @@ import nbc_final.gathering.domain.member.enums.MemberRole;
 @AllArgsConstructor
 public class MemberRequestDto {
     private Long gatheringId;
-    private Long userId;
-    private MemberRole role;
 }

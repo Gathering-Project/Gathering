@@ -9,7 +9,6 @@ import nbc_final.gathering.domain.member.enums.MemberStatus;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class MemberResponseDto {
     private Long id;
     private Long gatheringId;
@@ -17,11 +16,21 @@ public class MemberResponseDto {
     private MemberRole role;
     private MemberStatus status;
 
-    public MemberResponseDto(Member member) {
-        this.id = member.getId();
-        this.gatheringId = member.getGathering().getId();
-        this.userId = member.getUser().getId();
-        this.role = member.getRole();
-        this.status = member.getStatus();
+    private MemberResponseDto(Long id, Long gatheringId, Long userId, MemberRole role, MemberStatus status) {
+        this.id = id;
+        this.gatheringId = gatheringId;
+        this.userId = userId;
+        this.role = role;
+        this.status = status;
+    }
+
+    public static MemberResponseDto from(Member member) {
+        return new MemberResponseDto(
+                member.getId(),
+                member.getGathering().getId(),
+                member.getUser().getId(),
+                member.getRole(),
+                member.getStatus()
+        );
     }
 }

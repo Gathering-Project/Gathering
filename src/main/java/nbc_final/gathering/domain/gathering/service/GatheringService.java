@@ -10,6 +10,7 @@ import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
+import nbc_final.gathering.domain.member.enums.MemberStatus;
 import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
@@ -44,7 +45,7 @@ public class GatheringService {
     );
 
     // 주최자 추가
-    Member member = new Member(user, savedGathering, MemberRole.HOST);
+    Member member = new Member(user, savedGathering, MemberRole.HOST, MemberStatus.APPROVED);
     savedGathering.getMembers().add(member);
 
     // 그룹 저장
