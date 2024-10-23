@@ -6,20 +6,18 @@ import nbc_final.gathering.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-
-import java.util.List;
 import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
   List<Member> findByUserId(Long userId);
 
-    boolean existsByUserAndGathering(User user, Gathering gathering);
+  boolean existsByUserAndGathering(User user, Gathering gathering);
 
-    Optional<Member> findByUserAndGathering(User user, Gathering gathering);
+  Optional<Member> findByUserAndGathering(User user, Gathering gathering);
 
-    boolean existsByUserIdAndGatheringId(Long userId, Long gatheringId);
+  boolean existsByUserIdAndGatheringId(Long userId, Long gatheringId);
 
-    List<Member> findAllByGatheringId(Long gatheringId);
+  List<Member> findAllByGatheringId(Long gatheringId);
 
-    Optional<Member> findByIdAndGatheringId(Long memberId, Long gatheringId);
+  Optional<Member> findByIdAndGatheringId(Long memberId, Long gatheringId);
 }

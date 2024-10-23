@@ -12,14 +12,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/gatherings")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class GatheringController {
 
   private final GatheringService gatheringService;
 
   // 반환 데이터 존재 O
-  @PostMapping
+  @PostMapping("/v1/gatherings")
   public ResponseEntity<ApiResponse<GatheringResponseDto>> createGroup(@AuthenticationPrincipal AuthUser authUser,
                                                                        @RequestBody @Valid GatheringRequestDto gatheringRequestDto) {
 
@@ -41,7 +41,7 @@ public class GatheringController {
   }
   */
   // 반환 데이터 존재 O
-  @GetMapping("/{gatheringId}")
+  @GetMapping("/v1/gatherings/{gatheringId}")
   public ResponseEntity<ApiResponse<GatheringResponseDto>> getGathering(@AuthenticationPrincipal AuthUser authUser,
                                                                         @PathVariable @Valid Long gatheringId) {
 
