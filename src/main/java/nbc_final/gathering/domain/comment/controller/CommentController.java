@@ -5,6 +5,7 @@ import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.comment.dto.request.CommentRequestDto;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
+import nbc_final.gathering.domain.comment.entity.Comment;
 import nbc_final.gathering.domain.comment.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -55,7 +56,7 @@ public class CommentController {
             @PathVariable Long eventId,
             @AuthenticationPrincipal AuthUser authUser) {
         Long userId = authUser.getUserId();  // 인증된 사용자의 ID 사용
-        Comment0 ResponseDto commentUpdateResponseDto = commentService.updateComment(commentUpdateRequestDto, commentId, userId, gatheringId, eventId);
+        CommentResponseDto commentUpdateResponseDto = commentService.updateComment(commentUpdateRequestDto, commentId, userId, gatheringId, eventId);
         return ResponseEntity.ok(ApiResponse.createSuccess(commentUpdateResponseDto));
     }
 

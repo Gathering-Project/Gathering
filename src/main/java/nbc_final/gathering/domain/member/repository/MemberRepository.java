@@ -20,5 +20,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByIdAndGatheringId(Long memberId, Long gatheringId);
 
     Optional<Member> findByUserIdAndGatheringId(Long userId, Long gatheringId);
-  Optional<Member> findByIdAndGatheringId(Long memberId, Long gatheringId);
+
+    List<Member> findByUserId(Long userId);
 }

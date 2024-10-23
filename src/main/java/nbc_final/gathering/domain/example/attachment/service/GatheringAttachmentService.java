@@ -46,7 +46,7 @@ public class GatheringAttachmentService {
 
         // Gathering 객체를 조회
         Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
         // S3에 파일 업로드 후 URL 반환
         String fileUrl = uploadToS3(file);
@@ -67,7 +67,7 @@ public class GatheringAttachmentService {
 
         // Gathering 객체를 조회
         Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
         Attachment existingAttachment = attachmentRepository.findByUserAndGathering(authUser, gathering);
         if (existingAttachment != null) {
@@ -82,7 +82,7 @@ public class GatheringAttachmentService {
     public void gatheringDeleteFile(AuthUser authUser, Long gatheringId) {
         // gatheringId를 사용하여 Gathering 엔티티를 조회
         Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
         // 기존 파일 찾기
         Attachment existingAttachment = attachmentRepository.findByUserAndGathering(authUser, gathering);
@@ -126,7 +126,7 @@ public class GatheringAttachmentService {
 
         // gathering이 제대로 전달되는지 확인
         if (gathering == null) {
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP);
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING);
         }
 
         // User 엔티티 조회
