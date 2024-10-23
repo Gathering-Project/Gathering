@@ -12,6 +12,7 @@ import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.entity.User;
+import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -110,6 +111,20 @@ public class GatheringService {
     return new GatheringResponseDto(gathering);
   }
 
+  @Transactional
+  public void deleteGathering(AuthUser authUser, Long gatheringId) {
+    // 소모임 조회
+    Gathering gathering = findGatheringById(gatheringId);
+
+    // 사용자 권한 검증 (호스트인지 확인)
+    validateUserPermission(authUser, gathering);
+
+    // 모임과 관련된 멤버 삭제
+    memberRepository.deleteByGathering(gathering); // 모임에 속한 멤버를 삭제하는 메서드
+
+    // 모임 삭제
+    gatheringRepository.delete(gathering);
+  }
 
   ////////////////////// 에러 처리를 위한 메서드 ///////////////////////
 
@@ -146,8 +161,8 @@ public class GatheringService {
     Member member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
         () -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER)
     );
-    //
-    if (member.getRole() != MemberRole.HOST) {
+    // 호스트가 아니거나, 어드민이 아니면 권한 X
+    if ((member.getRole() != MemberRole.HOST) || (user.getUserRole() != UserRole.ROLE_ADMIN)) {
       throw new ResponseCodeException(ResponseCode.FORBIDDEN);
     }
   }

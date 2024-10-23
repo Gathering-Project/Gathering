@@ -85,4 +85,21 @@ public class GatheringController {
         ApiResponse.createSuccess(res)
     );
   }
+
+  /**
+   * 소모임 삭제
+   *
+   * @param authUser
+   * @param gatheringId
+   * @return
+   */
+  @DeleteMapping("/v1/gatherings/{gatheringId}")
+  public ResponseEntity<ApiResponse<Void>> deleteGathering(
+      @AuthenticationPrincipal AuthUser authUser,
+      @PathVariable @Valid Long gatheringId) {
+
+    gatheringService.deleteGathering(authUser, gatheringId);
+    return ResponseEntity.ok(ApiResponse.createSuccess(null));
+  }
+
 }
