@@ -16,6 +16,7 @@ import nbc_final.gathering.domain.user.enums.UserRole;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -24,30 +25,24 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtSecurityFilter extends OncePerRequestFilter {
-
     private final JwtUtil jwtUtil;
-
     @Override
     protected void doFilterInternal(
             HttpServletRequest httpRequest,
             @NonNull HttpServletResponse httpResponse,
             @NonNull FilterChain chain
     ) throws ServletException, IOException {
-        String authorizationHeader = httpRequest.getHeader("Authorization");
-
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String jwt = jwtUtil.substringToken(authorizationHeader);
+        String tokenValue = jwtUtil.getTokenFromRequest(httpRequest);
+        if (StringUtils.hasText(tokenValue)) {
+            String jwt = jwtUtil.substringToken(tokenValue);
             try {
                 Claims claims = jwtUtil.extractClaims(jwt);
-                Long userId = Long.valueOf(claims.getSubject());
+                Long userId = Long.parseLong(claims.getSubject());
                 String email = claims.get("email", String.class);
                 UserRole userRole = UserRole.of(claims.get("userRole", String.class));
-                String nickName = claims.get("nickName", String.class);
-
-                if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    AuthUser authUser = new AuthUser(userId, email, userRole, nickName);
-
+                String nickname = claims.get("nickname", String.class);
+                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    AuthUser authUser = new AuthUser(userId, email, userRole, nickname);
                     JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(authUser);
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpRequest));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);

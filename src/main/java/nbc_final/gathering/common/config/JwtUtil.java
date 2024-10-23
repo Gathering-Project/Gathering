@@ -1,8 +1,6 @@
 package nbc_final.gathering.common.config;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
@@ -47,15 +45,16 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(bytes);
     }
 
+    // 토큰 생성
     public String createToken(Long userId, String email, UserRole userRole, String nickName) {
         Date date = new Date();
 
         return BEARER_PREFIX +
                 Jwts.builder()
-                        .setSubject(String.valueOf(userId))
-                        .claim("email", email)
-                        .claim("userRole", userRole)
-                        .claim("nickName", nickName)
+                        .setSubject(String.valueOf(userId)) // 사용자 식별 값
+                        .claim("email", email) // 사용자 이메일
+                        .claim("userRole", userRole) // 사용자 권한
+                        .claim("nickName", nickName) // 사용자 닉네임
                         .setExpiration(new Date(date.getTime() + TOKEN_TIME))
                         .setIssuedAt(date) // 발급일
                         .signWith(key, signatureAlgorithm) // 암호화 알고리즘
@@ -97,6 +96,25 @@ public class JwtUtil {
             return tokenValue.substring(7);
         }
         throw new ServerException("Not Found Token");
+    }
+
+    public boolean validateToken(String token) {
+        try {//암호화할떄 사용한 키를 .setSigningkey , parseClaimsJws(token)은 받아와서 검증할 토큰
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (SecurityException | MalformedJwtException | SignatureException e) {
+            System.out.println("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
+        } catch (ExpiredJwtException e) {
+            System.out.println("Expired JWT token, 만료된 JWT token 입니다.");
+        } catch (UnsupportedJwtException e) {
+            System.out.println("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("JWT claims is empty, 잘못된 JWT 토큰 입니다.");
+        }
+        return false;
+    }
+    public Claims getUserInfoFromToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 
     public Claims extractClaims(String token) {

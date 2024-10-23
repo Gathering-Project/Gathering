@@ -8,4 +8,5 @@ public enum InterestType {
     GAMING,     // 게임
     EATING,     // 식사
     DRAWING     // 그림
+
 }
