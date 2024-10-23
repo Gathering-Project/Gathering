@@ -43,7 +43,10 @@ public class EventService {
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
-        Event event = Event.of(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(), requestDto.getLocation(), requestDto.getMaxParticipants(), gathering, userId
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        Event event = Event.of(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(), requestDto.getLocation(), requestDto.getMaxParticipants(), gathering, user
         );
         eventRepository.save(event);
 
@@ -123,7 +126,7 @@ public class EventService {
         }
 
         // 호스트는 직접 신청할 수 없음
-        if (event.getUserId().equals(userId)) {
+        if (event.getUser().getId().equals(userId)) {
             throw new ResponseCodeException(ResponseCode.EVENT_CREATOR_CANNOT_PARTICIPATE);
         }
 
@@ -193,7 +196,7 @@ public class EventService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
         boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
-        boolean isEventCreator = event.getUserId().equals(userId);
+        boolean isEventCreator = event.getUser().getId().equals(userId);
         boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
 
         if (!isAdmin && !isEventCreator && !isGatheringCreator) {
@@ -208,7 +211,7 @@ public class EventService {
 
         boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
 
-        boolean isEventCreator = event.getUserId().equals(userId);
+        boolean isEventCreator = event.getUser().getId().equals(userId);
 
         if (!isGatheringCreator && !isEventCreator) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api")
 public class UserController {
 
     private final UserService userService;
@@ -24,10 +24,10 @@ public class UserController {
     /**
      * 유저 회원가입
      *
-     * @param requestDto
-     * @return
+     * @param requestDto 생성 요청 데이터
+     * @return 유저(회원) 생성
      */
-    @PostMapping("/signup")
+    @PostMapping("/v1/users/signup")
     public ResponseEntity<ApiResponse<SignUpResponseDto>> signup(@RequestBody @Valid SignupRequestDto requestDto) {
         SignUpResponseDto res = userService.signup(requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
@@ -36,11 +36,11 @@ public class UserController {
     /**
      * 유저 로그인
      *
-     * @param requestDto
-     * @param response
-     * @return
+     * @param requestDto 생성 요청 데이터
+     * @param response http 응답
+     * @return 유저 로그인
      */
-    @PostMapping("/login")
+    @PostMapping("/v1/users/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(@RequestBody @Valid LoginRequestDto requestDto, HttpServletResponse response) {
         LoginResponseDto res = userService.login(requestDto, response);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
@@ -49,10 +49,10 @@ public class UserController {
 
     /**유저 조회
      *
-     * @param userId
-     * @return
+     * @param userId 유저 ID
+     * @return 조회된 유저 정보
      */
-    @GetMapping("/{userId}")
+    @GetMapping("/v1/users/{userId}")
     public ResponseEntity<ApiResponse<UserGetResponseDto>> getUser(@PathVariable Long userId) {
         UserGetResponseDto res = userService.getUser(userId);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
@@ -61,11 +61,11 @@ public class UserController {
     /**
      * 유저 회원 탈퇴
      *
-     * @param authUser
-     * @param requestDto
-     * @return
+     * @param authUser 인증 사용자
+     * @param requestDto 생성 요청 데이터
+     * @return 성공 여부
      */
-    @DeleteMapping
+    @DeleteMapping("/v1/users")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid UserDeleteRequestDto requestDto) {
         userService.deleteUser(authUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
@@ -74,11 +74,11 @@ public class UserController {
     /**
      * 유저 비밀번호 변경
      *
-     * @param authUser
-     * @param requestDto
-     * @return
+     * @param authUser 인증 사용자
+     * @param requestDto 생성 요청 데이터
+     * @return 성공 여부
      */
-    @PutMapping("/password")
+    @PutMapping("/v1/users/password")
     public ResponseEntity<ApiResponse<Void>> changePassword(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid UserChangePwRequestDto requestDto) {
         userService.changePassword(requestDto, authUser.getUserId());
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
@@ -87,11 +87,11 @@ public class UserController {
     /**
      * 유저 정보 수정
      *
-     * @param authUser
-     * @param requestDto
-     * @return
+     * @param authUser 인증 사용자
+     * @param requestDto 생성 요청 데이터
+     * @return 수정된 유저 상세 정보
      */
-    @PutMapping
+    @PutMapping("/v1/users")
     public ResponseEntity<ApiResponse<UserGetResponseDto>> updateMyInfo(@AuthenticationPrincipal AuthUser authUser, @RequestBody UserUpdateRequestDto requestDto) {
         UserGetResponseDto res = userService.updateInfo(authUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));

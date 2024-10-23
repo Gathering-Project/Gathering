@@ -20,6 +20,7 @@ public enum ResponseCode {
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "잘못된 비밀번호입니다."),
     VIOLATION_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호는 8자 이상이어야 하고, 숫자와 영문자를 포함해야 합니다."),
     USER_ALREADY_DELETED(HttpStatus.GONE, "이미 탈퇴한 회원입니다."),
+    INVALID_ADMIN_TOKEN(HttpStatus.BAD_REQUEST, "관리자 인증이 확인되지 않았습니다"),
 
     // 멤버 관련 예외
     NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "해당 멤버를 찾을 수 없습니다."),
