@@ -3,10 +3,8 @@ package nbc_final.gathering.domain.comment.controller;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
-import nbc_final.gathering.domain.comment.dto.request.CommentSaveRequestDto;
-import nbc_final.gathering.domain.comment.dto.request.CommentUpdateRequestDto;
-import nbc_final.gathering.domain.comment.dto.response.CommentSaveResponseDto;
-import nbc_final.gathering.domain.comment.dto.response.CommentUpdateResponseDto;
+import nbc_final.gathering.domain.comment.dto.request.CommentRequestDto;
+import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
 import nbc_final.gathering.domain.comment.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,21 +20,21 @@ public class CommentController {
     /**
      * 새로운 댓글을 저장
      *
-     * @param commentSaveRequestDto 저장할 댓글의 정보를 담은 DTO
+     * @param commentRequestDto 저장할 댓글의 정보를 담은 DTO
      * @param gatheringId            모임의 ID
      * @param eventId                이벤트의 ID
      * @param authUser               인증된 사용자의 정보
      * @return 저장된 댓글의 정보를 포함한 성공 응답
      */
     @PostMapping("/v1/gatherings/{gatheringId}/events/{eventId}/comments")
-    public ResponseEntity<ApiResponse<CommentSaveResponseDto>> saveComment(
-            @RequestBody CommentSaveRequestDto commentSaveRequestDto,
+    public ResponseEntity<ApiResponse<CommentResponseDto>> saveComment(
+            @RequestBody CommentRequestDto commentRequestDto,
             @PathVariable Long gatheringId,
             @PathVariable Long eventId,
             @AuthenticationPrincipal AuthUser authUser) {
         Long userId = authUser.getUserId();  // 인증된 사용자의 ID 사용
-        CommentSaveResponseDto commentSaveResponseDto = commentService.saveComment(commentSaveRequestDto, gatheringId, userId, eventId);
-        return ResponseEntity.ok(ApiResponse.createSuccess(commentSaveResponseDto));
+        CommentResponseDto commentResponseDto = commentService.saveComment(commentRequestDto, gatheringId, userId, eventId);
+        return ResponseEntity.ok(ApiResponse.createSuccess(commentResponseDto));
     }
 
     /**
@@ -50,14 +48,14 @@ public class CommentController {
      * @return 수정된 댓글의 정보를 포함한 성공 응답
      */
     @PutMapping("/v1/gatherings/{gatheringId}/events/{eventId}/comments/{commentId}")
-    public ResponseEntity<ApiResponse<CommentUpdateResponseDto>> updateComment(
-            @RequestBody CommentUpdateRequestDto commentUpdateRequestDto,
+    public ResponseEntity<ApiResponse<CommentResponseDto>> updateComment(
+            @RequestBody CommentRequestDto commentUpdateRequestDto,
             @PathVariable Long commentId,
             @PathVariable Long gatheringId,
             @PathVariable Long eventId,
             @AuthenticationPrincipal AuthUser authUser) {
         Long userId = authUser.getUserId();  // 인증된 사용자의 ID 사용
-        CommentUpdateResponseDto commentUpdateResponseDto = commentService.updateComment(commentUpdateRequestDto, commentId, userId, gatheringId, eventId);
+        Comment0 ResponseDto commentUpdateResponseDto = commentService.updateComment(commentUpdateRequestDto, commentId, userId, gatheringId, eventId);
         return ResponseEntity.ok(ApiResponse.createSuccess(commentUpdateResponseDto));
     }
 

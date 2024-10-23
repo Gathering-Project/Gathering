@@ -62,4 +62,8 @@ public class Gathering extends TimeStamped {
     this.rating = rating;
     this.location = location;
   }
+
+  public void setGatheringImage(String gatheringImage){
+    this. gatheringImage = gatheringImage;
+  }
 }

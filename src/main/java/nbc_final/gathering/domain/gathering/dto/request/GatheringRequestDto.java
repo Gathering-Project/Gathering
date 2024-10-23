@@ -11,6 +11,7 @@ public class GatheringRequestDto {
 
   private String title;
   private String description;
+  private String gatheringImage;
   private Integer gatheringMaxCount;
   private String location;
 }

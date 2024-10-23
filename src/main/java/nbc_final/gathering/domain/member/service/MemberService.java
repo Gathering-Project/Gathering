@@ -34,7 +34,7 @@ public class MemberService {
 
         // Gathering 조회
         Gathering savedGathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
         // 이미 가입된 멤버인지 확인
         if (memberRepository.existsByUserAndGathering(user, savedGathering)) {
