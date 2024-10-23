@@ -98,24 +98,24 @@ public class JwtUtil {
         throw new ServerException("Not Found Token");
     }
 
-//    public boolean validateToken(String token) {
-//        try {//암호화할떄 사용한 키를 .setSigningkey , parseClaimsJws(token)은 받아와서 검증할 토큰
-//            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-//            return true;
-//        } catch (SecurityException | MalformedJwtException | SignatureException e) {
-//            System.out.println("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
-//        } catch (ExpiredJwtException e) {
-//            System.out.println("Expired JWT token, 만료된 JWT token 입니다.");
-//        } catch (UnsupportedJwtException e) {
-//            System.out.println("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
-//        } catch (IllegalArgumentException e) {
-//            System.out.println("JWT claims is empty, 잘못된 JWT 토큰 입니다.");
-//        }
-//        return false;
-//    }
-//    public Claims getUserInfoFromToken(String token) {
-//        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
-//    }
+    public boolean validateToken(String token) {
+        try {//암호화할떄 사용한 키를 .setSigningkey , parseClaimsJws(token)은 받아와서 검증할 토큰
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (SecurityException | MalformedJwtException | SignatureException e) {
+            System.out.println("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
+        } catch (ExpiredJwtException e) {
+            System.out.println("Expired JWT token, 만료된 JWT token 입니다.");
+        } catch (UnsupportedJwtException e) {
+            System.out.println("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("JWT claims is empty, 잘못된 JWT 토큰 입니다.");
+        }
+        return false;
+    }
+    public Claims getUserInfoFromToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+    }
 
     public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
