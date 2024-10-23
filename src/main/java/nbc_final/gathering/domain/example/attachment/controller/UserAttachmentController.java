@@ -15,7 +15,7 @@ import java.io.IOException;
 
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class UserAttachmentController {
 
@@ -29,7 +29,7 @@ public class UserAttachmentController {
      * @return 업로드된 파일의 URL을 포함한 응답
      * @throws IOException 파일 처리 중 발생할 수 있는 예외
      */
-    @PostMapping("/users/upload/userFile")
+    @PostMapping("/v1/users/upload/userFile")
     public ResponseEntity<?> userUploadFile(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestPart("file") MultipartFile file
@@ -46,7 +46,7 @@ public class UserAttachmentController {
      * @return 수정된 파일의 URL을 포함한 응답
      * @throws IOException 파일 처리 중 발생할 수 있는 예외
      */
-    @PutMapping("/users/uploadUpdate/userFile")
+    @PutMapping("/v1/users/uploadUpdate/userFile")
     public ResponseEntity<?> userUpdateFile(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestPart("file") MultipartFile file
@@ -61,7 +61,7 @@ public class UserAttachmentController {
      * @param authUser 인증된 사용자 정보
      * @return 응답 없이 No Content 상태 반환
      */
-    @DeleteMapping("/users/delete/userFile")
+    @DeleteMapping("/v1/users/delete/userFile")
     public ResponseEntity<?> userDeleteFile(
             @AuthenticationPrincipal AuthUser authUser
     ) {

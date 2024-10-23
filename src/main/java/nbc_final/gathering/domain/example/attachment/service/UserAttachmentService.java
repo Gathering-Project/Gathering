@@ -3,7 +3,6 @@ package nbc_final.gathering.domain.example.attachment.service;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import io.jsonwebtoken.io.IOException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
@@ -15,6 +14,7 @@ import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
@@ -28,6 +28,7 @@ public class UserAttachmentService {
     private final AmazonS3 amazonS3;
     private final AttachmentRepository attachmentRepository;
     private final UserRepository userRepository;
+
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
@@ -55,7 +56,8 @@ public class UserAttachmentService {
 
     // 유저 이미지 수정
     @Transactional
-    public AttachmentResponseDto userUpdateFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException {
+    public AttachmentResponseDto userUpdateFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException
+    {
         validateFile(file);
 
         // User 엔티티 조회
@@ -63,10 +65,10 @@ public class UserAttachmentService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 
         // 기존 Attachment 조회 및 삭제
-        Attachment existingAttachment = attachmentRepository.findByUser(authUser);
-        if (existingAttachment != null) {
-            deleteFromS3(existingAttachment.getProfileImagePath());
-            attachmentRepository.delete(existingAttachment);
+        List<Attachment> existingAttachment = attachmentRepository.findByUser(user);
+        for (Attachment attachment : existingAttachment) {
+            deleteFromS3(attachment.getProfileImagePath());
+            attachmentRepository.delete(attachment);
         }
 
         // 새로운 파일 업로드 및 Attachment 저장
@@ -83,27 +85,33 @@ public class UserAttachmentService {
     // 유저 이미지 삭제
     @Transactional
     public void userDeleteFile(AuthUser authUser) {
+
+        // User 엔티티 조회
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
         // 기존 파일 찾기
-        Attachment existingAttachment = attachmentRepository.findByUser(authUser);
-        if (existingAttachment != null) {
-            deleteFromS3(existingAttachment.getProfileImagePath());
-            attachmentRepository.delete(existingAttachment);
+        List<Attachment> existingAttachment = attachmentRepository.findByUser(user);
+        for (Attachment attachment : existingAttachment) {
+            deleteFromS3(attachment.getProfileImagePath());
+            attachmentRepository.delete(attachment);
         }
     }
 
-    // 유저 이미지 예외처리
+    // 이미지 예외처리
     private void validateFile(MultipartFile file) {
         if (!SUPPORTED_FILE_TYPES.contains(file.getContentType())) {
-            throw new IllegalArgumentException("지원하지 않는 파일 형식입니다.");
+            throw new ResponseCodeException(ResponseCode.NOT_SERVICE);
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException(("파일 크기가 너무 큽니다."));
+            throw new ResponseCodeException(ResponseCode.TOO_LARGE_SIZE_FILE);
         }
     }
 
-    // 유저 삭제 메서드
+    // 삭제 메서드
     private void deleteFromS3(String fileUrl) {
+        // fileUrl에서 파일명을 추출합니다.
         String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
         amazonS3.deleteObject(bucketName, fileName);
     }

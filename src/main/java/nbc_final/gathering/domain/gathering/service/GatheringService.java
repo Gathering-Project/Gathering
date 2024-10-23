@@ -7,7 +7,6 @@ import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
-import nbc_final.gathering.domain.gathering.enums.Role;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
@@ -35,7 +34,7 @@ public class GatheringService {
     User user = findUserById(authUser);
 
     // 그룹 생성
-    Gathering savedGathering = new Gathering(gatheringRequestDto.getTitle(),
+    Gathering savedGathering = new Gathering(user.getId(),gatheringRequestDto.getTitle(),
         gatheringRequestDto.getDescription(),
         gatheringRequestDto.getGatheringImage(),
         1, gatheringRequestDto.getGatheringMaxCount(),
