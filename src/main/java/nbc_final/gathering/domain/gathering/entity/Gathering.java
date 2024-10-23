@@ -22,6 +22,8 @@ public class Gathering extends TimeStamped {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  private Long userId;
+
   @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Member> members = new ArrayList<>();
 
@@ -46,7 +48,8 @@ public class Gathering extends TimeStamped {
   @Column(length = 30, nullable = false)
   private String location;
 
-  public Gathering(String title,
+  public Gathering(Long userId,
+                   String title,
                    String description,
                    String gatheringImage,
                    Integer gatheringCount,
@@ -54,6 +57,7 @@ public class Gathering extends TimeStamped {
                    BigDecimal rating,
                    String location) {
 
+    this.userId = userId;
     this.title = title;
     this.description = description;
     this.gatheringImage = gatheringImage;
@@ -77,5 +81,11 @@ public class Gathering extends TimeStamped {
     this.gatheringMaxCount = gatheringMaxCount;
     this.location = location;
     this.gatheringImage = gatheringImage;
+  }
+
+  public static Gathering of(Long id) {
+    Gathering gathering = new Gathering();
+    gathering.id = id;
+    return gathering;
   }
 }

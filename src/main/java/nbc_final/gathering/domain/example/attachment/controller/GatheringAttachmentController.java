@@ -5,7 +5,6 @@ import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.example.attachment.dto.AttachmentResponseDto;
 import nbc_final.gathering.domain.example.attachment.service.GatheringAttachmentService;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class GatheringAttachmentController {
 
@@ -29,7 +28,7 @@ public class GatheringAttachmentController {
      * @return 업로드된 파일 정보가 담긴 응답 객체
      * @throws IOException 파일 처리 중 예외 발생 시
      */
-    @PostMapping("gatherings/{gatheringId}/upload/userFile")
+    @PostMapping("/v1/gatherings/{gatheringId}/upload/userFile")
     public ResponseEntity<?> gatheringUploadFile(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId,
@@ -48,7 +47,7 @@ public class GatheringAttachmentController {
      * @return 수정된 파일 정보가 담긴 응답 객체
      * @throws IOException 파일 처리 중 예외 발생 시
      */
-    @PutMapping("gatherings/{gatheringId}/uploadUpdate/userFile")
+    @PutMapping("/v1/gatherings/{gatheringId}/uploadUpdate/userFile")
     public ResponseEntity<?> gatheringUpdateFile(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId,
@@ -65,7 +64,7 @@ public class GatheringAttachmentController {
      * @param gatheringId 모임 ID
      * @return 응답 없음 (HTTP 204 No Content)
      */
-    @DeleteMapping("gatherings/{gatheringId}/delete/userFile")
+    @DeleteMapping("/v1/gatherings/{gatheringId}/delete/userFile")
     public ResponseEntity<?> gatheringDeleteFile(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId

@@ -36,7 +36,7 @@ public class GatheringService {
     User user = findUserById(authUser);
 
     // 그룹 생성
-    Gathering savedGathering = new Gathering(gatheringRequestDto.getTitle(),
+    Gathering savedGathering = new Gathering(user.getId(),gatheringRequestDto.getTitle(),
         gatheringRequestDto.getDescription(),
         gatheringRequestDto.getGatheringImage(),
         1, gatheringRequestDto.getGatheringMaxCount(),
