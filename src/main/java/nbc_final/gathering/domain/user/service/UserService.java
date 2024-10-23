@@ -16,6 +16,7 @@ import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,10 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${admin.token}")
+    private String ADMIN_TOKEN;
+
+
     // 유저 회원가입
     @Transactional
     public SignUpResponseDto signup(SignupRequestDto signupRequest) {
@@ -40,6 +45,7 @@ public class UserService {
 
         String email = signupRequest.getEmail();
         validateDeletedEmail(email); // 이미 탈퇴한 적 있는 이메일인지 확인
+        validateAdminToken(signupRequest, signupRequest.getUserRole()); // 관리자 계정 생성 시 관리자 인증 토큰이 맞는지 확인
 
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
 
@@ -170,6 +176,13 @@ public class UserService {
                         requestDto.getNewPassword().length() > 20
         ) {
             throw new ResponseCodeException(ResponseCode.INVALID_PASSWORD);
+        }
+    }
+
+    // 관리자 계정 생성 인증
+    public void validateAdminToken(SignupRequestDto requestDto, String userRole) {
+        if (requestDto.getUserRole().equals("ROLE_ADMIN") && !(ADMIN_TOKEN.equals(requestDto.getAdminToken()))) {
+            throw  new ResponseCodeException(ResponseCode.INVALID_ADMIN_TOKEN);
         }
     }
 
