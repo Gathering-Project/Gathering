@@ -64,11 +64,13 @@ public class User extends TimeStamped {
 
     @Builder
     public User(
+            Long id,
             String nickname,
             String email,
             String password,
             UserRole userRole
     ) {
+        this.id = id;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
