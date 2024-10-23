@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -18,7 +20,13 @@ public class GatheringController {
 
   private final GatheringService gatheringService;
 
-  // 반환 데이터 존재 O
+  /**
+   * 소모임 생성
+   *
+   * @param authUser
+   * @param gatheringRequestDto
+   * @return
+   */
   @PostMapping("/v1/gatherings")
   public ResponseEntity<ApiResponse<GatheringResponseDto>> createGroup(@AuthenticationPrincipal AuthUser authUser,
                                                                        @RequestBody @Valid GatheringRequestDto gatheringRequestDto) {
@@ -27,20 +35,13 @@ public class GatheringController {
     return ResponseEntity.ok(ApiResponse.createSuccess(res));
   }
 
-  /*
-  {
-  “status” : 200,
-  “message” : “정상 처리 되었습니다.”,
-  “data” : {
-     “gatheringId” : 1,
-     “title” : “소모임 제목”,
-     “description” : “소모임 설명”,
-     “groupMaxCount” : “소모임 최대 인원”,
-     “groupImage” :  “이미지.png”
-    }
-  }
-  */
-  // 반환 데이터 존재 O
+  /**
+   * 소모임 단건 조회
+   *
+   * @param authUser
+   * @param gatheringId
+   * @return
+   */
   @GetMapping("/v1/gatherings/{gatheringId}")
   public ResponseEntity<ApiResponse<GatheringResponseDto>> getGathering(@AuthenticationPrincipal AuthUser authUser,
                                                                         @PathVariable @Valid Long gatheringId) {
@@ -49,19 +50,56 @@ public class GatheringController {
 
     return ResponseEntity.ok(ApiResponse.createSuccess(res));
   }
-/*
-  {
-  “status” : 200,
-  “message” : “정상 처리 되었습니다.”,
-  “data” : {
-     “gathringId” : 1,
-     “title” : “소모임 제목”,
-     “description” : “소모임 설명”,
-     “gathringMaxCount” : “소모임 최대 인원”,
-     “gathringImage” :  “이미지.png”
-   }
-  }
-  */
 
+  /**
+   * 소모임 다건 조회
+   *
+   * @param authUser
+   * @return
+   */
+  @GetMapping("/v1/gatherings")
+  public ResponseEntity<ApiResponse<List<GatheringResponseDto>>> getAllGatherings(
+      @AuthenticationPrincipal AuthUser authUser) {
+
+    List<GatheringResponseDto> res = gatheringService.getAllGatherings(authUser);
+    return ResponseEntity.ok(ApiResponse.createSuccess(res));
+  }
+
+  /**
+   * 소모임 수정
+   *
+   * @param authUser
+   * @param gatheringId
+   * @param gatheringRequestDto
+   * @return
+   */
+  @PutMapping("/v1/gatherings/{gatheringId}")
+  public ResponseEntity<ApiResponse<GatheringResponseDto>> updateGathering(
+      @AuthenticationPrincipal AuthUser authUser,
+      @PathVariable @Valid Long gatheringId,
+      @RequestBody @Valid GatheringRequestDto gatheringRequestDto) {
+
+    GatheringResponseDto res = gatheringService.updateGathering(authUser, gatheringId, gatheringRequestDto);
+
+    return ResponseEntity.ok(
+        ApiResponse.createSuccess(res)
+    );
+  }
+
+  /**
+   * 소모임 삭제
+   *
+   * @param authUser
+   * @param gatheringId
+   * @return
+   */
+  @DeleteMapping("/v1/gatherings/{gatheringId}")
+  public ResponseEntity<ApiResponse<Void>> deleteGathering(
+      @AuthenticationPrincipal AuthUser authUser,
+      @PathVariable @Valid Long gatheringId) {
+
+    gatheringService.deleteGathering(authUser, gatheringId);
+    return ResponseEntity.ok(ApiResponse.createSuccess(null));
+  }
 
 }
