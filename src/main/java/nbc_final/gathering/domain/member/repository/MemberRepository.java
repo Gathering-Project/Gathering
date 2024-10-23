@@ -12,15 +12,21 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
-  List<Member> findByUserId(Long userId);
+    boolean existsByUserAndGathering(User user, Gathering gathering);
 
-  boolean existsByUserAndGathering(User user, Gathering gathering);
+    Optional<Member> findByUserAndGathering(User user, Gathering gathering);
 
-  Optional<Member> findByUserAndGathering(User user, Gathering gathering);
+    boolean existsByUserIdAndGatheringId(Long userId, Long gatheringId);
 
-  boolean existsByUserIdAndGatheringId(Long userId, Long gatheringId);
+    List<Member> findAllByGatheringId(Long gatheringId);
 
-  List<Member> findAllByGatheringId(Long gatheringId);
+    Optional<Member> findByIdAndGatheringId(Long memberId, Long gatheringId);
+
+
+    Optional<Member> findByUserIdAndGatheringId(Long userId, Long gatheringId);
+
+    List<Member> findByUserId(Long userId);
+}
 
   Optional<Member> findByIdAndGatheringId(Long memberId, Long gatheringId);
 
@@ -28,3 +34,4 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
   @Query("DELETE FROM Member m WHERE m.gathering = :gathering")
   void deleteByGathering(@Param("gathering") Gathering gathering);
 }
+

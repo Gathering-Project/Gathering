@@ -12,6 +12,7 @@ import nbc_final.gathering.domain.user.enums.MbtiType;
 import nbc_final.gathering.domain.user.enums.UserRole;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "users")
@@ -55,7 +56,7 @@ public class User extends TimeStamped {
 
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 //    private List<Member> members = new ArrayList<>();
-
+//
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 //    private List<Event> events = new ArrayList<>();
 
