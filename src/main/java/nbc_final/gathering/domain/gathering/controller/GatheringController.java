@@ -64,4 +64,25 @@ public class GatheringController {
     List<GatheringResponseDto> res = gatheringService.getAllGatherings(authUser);
     return ResponseEntity.ok(ApiResponse.createSuccess(res));
   }
+
+  /**
+   * 소모임 수정
+   *
+   * @param authUser
+   * @param gatheringId
+   * @param gatheringRequestDto
+   * @return
+   */
+  @PutMapping("/v1/gatherings/{gatheringId}")
+  public ResponseEntity<ApiResponse<GatheringResponseDto>> updateGathering(
+      @AuthenticationPrincipal AuthUser authUser,
+      @PathVariable @Valid Long gatheringId,
+      @RequestBody @Valid GatheringRequestDto gatheringRequestDto) {
+
+    GatheringResponseDto res = gatheringService.updateGathering(authUser, gatheringId, gatheringRequestDto);
+
+    return ResponseEntity.ok(
+        ApiResponse.createSuccess(res)
+    );
+  }
 }

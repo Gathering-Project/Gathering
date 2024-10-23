@@ -66,4 +66,16 @@ public class Gathering extends TimeStamped {
   public void setGatheringImage(String gatheringImage){
     this. gatheringImage = gatheringImage;
   }
+
+  public void updateDetails(String title,
+                            String description,
+                            Integer gatheringMaxCount,
+                            String location,
+                            String gatheringImage) {
+    this.title = title;
+    this.description = description;
+    this.gatheringMaxCount = gatheringMaxCount;
+    this.location = location;
+    this.gatheringImage = gatheringImage;
+  }
 }

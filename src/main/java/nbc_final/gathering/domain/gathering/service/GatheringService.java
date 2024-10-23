@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -89,6 +90,31 @@ public class GatheringService {
     return gatheringResponses;
   }
 
+  // 소모임 수정 로직
+  @Transactional
+  public GatheringResponseDto updateGathering(AuthUser authUser, Long gatheringId, GatheringRequestDto gatheringRequestDto) {
+    // 소모임 조회
+    Gathering gathering = findGatheringById(gatheringId);
+
+    // Host인지 권한 체크
+    validateUserPermission(authUser, gathering);
+
+    // 소모임 정보 업데이트
+    gathering.updateDetails(gatheringRequestDto.getTitle(),
+        gatheringRequestDto.getDescription(),
+        gatheringRequestDto.getGatheringMaxCount(),
+        gatheringRequestDto.getLocation(),
+        gatheringRequestDto.getGatheringImage());
+
+    // 소모임 저장
+    gatheringRepository.save(gathering);
+
+    // 업데이트된 정보를 DTO로 반환
+    return new GatheringResponseDto(gathering);
+  }
+
+
+
   ////////////////////// 에러 처리를 위한 메서드 ///////////////////////
 
   private User findUserById(AuthUser authUser) {
@@ -109,6 +135,25 @@ public class GatheringService {
     return gatheringRepository.findByMembers(member).orElseThrow(
         () -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING)
     );
+  }
+
+  private Gathering findGatheringById(Long gatheringId) {
+    return gatheringRepository.findById(gatheringId).orElseThrow(
+        () -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING)
+    );
+  }
+
+  private void validateUserPermission(AuthUser authUser, Gathering gathering) {
+    // 유저 조회
+    User user = findUserById(authUser);
+    // 유저와 소모임을 기반으로 멤버 조회
+    Member member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
+        () -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER)
+    );
+    //
+    if (member.getRole() != MemberRole.HOST) {
+      throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+    }
   }
 
 
