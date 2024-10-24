@@ -12,9 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "events")
 @Entity
+@Table(name = "events")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Event extends TimeStamped {
 
     @Id
