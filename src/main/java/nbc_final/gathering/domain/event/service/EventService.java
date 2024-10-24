@@ -3,6 +3,8 @@ package nbc_final.gathering.domain.event.service;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
+import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
+import nbc_final.gathering.domain.comment.repository.CommentRepository;
 import nbc_final.gathering.domain.event.dto.ParticipantResponseDto;
 import nbc_final.gathering.domain.event.dto.request.EventCreateRequestDto;
 import nbc_final.gathering.domain.event.dto.request.EventUpdateRequestDto;
@@ -21,12 +23,14 @@ import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import nbc_final.gathering.domain.comment.entity.Comment;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class EventService {
 
     private final ParticipantRepository participantRepository;
@@ -34,6 +38,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventRepositoryCustom eventRepositoryCustom;
     private final GatheringRepository gatheringRepository;
+    private final CommentRepository commentRepository;
 
     // 이벤트 생성 (권한: 소모임 멤버 또는 어드민)
     @Transactional
@@ -62,32 +67,26 @@ public class EventService {
     // 이벤트 수정 (권한: 소모임 생성자 또는 이벤트 생성자)
     @Transactional
     public EventUpdateResponseDto updateEvent(Long userId, Long gatheringId, Long eventId, EventUpdateRequestDto requestDto) {
-
         checkGatheringCreatorOrEventCreator(userId, eventId, gatheringId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
-
         if (event.getCurrentParticipants() > requestDto.getMaxParticipants()) {
             throw new ResponseCodeException(ResponseCode.INVALID_MAX_PARTICIPANTS);
         }
 
         event.updateEvent(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(), requestDto.getLocation(), requestDto.getMaxParticipants());
-
         return EventUpdateResponseDto.of(event);
     }
 
     // 이벤트 다건 조회 (권한: 소모임 멤버 또는 어드민)
     public EventListResponseDto getAllEvents(Long userId, Long gatheringId) {
-        // 공통 권한 검증
         checkAdminOrGatheringMember(userId, gatheringId);
-
         List<Event> events = eventRepository.findAllByGatheringId(gatheringId);
         return EventListResponseDto.of(events, userId);
     }
 
     // 이벤트 단건 조회 (권한: 소모임 멤버 또는 어드민)
-    @Transactional(readOnly = true)
     public EventResponseDto getEvent(Long userId, Long gatheringId, Long eventId) {
 
         checkAdminOrGatheringMember(userId, gatheringId);
@@ -95,7 +94,12 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
-        return EventResponseDto.of(event, userId);
+        List<Comment> comments = commentRepository.findByEventId(eventId);
+        List<CommentResponseDto> commentResponseDtos = comments.stream()
+                .map(CommentResponseDto::of)
+                .collect(Collectors.toList());
+
+        return EventResponseDto.of(event, userId, commentResponseDtos);
     }
 
     // 검증 권한: 어드민, 이벤트 생성자, 소모임 생성자
