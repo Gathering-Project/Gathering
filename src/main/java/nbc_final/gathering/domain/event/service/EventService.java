@@ -45,13 +45,11 @@ public class EventService {
     public EventResponseDto createEvent(Long userId, Long gatheringId, EventCreateRequestDto requestDto) {
         checkAdminOrGatheringMemberForCreation(userId, gatheringId);
 
-        Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
+        Gathering gathering = getGatheringOrThrow(gatheringId);
+        User user = getUserOrThrow(userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
-        Event event = Event.of(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(), requestDto.getLocation(), requestDto.getMaxParticipants(), gathering, user);
+        Event event = Event.of(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(),
+                requestDto.getLocation(), requestDto.getMaxParticipants(), gathering, user);
         eventRepository.save(event);
 
         // 이벤트 생성자는 자동으로 참가
@@ -61,20 +59,19 @@ public class EventService {
         return EventResponseDto.of(event, userId);
     }
 
-
     // 이벤트 수정 (권한: 이벤트 생성자만 가능, 어드민 불가능)
     @Transactional
     public EventUpdateResponseDto updateEvent(Long userId, Long gatheringId, Long eventId, EventUpdateRequestDto requestDto) {
         checkEventCreatorForUpdate(userId, eventId, gatheringId);
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+        Event event = getEventOrThrow(eventId);
 
         if (event.getCurrentParticipants() > requestDto.getMaxParticipants()) {
             throw new ResponseCodeException(ResponseCode.INVALID_MAX_PARTICIPANTS);
         }
 
-        event.updateEvent(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(), requestDto.getLocation(), requestDto.getMaxParticipants());
+        event.updateEvent(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(),
+                requestDto.getLocation(), requestDto.getMaxParticipants());
         return EventUpdateResponseDto.of(event);
     }
 
@@ -85,12 +82,11 @@ public class EventService {
         return EventListResponseDto.of(events, userId);
     }
 
-    /// 이벤트 단건 조회 (권한: 소모임 멤버 또는 어드민)
+    // 이벤트 단건 조회 (권한: 소모임 멤버 또는 어드민)
     public EventResponseDto getEvent(Long userId, Long gatheringId, Long eventId) {
         checkAdminOrGatheringMemberForView(userId, gatheringId);
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+        Event event = getEventOrThrow(eventId);
 
         List<Comment> comments = commentRepository.findByEventId(eventId);
         List<CommentResponseDto> commentResponseDtos = comments.stream()
@@ -105,34 +101,18 @@ public class EventService {
     public void deleteEvent(Long userId, Long gatheringId, Long eventId) {
         checkAdminOrEventCreatorForDeletion(userId, eventId, gatheringId);
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+        Event event = getEventOrThrow(eventId);
 
         eventRepository.delete(event);
     }
 
-
     // 이벤트 참가 (권한: 어드민 불가, 이벤트 생성자 불가, 게더링 멤버 가능)
     @Transactional
     public void participateInEvent(Long userId, Long gatheringId, Long eventId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+        User user = getUserOrThrow(userId);
+        Event event = getEventOrThrow(eventId);
 
-        if (user.getUserRole().equals(UserRole.ROLE_ADMIN)) {
-            throw new ResponseCodeException(ResponseCode.ADMIN_CANNOT_PARTICIPATE);
-        }
-
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
-
-        if (event.getUser().getId().equals(userId)) {
-            throw new ResponseCodeException(ResponseCode.EVENT_CREATOR_CANNOT_PARTICIPATE);
-        }
-
-        boolean alreadyParticipated = participantRepository.findByEventAndUserId(event, userId).isPresent();
-        if (alreadyParticipated) {
-            throw new ResponseCodeException(ResponseCode.ALREADY_PARTICIPATED);
-        }
+        validateParticipantConditions(user, event, userId);
 
         if (event.getCurrentParticipants() >= event.getMaxParticipants()) {
             throw new ResponseCodeException(ResponseCode.PARTICIPANT_LIMIT_EXCEEDED);
@@ -147,15 +127,13 @@ public class EventService {
     // 이벤트 참가 취소 (권한: 어드민 불가, 이벤트 생성자 불가)
     @Transactional
     public void cancelParticipation(Long userId, Long gatheringId, Long eventId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+        User user = getUserOrThrow(userId);
 
         if (user.getUserRole().equals(UserRole.ROLE_ADMIN)) {
             throw new ResponseCodeException(ResponseCode.ADMIN_CANNOT_CANCEL_PARTICIPATION);
         }
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+        Event event = getEventOrThrow(eventId);
 
         if (event.getUser().getId().equals(userId)) {
             throw new ResponseCodeException(ResponseCode.EVENT_CREATOR_CANNOT_CANCEL);
@@ -167,28 +145,12 @@ public class EventService {
         event.removeParticipant(participant);
     }
 
-
-
-    // 공통 권한 검증 (권한: 소모임 멤버 또는 어드민)
-    private void checkAdminOrGatheringMember(Long userId, Long gatheringId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
-        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
-        boolean isGatheringMember = eventRepositoryCustom.isUserInGathering(gatheringId, userId);
-
-        if (!isAdmin && !isGatheringMember) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
-    }
-
     // 이벤트 참가자 조회 (권한: 소모임 멤버 또는 어드민)
     @Transactional(readOnly = true)
     public List<ParticipantResponseDto> getParticipants(Long userId, Long gatheringId, Long eventId) {
         checkAdminOrGatheringMemberForView(userId, gatheringId);
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+        Event event = getEventOrThrow(eventId);
 
         List<Participant> participants = participantRepository.findAllByEvent(event);
 
@@ -200,37 +162,33 @@ public class EventService {
 
     // 공통 권한 검증 (생성 권한: 어드민 또는 게더링 멤버)
     private void checkAdminOrGatheringMemberForCreation(Long userId, Long gatheringId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+        checkPermission(userId, gatheringId, true, true);
+    }
+
+
+    // 공통 권한 검증 (권한: 어드민 또는 게더링 멤버)
+    private void checkPermission(Long userId, Long gatheringId, boolean forAdmin, boolean forMember) {
+        User user = getUserOrThrow(userId);
 
         boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
         boolean isGatheringMember = eventRepositoryCustom.isUserInGathering(gatheringId, userId);
 
-        if (!isAdmin && !isGatheringMember) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        if ((forAdmin && isAdmin) || (forMember && isGatheringMember)) {
+            return;
         }
+
+        throw new ResponseCodeException(ResponseCode.FORBIDDEN);
     }
 
     // 조회 권한 (어드민 또는 게더링 멤버)
     private void checkAdminOrGatheringMemberForView(Long userId, Long gatheringId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
-        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
-        boolean isGatheringMember = eventRepositoryCustom.isUserInGathering(gatheringId, userId);
-
-        if (!isAdmin && !isGatheringMember) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
+        checkPermission(userId, gatheringId, true, true);
     }
 
     // 삭제 권한 (어드민 또는 이벤트 생성자)
     private void checkAdminOrEventCreatorForDeletion(Long userId, Long eventId, Long gatheringId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+        Event event = getEventOrThrow(eventId);
+        User user = getUserOrThrow(userId);
 
         boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
         boolean isEventCreator = event.getUser().getId().equals(userId);
@@ -240,16 +198,44 @@ public class EventService {
         }
     }
 
-
     // 수정 권한 (이벤트 생성자만 가능)
     private void checkEventCreatorForUpdate(Long userId, Long eventId, Long gatheringId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+        Event event = getEventOrThrow(eventId);
 
         boolean isEventCreator = event.getUser().getId().equals(userId);
 
         if (!isEventCreator) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
+    }
+
+    // 참가자 관련 검증 (어드민 불가, 이벤트 생성자 불가, 이미 참가 여부 등)
+    private void validateParticipantConditions(User user, Event event, Long userId) {
+        if (user.getUserRole().equals(UserRole.ROLE_ADMIN)) {
+            throw new ResponseCodeException(ResponseCode.ADMIN_CANNOT_PARTICIPATE);
+        }
+
+        if (event.getUser().getId().equals(userId)) {
+            throw new ResponseCodeException(ResponseCode.EVENT_CREATOR_CANNOT_PARTICIPATE);
+        }
+
+        if (participantRepository.findByEventAndUserId(event, userId).isPresent()) {
+            throw new ResponseCodeException(ResponseCode.ALREADY_PARTICIPATED);
+        }
+    }
+
+    private Gathering getGatheringOrThrow(Long gatheringId) {
+        return gatheringRepository.findById(gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
+    }
+
+    private User getUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+    }
+
+    private Event getEventOrThrow(Long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
     }
 }

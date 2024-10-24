@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,29 +35,51 @@ public class MemberService {
     @Transactional
     public MemberResponseDto requestToJoin(AuthUser authUser, Long gatheringId) {
 
+        // 유저 조회
         User user = findUserById(authUser);
 
+        // 소모임 조회
         Gathering savedGathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
-        if (memberRepository.existsByUserAndGathering(user, savedGathering)) {
-            throw new ResponseCodeException(ResponseCode.ALREADY_REQUESTED);
+        // 이미 소모임에 가입한 적이 있는지 확인
+        Optional<Member> existingMember = memberRepository.findByUserAndGathering(user, savedGathering);
+
+        // 멤버 상태 확인
+        if (existingMember.isPresent()) {
+            Member member = existingMember.get();
+            // REJECT 상태인 경우
+            if (member.getStatus() == MemberStatus.REJECTED) {
+                throw new ResponseCodeException(ResponseCode.REJECTED_MEMBER);
+            }
+            // APPROVED 상태인 경우
+            else if (member.getStatus() == MemberStatus.APPROVED) {
+                throw new ResponseCodeException(ResponseCode.ALREADY_MEMBER);
+            }
+            // PENDING 상태인 경우
+            else if (member.getStatus() == MemberStatus.PENDING) {
+                throw new ResponseCodeException(ResponseCode.ALREADY_REQUESTED);
+            }
         }
 
-        Member member = new Member(user, savedGathering, MemberRole.USER, MemberStatus.PENDING);
-        memberRepository.save(member);
+        // 새로운 가입 요청 처리 (PENDING 상태로 저장)
+        Member newMember = new Member(user, savedGathering, MemberRole.GUEST, MemberStatus.PENDING);
+        memberRepository.save(newMember);
 
-        return MemberResponseDto.from(member);
+        return MemberResponseDto.from(newMember);
     }
 
     @Transactional
     public MemberResponseDto approveMember(AuthUser authUser, Long memberId) {
 
+        // 승인할 멤버 조회
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
 
+        // 소모임 조회
         Gathering gathering = member.getGathering();
 
+        // 현재 로그인한 사용자가 소모임의 HOST인지 확인
         User user = userRepository.findById(authUser.getUserId())
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 
@@ -75,6 +98,19 @@ public class MemberService {
             throw new ResponseCodeException(ResponseCode.ALREADY_REQUESTED);
         }
 
+        // 현재 소모임의 승인된 멤버 수 확인
+        long approvedMembersCount = memberRepository.findAllByGatheringId(gathering.getId())
+                .stream()
+                .filter(m -> m.getStatus() == MemberStatus.APPROVED)
+                .count();
+
+        // 소모임 최대 인원을 초과할 경우
+        if (approvedMembersCount >= gathering.getGatheringMaxCount()) {
+            // 멤버는 여전히 PENDING 상태로 유지
+            throw new ResponseCodeException(ResponseCode.FULL_MEMBER);
+        }
+
+        // 인원이 초과되지 않았으면 멤버 승인
         member.approve();
 
         return MemberResponseDto.from(member);
@@ -82,34 +118,37 @@ public class MemberService {
 
     public List<MemberResponseDto> getAllMembers(AuthUser authUser, Long gatheringId) {
 
-        // 현재 사용자가 해당 소모임에 존재하는지 확인
-        if (!memberRepository.existsByUserIdAndGatheringId(authUser.getUserId(), gatheringId)) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        // ADMIN인지 확인
+        if (!isAdmin(authUser)) {
+            // ADMIN이 아닌 경우 현재 사용자의 멤버 정보 가져오기
+            User user = userRepository.findById(authUser.getUserId())
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+            Member currentUserMember = memberRepository.findByUserAndGathering(user, gatheringRepository.findById(gatheringId)
+                            .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING)))
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.FORBIDDEN));
+
+            // 현재 사용자의 역할이 HOST 또는 GUEST가 아니면 조회 불가
+            if (currentUserMember.getRole() != MemberRole.HOST && currentUserMember.getRole() != MemberRole.GUEST) {
+                throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+            }
+
+            // 현재 사용자의 상태가 APPROVED가 아니면 조회 불가
+            if (currentUserMember.getStatus() != MemberStatus.APPROVED) {
+                throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+            }
+
+            // GUEST는 APPROVED 상태의 멤버만 조회 가능
+            if (currentUserMember.getRole() == MemberRole.GUEST) {
+                return memberRepository.findAllByGatheringId(gatheringId).stream()
+                        .filter(member -> member.getStatus() == MemberStatus.APPROVED) // APPROVED 상태의 멤버만 필터링
+                        .map(MemberResponseDto::from)
+                        .collect(Collectors.toList());
+            }
         }
 
-        // 현재 사용자의 멤버 정보 가져오기
-        Member currentUserMember = memberRepository.findByUserAndGathering(
-                        userRepository.findById(authUser.getUserId())
-                                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER)),
-                        gatheringRepository.findById(gatheringId)
-                                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING)))
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.FORBIDDEN));
-
-        // 사용자의 역할이 HOST 또는 USER가 아니면 조회 불가능
-        if (currentUserMember.getRole() != MemberRole.HOST && currentUserMember.getRole() != MemberRole.USER) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
-
-        // 사용자의 상태가 APPROVED가 아니면 조회 불가능
-        if (currentUserMember.getStatus() != MemberStatus.APPROVED) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
-
-        // 소모임에 속한 모든 멤버 조회 (상태 상관없이 조회)
-        List<Member> members = memberRepository.findAllByGatheringId(gatheringId);
-
-        // 모든 멤버를 DTO로 변환하여 반환
-        return members.stream()
+        // ADMIN 또는 HOST일 경우 모든 상태의 멤버를 조회 가능
+        return memberRepository.findAllByGatheringId(gatheringId).stream()
                 .map(MemberResponseDto::from)
                 .collect(Collectors.toList());
     }
@@ -120,30 +159,39 @@ public class MemberService {
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
-        // 해당 소모임에 대해 현재 사용자의 권한을 확인
-        if (!memberRepository.existsByUserIdAndGatheringId(authUser.getUserId(), gatheringId)) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        // ADMIN인지 확인
+        if (!isAdmin(authUser)) {
+            // ADMIN이 아니면 현재 사용자의 멤버 정보 가져오기
+            User user = userRepository.findById(authUser.getUserId())
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+            Member currentUserMember = memberRepository.findByUserAndGathering(user, gathering)
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.FORBIDDEN));
+
+            // 현재 사용자의 역할이 HOST 또는 GUEST가 아니면 조회 불가
+            if (currentUserMember.getRole() != MemberRole.GUEST && currentUserMember.getRole() != MemberRole.HOST) {
+                throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+            }
+
+            // 현재 사용자의 상태가 APPROVED가 아니면 조회 불가
+            if (currentUserMember.getStatus() != MemberStatus.APPROVED) {
+                throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+            }
+
+            // GUEST는 APPROVED 상태의 멤버만 조회 가능
+            if (currentUserMember.getRole() == MemberRole.GUEST) {
+                Member member = memberRepository.findByIdAndGatheringId(memberId, gatheringId)
+                        .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+
+                if (member.getStatus() != MemberStatus.APPROVED) {
+                    throw new ResponseCodeException(ResponseCode.FORBIDDEN); // GUEST는 APPROVED 상태의 멤버만 조회 가능
+                }
+
+                return MemberResponseDto.from(member);
+            }
         }
 
-        // 멤버의 권한 및 상태를 먼저 확인
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
-        // 사용자가 해당 소모임에 속해 있는지 확인 (Gathering 객체로 조회)
-        Member currentUserMember = memberRepository.findByUserAndGathering(user, gathering)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.FORBIDDEN));
-
-        // 현재 사용자의 역할이 USER나 HOST가 아니면 조회 불가
-        if (currentUserMember.getRole() != MemberRole.USER && currentUserMember.getRole() != MemberRole.HOST) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
-
-        // 현재 사용자의 상태가 APPROVED가 아니면 조회 불가
-        if (currentUserMember.getStatus() != MemberStatus.APPROVED) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
-
-        // 권한 및 상태 검증을 통과한 후에 멤버 정보 조회
+        // ADMIN 또는 HOST일 경우 모든 상태의 멤버를 조회 가능
         Member member = memberRepository.findByIdAndGatheringId(memberId, gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
 
@@ -160,6 +208,16 @@ public class MemberService {
         // 현재 로그인한 사용자 정보 조회
         User user = userRepository.findById(authUser.getUserId())
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        // 관리자 권한 확인
+        boolean isAdmin = authUser.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals(UserRole.Authority.ADMIN));
+
+        // 관리자는 멤버 상태나 역할에 상관없이 삭제 가능
+        if (isAdmin) {
+            memberRepository.delete(memberToDelete);
+            return;
+        }
 
         // 소모임 내 현재 사용자의 Member 정보를 가져옴 (현재 사용자의 역할 및 상태를 확인하기 위해)
         Member currentUserMember = memberRepository.findByUserAndGathering(user, memberToDelete.getGathering())
