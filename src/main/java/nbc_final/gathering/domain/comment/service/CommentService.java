@@ -9,6 +9,7 @@ import nbc_final.gathering.domain.comment.entity.Comment;
 import nbc_final.gathering.domain.comment.repository.CommentRepository;
 import nbc_final.gathering.domain.event.entity.Event;
 import nbc_final.gathering.domain.event.repository.EventRepository;
+import nbc_final.gathering.domain.event.repository.EventRepositoryCustom;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
@@ -20,7 +21,7 @@ import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static nbc_final.gathering.domain.event.entity.QEvent.event;
+
 
 
 @Service
@@ -32,6 +33,7 @@ public class CommentService {
     private final GatheringRepository gatheringRepository;
     private final EventRepository eventRepository;
     private final MemberRepository memberRepository;
+    private final EventRepositoryCustom eventRepositoryCustom;
 
     @Transactional
     public CommentResponseDto saveComment(CommentRequestDto commentRequestDto, Long gatheringId, Long userId, Long eventId) {
@@ -111,7 +113,16 @@ public class CommentService {
         // 댓글 존재 여부 확인
         Comment comment = getComment(commentId);
 
+        // 권한 확인 (메서드 이름 수정)
+        checkAdminOrEventCreatorOrGatheringCreator(userId, eventId, gatheringId);
 
+        // 댓글 작성자 확인
+        if (!comment.getUser().getId().equals(userId)) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+            // ADMIN 권한을 가진 경우는 추가 검증 없이 삭제 허용
+            if (user.getUserRole() != UserRole.ROLE_ADMIN) {
                 // 소모임 존재 여부 확인
                 Gathering gathering = gatheringRepository.findById(gatheringId)
                         .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
@@ -128,11 +139,45 @@ public class CommentService {
                 if (member.getRole() != MemberRole.HOST) {
                     throw new ResponseCodeException(ResponseCode.FORBIDDEN);
                 }
-
-
+            }
+        }
 
         // 댓글 삭제
         commentRepository.deleteById(commentId);
     }
 
+    // 삭제 기능 (권한: 어드민, 이벤트 생성자, 소모임 생성자)
+    private void checkAdminOrEventCreatorOrGatheringCreator(Long userId, Long eventId, Long gatheringId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+        if (isAdmin(user)) {
+            return;
+        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+
+        Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+
+        //equals보다 ==으로 쓰는게 더 효율적
+        boolean isEventCreator = event.getUser().getId().equals(userId);
+        boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
+        boolean isHost = isHost(member);
+
+        if (!isEventCreator && !isGatheringCreator && !isHost) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
+    }
+
+    private boolean isHost(Member member) {
+        boolean isHost = member.getRole().equals(MemberRole.HOST);
+        return isHost;
+    }
+
+    private boolean isAdmin(User user) {
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        return isAdmin;
+    }
 }
+
+
