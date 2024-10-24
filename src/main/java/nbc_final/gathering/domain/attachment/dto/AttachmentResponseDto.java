@@ -1,8 +1,8 @@
-package nbc_final.gathering.domain.example.attachment.dto;
+package nbc_final.gathering.domain.attachment.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import nbc_final.gathering.domain.example.attachment.entity.Attachment;
+import nbc_final.gathering.domain.attachment.entity.Attachment;
 
 @Getter
 @AllArgsConstructor

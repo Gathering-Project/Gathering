@@ -1,4 +1,4 @@
-package nbc_final.gathering.domain.example.attachment.service;
+package nbc_final.gathering.domain.attachment.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -7,14 +7,20 @@ import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
-import nbc_final.gathering.domain.example.attachment.dto.AttachmentResponseDto;
-import nbc_final.gathering.domain.example.attachment.entity.Attachment;
-import nbc_final.gathering.domain.example.attachment.repository.AttachmentRepository;
+import nbc_final.gathering.domain.attachment.dto.AttachmentResponseDto;
+import nbc_final.gathering.domain.attachment.entity.Attachment;
+import nbc_final.gathering.domain.attachment.repository.AttachmentRepository;
+import nbc_final.gathering.domain.event.entity.Event;
+import nbc_final.gathering.domain.event.repository.EventRepository;
+import nbc_final.gathering.domain.event.repository.EventRepositoryCustom;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
+import nbc_final.gathering.domain.gathering.enums.Role;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
+import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.entity.User;
+import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,6 +39,8 @@ public class GatheringAttachmentService {
     private final AttachmentRepository attachmentRepository;
     private final GatheringRepository gatheringRepository;
     private final UserRepository userRepository;
+    private final EventRepository eventRepository;
+    private final MemberRepository memberRepository;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
@@ -45,7 +53,7 @@ public class GatheringAttachmentService {
     @Transactional
     public AttachmentResponseDto gatheringUploadFile(AuthUser authUser, Long gatheringId, MultipartFile file) throws IOException, java.io.IOException {
         // 파일 체크
-        validateFile(file);
+        validateFile(file, authUser);
 
         Gathering gathering = gatheringRepository.findById(gatheringId)
         .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
@@ -83,7 +91,7 @@ public class GatheringAttachmentService {
     // 모임 이미지 수정
     @Transactional
     public AttachmentResponseDto gatheringUpdateFile (AuthUser authUser, Long gatheringId, MultipartFile file) throws IOException, java.io.IOException {
-        validateFile(file);
+        validateFile(file, authUser);
 
         // Gathering 객체를 조회
         Gathering gathering = gatheringRepository.findById(gatheringId)
@@ -126,6 +134,8 @@ public class GatheringAttachmentService {
     // 모임 이미지 삭제
     @Transactional
     public void gatheringDeleteFile(AuthUser authUser, Long gatheringId) {
+
+        checkAdminOrEventCreatorForDeletion(authUser.getUserId(), gatheringId);
         // gatheringId를 사용하여 Gathering 엔티티를 조회
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
@@ -148,13 +158,21 @@ public class GatheringAttachmentService {
     }
 
     // 이미지 예외처리
-    private void validateFile(MultipartFile file) {
+    private void validateFile(MultipartFile file, AuthUser authUser) {
         if (!SUPPORTED_FILE_TYPES.contains(file.getContentType())) {
             throw new ResponseCodeException(ResponseCode.NOT_SERVICE);
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new ResponseCodeException(ResponseCode.TOO_LARGE_SIZE_FILE);
+        }
+
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        if (isAdmin) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
     }
 
@@ -199,5 +217,24 @@ public class GatheringAttachmentService {
         attachment.setGathering(gathering);
         attachmentRepository.save(attachment);
         return attachment;
+    }
+
+    // 삭제 권한
+    private void checkAdminOrEventCreatorForDeletion(Long userId, Long gatheringId) {
+       Gathering gathering = gatheringRepository.findById(gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(()-> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        boolean isHost = (member.getRole().equals(MemberRole.HOST));
+
+        if (!isAdmin && !isHost) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
     }
 }
