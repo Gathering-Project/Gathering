@@ -9,6 +9,7 @@ import nbc_final.gathering.domain.user.entity.User;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "participants")
 @Entity
 public class Participant extends TimeStamped {
 
