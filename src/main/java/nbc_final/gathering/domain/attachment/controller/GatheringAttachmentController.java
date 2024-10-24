@@ -1,10 +1,10 @@
-package nbc_final.gathering.domain.example.attachment.controller;
+package nbc_final.gathering.domain.attachment.controller;
 
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
-import nbc_final.gathering.domain.example.attachment.dto.AttachmentResponseDto;
-import nbc_final.gathering.domain.example.attachment.service.GatheringAttachmentService;
+import nbc_final.gathering.domain.attachment.dto.AttachmentResponseDto;
+import nbc_final.gathering.domain.attachment.service.GatheringAttachmentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;

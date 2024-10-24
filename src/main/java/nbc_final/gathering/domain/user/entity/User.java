@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.event.entity.Event;
-import nbc_final.gathering.domain.example.attachment.entity.Attachment;
+import nbc_final.gathering.domain.attachment.entity.Attachment;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.user.dto.request.UserUpdateRequestDto;
 import nbc_final.gathering.domain.user.enums.InterestType;
@@ -14,7 +14,6 @@ import nbc_final.gathering.domain.user.enums.MbtiType;
 import nbc_final.gathering.domain.user.enums.UserRole;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.ArrayList;
 import java.util.List;
 

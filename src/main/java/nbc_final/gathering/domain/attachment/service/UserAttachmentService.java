@@ -1,4 +1,4 @@
-package nbc_final.gathering.domain.example.attachment.service;
+package nbc_final.gathering.domain.attachment.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -7,10 +7,11 @@ import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
-import nbc_final.gathering.domain.example.attachment.dto.AttachmentResponseDto;
-import nbc_final.gathering.domain.example.attachment.entity.Attachment;
-import nbc_final.gathering.domain.example.attachment.repository.AttachmentRepository;
+import nbc_final.gathering.domain.attachment.dto.AttachmentResponseDto;
+import nbc_final.gathering.domain.attachment.entity.Attachment;
+import nbc_final.gathering.domain.attachment.repository.AttachmentRepository;
 import nbc_final.gathering.domain.user.entity.User;
+import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserAttachmentService {
 
     private final AmazonS3 amazonS3;
@@ -40,7 +42,7 @@ public class UserAttachmentService {
     // 유저 프로필 등록
     @Transactional
     public AttachmentResponseDto userUploadFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException {
-        validateFile(file);
+        validateFile(file, authUser);
 
         User user = userRepository.findById(authUser.getUserId())
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
@@ -58,7 +60,7 @@ public class UserAttachmentService {
     @Transactional
     public AttachmentResponseDto userUpdateFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException
     {
-        validateFile(file);
+        validateFile(file, authUser);
 
         // User 엔티티 조회
         User user = userRepository.findById(authUser.getUserId())
@@ -99,13 +101,21 @@ public class UserAttachmentService {
     }
 
     // 이미지 예외처리
-    private void validateFile(MultipartFile file) {
+    private void validateFile(MultipartFile file, AuthUser authUser) {
         if (!SUPPORTED_FILE_TYPES.contains(file.getContentType())) {
             throw new ResponseCodeException(ResponseCode.NOT_SERVICE);
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new ResponseCodeException(ResponseCode.TOO_LARGE_SIZE_FILE);
+        }
+
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        if (isAdmin) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
     }
 

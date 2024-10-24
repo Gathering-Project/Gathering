@@ -1,6 +1,6 @@
-package nbc_final.gathering.domain.example.attachment.repository;
+package nbc_final.gathering.domain.attachment.repository;
 
-import nbc_final.gathering.domain.example.attachment.entity.Attachment;
+import nbc_final.gathering.domain.attachment.entity.Attachment;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
