@@ -3,7 +3,6 @@ package nbc_final.gathering.domain.example.attachment.service;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import io.jsonwebtoken.io.IOException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
@@ -19,14 +18,15 @@ import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class GatheringAttachmentService {
 
     private final AmazonS3 amazonS3;
