@@ -7,8 +7,8 @@ import nbc_final.gathering.domain.member.enums.MemberStatus;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
-@Repository
 @Primary
+@Repository
 public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
@@ -30,7 +30,6 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                         .and(member.status.eq(MemberStatus.APPROVED)))
                 .fetchFirst() != null;
     }
-
     @Override
     public boolean isGatheringCreator(Long userId, Long gatheringId) {
         QGathering gathering = QGathering.gathering;
