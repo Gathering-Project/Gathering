@@ -43,7 +43,7 @@ public class EventService {
     // 이벤트 생성 (권한: 소모임 멤버 또는 어드민)
     @Transactional
     public EventResponseDto createEvent(Long userId, Long gatheringId, EventCreateRequestDto requestDto) {
-        checkAdminOrGatheringMember(userId, gatheringId);
+        checkAdminOrGatheringMemberForCreation(userId, gatheringId);
 
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
@@ -51,23 +51,21 @@ public class EventService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 
-        Event event = Event.of(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(), requestDto.getLocation(), requestDto.getMaxParticipants(), gathering, user
-        );
+        Event event = Event.of(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(), requestDto.getLocation(), requestDto.getMaxParticipants(), gathering, user);
         eventRepository.save(event);
 
-        User creator = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-        Participant participant = Participant.of(event, creator);
+        // 이벤트 생성자는 자동으로 참가
+        Participant participant = Participant.of(event, user);
         event.addParticipant(participant);
 
         return EventResponseDto.of(event, userId);
     }
 
 
-    // 이벤트 수정 (권한: 소모임 생성자 또는 이벤트 생성자)
+    // 이벤트 수정 (권한: 이벤트 생성자만 가능, 어드민 불가능)
     @Transactional
     public EventUpdateResponseDto updateEvent(Long userId, Long gatheringId, Long eventId, EventUpdateRequestDto requestDto) {
-        checkGatheringCreatorOrEventCreator(userId, eventId, gatheringId);
+        checkEventCreatorForUpdate(userId, eventId, gatheringId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
@@ -81,15 +79,14 @@ public class EventService {
 
     // 이벤트 다건 조회 (권한: 소모임 멤버 또는 어드민)
     public EventListResponseDto getAllEvents(Long userId, Long gatheringId) {
-        checkAdminOrGatheringMember(userId, gatheringId);
+        checkAdminOrGatheringMemberForView(userId, gatheringId);
         List<Event> events = eventRepository.findAllByGatheringId(gatheringId);
         return EventListResponseDto.of(events, userId);
     }
 
-    // 이벤트 단건 조회 (권한: 소모임 멤버 또는 어드민)
+    /// 이벤트 단건 조회 (권한: 소모임 멤버 또는 어드민)
     public EventResponseDto getEvent(Long userId, Long gatheringId, Long eventId) {
-
-        checkAdminOrGatheringMember(userId, gatheringId);
+        checkAdminOrGatheringMemberForView(userId, gatheringId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
@@ -102,11 +99,10 @@ public class EventService {
         return EventResponseDto.of(event, userId, commentResponseDtos);
     }
 
-    // 검증 권한: 어드민, 이벤트 생성자, 소모임 생성자
+    // 이벤트 삭제 (권한: 이벤트 생성자 또는 어드민)
     @Transactional
     public void deleteEvent(Long userId, Long gatheringId, Long eventId) {
-
-        checkAdminOrEventCreatorOrGatheringCreator(userId, eventId, gatheringId);
+        checkAdminOrEventCreatorForDeletion(userId, eventId, gatheringId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
@@ -114,46 +110,55 @@ public class EventService {
         eventRepository.delete(event);
     }
 
-    // 이벤트 참가 (권한: 소모임 멤버 또는 어드민)
+
+    // 이벤트 참가 (권한: 어드민 불가, 이벤트 생성자 불가, 게더링 멤버 가능)
     @Transactional
     public void participateInEvent(Long userId, Long gatheringId, Long eventId) {
-        // 공통 권한 검증
-        checkAdminOrGatheringMember(userId, gatheringId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        if (user.getUserRole().equals(UserRole.ROLE_ADMIN)) {
+            throw new ResponseCodeException(ResponseCode.ADMIN_CANNOT_PARTICIPATE);
+        }
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
-        // 이미 참가한 유저인지 확인
+        if (event.getUser().getId().equals(userId)) {
+            throw new ResponseCodeException(ResponseCode.EVENT_CREATOR_CANNOT_PARTICIPATE);
+        }
+
         boolean alreadyParticipated = participantRepository.findByEventAndUserId(event, userId).isPresent();
         if (alreadyParticipated) {
             throw new ResponseCodeException(ResponseCode.ALREADY_PARTICIPATED);
         }
 
-        // 호스트는 직접 신청할 수 없음
-        if (event.getUser().getId().equals(userId)) {
-            throw new ResponseCodeException(ResponseCode.EVENT_CREATOR_CANNOT_PARTICIPATE);
-        }
-
-        // 참가 인원이 최대치에 도달했는지 확인
         if (event.getCurrentParticipants() >= event.getMaxParticipants()) {
             throw new ResponseCodeException(ResponseCode.PARTICIPANT_LIMIT_EXCEEDED);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+        checkAdminOrGatheringMemberForCreation(userId, gatheringId);
 
         Participant participant = Participant.of(event, user);
         event.addParticipant(participant);
     }
 
-    // 이벤트 참가 취소 (권한: 소모임 멤버 또는 어드민)
+    // 이벤트 참가 취소 (권한: 어드민 불가, 이벤트 생성자 불가)
     @Transactional
     public void cancelParticipation(Long userId, Long gatheringId, Long eventId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 
-        checkAdminOrGatheringMember(userId, gatheringId);
+        if (user.getUserRole().equals(UserRole.ROLE_ADMIN)) {
+            throw new ResponseCodeException(ResponseCode.ADMIN_CANNOT_CANCEL_PARTICIPATION);
+        }
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+
+        if (event.getUser().getId().equals(userId)) {
+            throw new ResponseCodeException(ResponseCode.EVENT_CREATOR_CANNOT_CANCEL);
+        }
 
         Participant participant = participantRepository.findByEventAndUserId(event, userId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_PARTICIPATED));
@@ -161,25 +166,10 @@ public class EventService {
         event.removeParticipant(participant);
     }
 
-
-
-    // 공통 권한 검증 (권한: 소모임 멤버 또는 어드민)
-    private void checkAdminOrGatheringMember(Long userId, Long gatheringId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
-        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
-        boolean isGatheringMember = eventRepositoryCustom.isUserInGathering(gatheringId, userId);
-
-        if (!isAdmin && !isGatheringMember) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
-    }
-
     // 이벤트 참가자 조회 (권한: 소모임 멤버 또는 어드민)
     @Transactional(readOnly = true)
     public List<ParticipantResponseDto> getParticipants(Long userId, Long gatheringId, Long eventId) {
-        checkAdminOrGatheringMember(userId, gatheringId);
+        checkAdminOrGatheringMemberForView(userId, gatheringId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
@@ -191,33 +181,58 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    // 삭제 기능 (권한: 어드민, 이벤트 생성자, 소모임 생성자)
-    private void checkAdminOrEventCreatorOrGatheringCreator(Long userId, Long eventId, Long gatheringId) {
+
+    // 공통 권한 검증 (생성 권한: 어드민 또는 게더링 멤버)
+    private void checkAdminOrGatheringMemberForCreation(Long userId, Long gatheringId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
-
         boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
-        boolean isEventCreator = event.getUser().getId().equals(userId);
-        boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
+        boolean isGatheringMember = eventRepositoryCustom.isUserInGathering(gatheringId, userId);
 
-        if (!isAdmin && !isEventCreator && !isGatheringCreator) {
+        if (!isAdmin && !isGatheringMember) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
     }
 
-    // 검증 권한: 소모임 생성자 또는 이벤트 생성자
-    private void checkGatheringCreatorOrEventCreator(Long userId, Long eventId, Long gatheringId) {
+    // 조회 권한 (어드민 또는 게더링 멤버)
+    private void checkAdminOrGatheringMemberForView(Long userId, Long gatheringId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        boolean isGatheringMember = eventRepositoryCustom.isUserInGathering(gatheringId, userId);
+
+        if (!isAdmin && !isGatheringMember) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
+    }
+
+    // 삭제 권한 (어드민 또는 이벤트 생성자)
+    private void checkAdminOrEventCreatorForDeletion(Long userId, Long eventId, Long gatheringId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
-        boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        boolean isEventCreator = event.getUser().getId().equals(userId);
+
+        if (!isAdmin && !isEventCreator) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
+    }
+
+
+    // 수정 권한 (이벤트 생성자만 가능)
+    private void checkEventCreatorForUpdate(Long userId, Long eventId, Long gatheringId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
         boolean isEventCreator = event.getUser().getId().equals(userId);
 
-        if (!isGatheringCreator && !isEventCreator) {
+        if (!isEventCreator) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
     }

@@ -1,5 +1,6 @@
 package nbc_final.gathering.domain.event.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventResponseDto {
 
     private Long eventId;
@@ -36,11 +38,10 @@ public class EventResponseDto {
                 event.getCurrentParticipants(),
                 event.getCreatedAt(),
                 event.getUpdatedAt(),
-                null  // 댓글 리스트 없이 반환
+                null
         );
     }
 
-    // 댓글이 포함된 메서드
     public static EventResponseDto of(Event event, Long userId, List<CommentResponseDto> comments) {
         return new EventResponseDto(
                 event.getId(),

@@ -43,6 +43,8 @@ public enum ResponseCode {
     EVENT_CREATOR_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "이벤트 생성자는 참가 취소를 할 수 없습니다."),
     EVENT_CREATOR_CANNOT_PARTICIPATE(HttpStatus.BAD_REQUEST, "이벤트 생성자는 참가할 수 없습니다."),
     INVALID_MAX_PARTICIPANTS(HttpStatus.BAD_REQUEST, "현재 참가자 수보다 적은 인원으로 설정할 수 없습니다."),
+    ADMIN_CANNOT_PARTICIPATE(HttpStatus.BAD_REQUEST, "관리자 계정은 이벤트에 참가할 수 없습니다."),
+    ADMIN_CANNOT_CANCEL_PARTICIPATION(HttpStatus.BAD_REQUEST,"관리자 계정은 이벤트 참가를 취소할 수 없습니다"),
 
     // 댓글 관련 예외
     NOT_FOUND_COMMENT(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다."),
