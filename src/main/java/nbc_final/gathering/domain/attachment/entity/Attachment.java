@@ -1,4 +1,4 @@
-package nbc_final.gathering.domain.example.attachment.entity;
+package nbc_final.gathering.domain.attachment.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

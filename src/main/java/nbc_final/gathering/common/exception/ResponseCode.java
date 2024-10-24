@@ -25,8 +25,10 @@ public enum ResponseCode {
 
     // 멤버 관련 예외
     NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "해당 멤버를 찾을 수 없습니다."),
-    ALREADY_REQUESTED(HttpStatus.CONFLICT, "이미 가입된 모임입니다."),
+    ALREADY_REQUESTED(HttpStatus.CONFLICT, "이미 가입 신청한 멤버입니다."),
     ALREADY_MEMBER(HttpStatus.CONFLICT, "이미 가입된 멤버입니다."),
+    FULL_MEMBER(HttpStatus.CONFLICT, "소모임에 인원이 가득 찼습니다."),
+    REJECTED_MEMBER(HttpStatus.CONFLICT, "소모임 참여가 거부되었습니다."),
 
     // 소모임 관련 예외
     NOT_FOUND_GATHERING(HttpStatus.NOT_FOUND, "해당 소모임을 찾을 수 없습니다."),
@@ -43,6 +45,8 @@ public enum ResponseCode {
     EVENT_CREATOR_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "이벤트 생성자는 참가 취소를 할 수 없습니다."),
     EVENT_CREATOR_CANNOT_PARTICIPATE(HttpStatus.BAD_REQUEST, "이벤트 생성자는 참가할 수 없습니다."),
     INVALID_MAX_PARTICIPANTS(HttpStatus.BAD_REQUEST, "현재 참가자 수보다 적은 인원으로 설정할 수 없습니다."),
+    ADMIN_CANNOT_PARTICIPATE(HttpStatus.BAD_REQUEST, "관리자 계정은 이벤트에 참가할 수 없습니다."),
+    ADMIN_CANNOT_CANCEL_PARTICIPATION(HttpStatus.BAD_REQUEST,"관리자 계정은 이벤트 참가를 취소할 수 없습니다"),
 
     // 댓글 관련 예외
     NOT_FOUND_COMMENT(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다."),

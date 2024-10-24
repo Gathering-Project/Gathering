@@ -1,4 +1,4 @@
-package nbc_final.gathering.domain.example.attachment.service;
+package nbc_final.gathering.domain.attachment.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -7,10 +7,14 @@ import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
-import nbc_final.gathering.domain.example.attachment.dto.AttachmentResponseDto;
-import nbc_final.gathering.domain.example.attachment.entity.Attachment;
-import nbc_final.gathering.domain.example.attachment.repository.AttachmentRepository;
+import nbc_final.gathering.domain.attachment.dto.AttachmentResponseDto;
+import nbc_final.gathering.domain.attachment.entity.Attachment;
+import nbc_final.gathering.domain.attachment.repository.AttachmentRepository;
+import nbc_final.gathering.domain.event.entity.Event;
+import nbc_final.gathering.domain.event.repository.EventRepository;
+import nbc_final.gathering.domain.event.repository.EventRepositoryCustom;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
+import nbc_final.gathering.domain.gathering.enums.Role;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
@@ -48,7 +52,7 @@ public class GatheringAttachmentService {
     @Transactional
     public AttachmentResponseDto gatheringUploadFile(AuthUser authUser, Long gatheringId, MultipartFile file) throws IOException, java.io.IOException {
         // 파일 체크
-        validateFile(file);
+        validateFile(file, authUser);
 
         Gathering gathering = gatheringRepository.findById(gatheringId)
         .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
@@ -69,12 +73,10 @@ public class GatheringAttachmentService {
         return new AttachmentResponseDto(attachment);
     }
 
-
-
     // 모임 이미지 수정
     @Transactional
     public AttachmentResponseDto gatheringUpdateFile (AuthUser authUser, Long gatheringId, MultipartFile file) throws IOException, java.io.IOException {
-        validateFile(file);
+        validateFile(file, authUser);
 
         // Gathering 객체를 조회
         Gathering gathering = gatheringRepository.findById(gatheringId)
@@ -100,6 +102,8 @@ public class GatheringAttachmentService {
     // 모임 이미지 삭제
     @Transactional
     public void gatheringDeleteFile(AuthUser authUser, Long gatheringId) {
+
+        checkAdminOrEventCreatorForDeletion(authUser.getUserId(), gatheringId);
         // gatheringId를 사용하여 Gathering 엔티티를 조회
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
@@ -133,7 +137,7 @@ public class GatheringAttachmentService {
     }
 
     // 이미지 예외처리
-    private void validateFile(MultipartFile file) {
+    private void validateFile(MultipartFile file, AuthUser authUser) {
         if (!SUPPORTED_FILE_TYPES.contains(file.getContentType())) {
             throw new ResponseCodeException(ResponseCode.NOT_SERVICE);
         }
@@ -141,26 +145,33 @@ public class GatheringAttachmentService {
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new ResponseCodeException(ResponseCode.TOO_LARGE_SIZE_FILE);
         }
-    }
 
-    private static void validateMemberAndHost(AuthUser authUser, Gathering gathering) {
-        List<Member> members = gathering.getMembers();
-        Member loginMember = null;
-        for (Member member : members) {
-            // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
-            if (member.getUser().getId().equals(authUser.getUserId())) {
-                loginMember = member;
-            }
-        }
-
-        if (loginMember == null) {
-            // 멤버를 찾지 못한다면
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다.");
-            // 로그인 한 유저의 역할이 HOST가 아닌 경우
-        } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        if (isAdmin) {
+          throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
     }
+
+  private static void validateMemberAndHost(AuthUser authUser, Gathering gathering) {
+    List<Member> members = gathering.getMembers();
+    Member loginMember = null;
+    for (Member member : members) {
+      // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
+      if (member.getUser().getId().equals(authUser.getUserId())) {
+        loginMember = member;
+      }
+    }
+
+    if (loginMember == null) {
+      // 멤버를 찾지 못한다면
+      throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다.");
+      // 로그인 한 유저의 역할이 HOST가 아닌 경우
+    } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
+      throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+    }
+  }
 
     // 삭제 메서드
     private void deleteFromS3(String fileUrl) {
@@ -203,5 +214,24 @@ public class GatheringAttachmentService {
         attachment.setGathering(gathering);
         attachmentRepository.save(attachment);
         return attachment;
+    }
+
+    // 삭제 권한
+    private void checkAdminOrEventCreatorForDeletion(Long userId, Long gatheringId) {
+       Gathering gathering = gatheringRepository.findById(gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(()-> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        boolean isHost = (member.getRole().equals(MemberRole.HOST));
+
+        if (!isAdmin && !isHost) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
     }
 }
