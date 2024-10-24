@@ -138,20 +138,20 @@ public class GatheringAttachmentService {
 
     // 이미지 예외처리
     private void validateFile(MultipartFile file, AuthUser authUser) {
-        if (!SUPPORTED_FILE_TYPES.contains(file.getContentType())) {
-            throw new ResponseCodeException(ResponseCode.NOT_SERVICE);
-        }
+      if (!SUPPORTED_FILE_TYPES.contains(file.getContentType())) {
+        throw new ResponseCodeException(ResponseCode.NOT_SERVICE);
+      }
 
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new ResponseCodeException(ResponseCode.TOO_LARGE_SIZE_FILE);
-        }
+      if (file.getSize() > MAX_FILE_SIZE) {
+        throw new ResponseCodeException(ResponseCode.TOO_LARGE_SIZE_FILE);
+      }
 
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
-        if (isAdmin) {
-          throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
+      User user = userRepository.findById(authUser.getUserId())
+          .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+      boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+      if (isAdmin) {
+        throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+      }
     }
 
   private static void validateMemberAndHost(AuthUser authUser, Gathering gathering) {
