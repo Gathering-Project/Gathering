@@ -52,7 +52,7 @@ public class GatheringService {
     gatheringRepository.save(savedGathering);
     memberRepository.save(member);
 
-    return new GatheringResponseDto(savedGathering);
+    return GatheringResponseDto.of(savedGathering);
   }
 
   // 소모임 단 건 조회 로직
@@ -64,7 +64,7 @@ public class GatheringService {
     for (Member member : members) {
       Gathering gathering = member.getGathering();
       if (gathering != null && gathering.getId().equals(gatheringId)) {
-        return new GatheringResponseDto(gathering);
+        return GatheringResponseDto.of(gathering);
       }
     }
     throw new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING);
@@ -81,7 +81,7 @@ public class GatheringService {
     for (Member member : members) {
       Gathering gathering = findGatheringByMember(member);
       if (gathering != null) {
-        gatheringResponses.add(new GatheringResponseDto(gathering));
+        gatheringResponses.add(GatheringResponseDto.of(gathering));
       }
     }
 
@@ -96,7 +96,9 @@ public class GatheringService {
     Gathering gathering = findGatheringById(gatheringId);
 
     // Host인지 권한 체크
-    validateUserPermission(authUser, gathering);
+    validateHostPermission(authUser, gathering);
+    // MaxCount 체크
+    validateMaxCount(gatheringRequestDto, gathering);
 
     // 소모임 정보 업데이트
     gathering.updateDetails(gatheringRequestDto.getTitle(),
@@ -108,7 +110,7 @@ public class GatheringService {
     gatheringRepository.save(gathering);
 
     // 업데이트된 정보를 DTO로 반환
-    return new GatheringResponseDto(gathering);
+    return GatheringResponseDto.of(gathering);
   }
 
   @Transactional
@@ -116,8 +118,8 @@ public class GatheringService {
     // 소모임 조회
     Gathering gathering = findGatheringById(gatheringId);
 
-    // 사용자 권한 검증 (호스트인지 확인)
-    validateUserPermission(authUser, gathering);
+    // 사용자 권한 검증 (HOST or ADMIN)
+    validateHostAndAdminPermission(authUser, gathering);
 
     // 모임과 관련된 멤버 삭제
     memberRepository.deleteByGathering(gathering); // 모임에 속한 멤버를 삭제하는 메서드
@@ -154,7 +156,7 @@ public class GatheringService {
     );
   }
 
-  private void validateUserPermission(AuthUser authUser, Gathering gathering) {
+  private void validateHostAndAdminPermission(AuthUser authUser, Gathering gathering) {
     // 유저 조회
     User user = findUserById(authUser);
     // 유저와 소모임을 기반으로 멤버 조회
@@ -164,6 +166,26 @@ public class GatheringService {
     // 호스트가 아니거나, 어드민이 아니면 권한 X
     if ((member.getRole() != MemberRole.HOST) || (user.getUserRole() != UserRole.ROLE_ADMIN)) {
       throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+    }
+  }
+
+  private void validateHostPermission(AuthUser authUser, Gathering gathering) {
+    // 유저 조회
+    User user = findUserById(authUser);
+    // 유저와 소모임을 기반으로 멤버 조회
+    Member member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
+        () -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER)
+    );
+    // 호스트가 아니면 권한 X
+    if ((member.getRole() != MemberRole.HOST)) {
+      throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+    }
+  }
+
+  private static void validateMaxCount(GatheringRequestDto gatheringRequestDto, Gathering gathering) {
+    // 변경하려는 최대 인원이 소모임의 현재 인원보다 적은 경우
+    if (gathering.getGatheringCount() > gatheringRequestDto.getGatheringMaxCount()) {
+      throw new ResponseCodeException(ResponseCode.INVALID_MAX_COUNT);
     }
   }
 
