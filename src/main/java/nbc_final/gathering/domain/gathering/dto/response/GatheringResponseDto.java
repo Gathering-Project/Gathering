@@ -1,9 +1,11 @@
 package nbc_final.gathering.domain.gathering.dto.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 
 @Getter
+@AllArgsConstructor
 public class GatheringResponseDto {
 
   private Long gatheringId;
@@ -13,14 +15,21 @@ public class GatheringResponseDto {
   private Integer gatheringMaxCount;
   private Integer gatheringCount;
 
-  public GatheringResponseDto(Gathering gathering) {
-    this.gatheringId = gathering.getId();
-    this.title = gathering.getTitle();
-    this.description = gathering.getDescription();
-    this.gatheringImage = gathering.getGatheringImage();
-    this.gatheringCount = gathering.getGatheringCount();
-    this.gatheringMaxCount = gathering.getGatheringMaxCount();
+  public static GatheringResponseDto of(Gathering gathering) {
+    return new GatheringResponseDto(
+        gathering.getId(),
+        gathering.getTitle(),
+        gathering.getDescription(),
+        gathering.getGatheringImage(),
+        gathering.getGatheringCount(),
+        gathering.getGatheringMaxCount()
+    );
   }
+
+
+
+
+
 }
 
 
