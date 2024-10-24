@@ -33,7 +33,7 @@ public class Gathering extends TimeStamped {
   @Column(length = 100, nullable = false)
   private String description;
 
-  @Column(length = 2048, nullable = false)
+  @Column(length = 2048)
   private String gatheringImage;
 
   @Column(nullable = false)
@@ -51,7 +51,6 @@ public class Gathering extends TimeStamped {
   public Gathering(Long userId,
                    String title,
                    String description,
-                   String gatheringImage,
                    Integer gatheringCount,
                    Integer gatheringMaxCount,
                    BigDecimal rating,
@@ -60,7 +59,6 @@ public class Gathering extends TimeStamped {
     this.userId = userId;
     this.title = title;
     this.description = description;
-    this.gatheringImage = gatheringImage;
     this.gatheringCount = gatheringCount;
     this.gatheringMaxCount = gatheringMaxCount;
     this.rating = rating;
@@ -74,13 +72,11 @@ public class Gathering extends TimeStamped {
   public void updateDetails(String title,
                             String description,
                             Integer gatheringMaxCount,
-                            String location,
-                            String gatheringImage) {
+                            String location) {
     this.title = title;
     this.description = description;
     this.gatheringMaxCount = gatheringMaxCount;
     this.location = location;
-    this.gatheringImage = gatheringImage;
   }
 
   public static Gathering of(Long id) {
