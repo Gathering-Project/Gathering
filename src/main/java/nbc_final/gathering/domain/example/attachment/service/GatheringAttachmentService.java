@@ -14,7 +14,9 @@ import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
+import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.entity.User;
+import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,7 @@ public class GatheringAttachmentService {
     private final AttachmentRepository attachmentRepository;
     private final GatheringRepository gatheringRepository;
     private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
@@ -50,22 +53,8 @@ public class GatheringAttachmentService {
         Gathering gathering = gatheringRepository.findById(gatheringId)
         .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 //------
-        List<Member> members = gathering.getMembers();
-        Member loginMember = null;
-        for (Member member : members) {
-          // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
-          if (member.getUser().getId().equals(authUser.getUserId())) {
-            loginMember = member;
-          }
-        }
-
-        if (loginMember == null) {
-            // 멤버를 찾지 못한다면
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_USER);
-            // 로그인 한 유저의 역할이 HOST가 아닌 경우
-        } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
+        // 멤버인지, 유저라면 Host인지 체크
+        validateMemberAndHost(authUser, gathering);
 //------
 
         // S3에 파일 업로드 후 URL 반환
@@ -80,6 +69,8 @@ public class GatheringAttachmentService {
         return new AttachmentResponseDto(attachment);
     }
 
+
+
     // 모임 이미지 수정
     @Transactional
     public AttachmentResponseDto gatheringUpdateFile (AuthUser authUser, Long gatheringId, MultipartFile file) throws IOException, java.io.IOException {
@@ -93,23 +84,7 @@ public class GatheringAttachmentService {
         User user = userRepository.findById(authUser.getUserId())
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 //-----
-        List<Member> members = gathering.getMembers();
-        Member loginMember = null;
-
-        for (Member member : members) {
-            // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
-            if (member.getUser().getId().equals(authUser.getUserId())) {
-                loginMember = member;
-            }
-        }
-
-        if (loginMember == null) {
-            // 멤버를 찾지 못한다면
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_USER);
-            // 로그인 한 유저의 역할이 HOST가 아닌 경우
-        } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
+        validateMemberAndHost(authUser, gathering);
 
 //-----
         // 유저와 소모임으로 올려진 파일 찾기
@@ -133,7 +108,15 @@ public class GatheringAttachmentService {
         // AuthUser에서 User 엔티티 조회
         User user = userRepository.findById(authUser.getUserId())
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
+//-----
+        Member member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
+            () -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다.")
+        );
+        // 유저가 ADMIN 이거나 HOST가 아닌 경우
+        if (!(user.getUserRole().equals(UserRole.ROLE_ADMIN) || (member.getRole().equals(MemberRole.HOST)))) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
+//-----
         // 기존 파일 찾기
         List<Attachment> existingAttachment = attachmentRepository.findByUserAndGathering(user, gathering);
         for (Attachment attachment : existingAttachment) {
@@ -155,6 +138,25 @@ public class GatheringAttachmentService {
 
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new ResponseCodeException(ResponseCode.TOO_LARGE_SIZE_FILE);
+        }
+    }
+
+    private static void validateMemberAndHost(AuthUser authUser, Gathering gathering) {
+        List<Member> members = gathering.getMembers();
+        Member loginMember = null;
+        for (Member member : members) {
+            // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
+            if (member.getUser().getId().equals(authUser.getUserId())) {
+                loginMember = member;
+            }
+        }
+
+        if (loginMember == null) {
+            // 멤버를 찾지 못한다면
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다.");
+            // 로그인 한 유저의 역할이 HOST가 아닌 경우
+        } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
     }
 
