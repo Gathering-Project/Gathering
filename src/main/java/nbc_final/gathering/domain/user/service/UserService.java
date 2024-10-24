@@ -44,6 +44,10 @@ public class UserService {
             throw new ResponseCodeException(ResponseCode.DUPLICATE_EMAIL);
         }
 
+        if (userRepository.existsByNickname(signupRequest.getNickname())) {
+            throw new ResponseCodeException(ResponseCode.DUPLICATE_NICKNAME);
+        }
+
         String email = signupRequest.getEmail();
         validateDeletedEmail(email); // 이미 탈퇴한 적 있는 이메일인지 확인
         validateAdminToken(signupRequest, signupRequest.getUserRole()); // 관리자 계정 생성 시 관리자 인증 토큰이 맞는지 확인
@@ -59,14 +63,19 @@ public class UserService {
                 .userRole(userRole)
                 .build();
 
-        if (newUser.getNickname() == null) {
-            String randomNickname = GenerateRandomNickname.generateNickname();
-            newUser.setRandomNickname(randomNickname);
+        while (newUser.getNickname() == null) {
+            try {
+                String randomNickname = GenerateRandomNickname.generateNickname();
+                if (userRepository.existsByNickname(randomNickname)) {
+                    throw new ResponseCodeException(ResponseCode.DUPLICATE_NICKNAME);
+                }
+                newUser.setRandomNickname(randomNickname);
+            } catch (ResponseCodeException e) {
+                log.info("중복되는 닉네임이 생성되어 닉네임을 재부여합니다");
+            }
         }
 
-
         User savedUser = userRepository.save(newUser);
-
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserRole(), savedUser.getNickname());
 
         return new SignUpResponseDto(bearerToken);
