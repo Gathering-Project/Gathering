@@ -16,6 +16,7 @@ import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
+import nbc_final.gathering.domain.user.utils.GenerateRandomNickname;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -57,6 +58,12 @@ public class UserService {
                 .password(encodedPassword)
                 .userRole(userRole)
                 .build();
+
+        if (newUser.getNickname() == null) {
+            String randomNickname = GenerateRandomNickname.generateNickname();
+            newUser.setRandomNickname(randomNickname);
+        }
+
 
         User savedUser = userRepository.save(newUser);
 
@@ -112,7 +119,7 @@ public class UserService {
 
 
         if (passwordEncoder.matches(requestDto.getNewPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("새 비밀번호는 기존 비밀번호와 같을 수 없습니다.");
+            throw new ResponseCodeException(ResponseCode.SAME_PASSWORD);
         }
 
         String inputOldPassword = requestDto.getOldPassword();
@@ -165,6 +172,7 @@ public class UserService {
     // 새 비밀번호 검증
     private static void validateNewPassword(UserChangePwRequestDto requestDto) {
         if (
+                // 비밀번호는 영문 + 숫자 + 특수문자를 최소 1글자 포함하고 최소 8글자 이상 최대 20글자 이하
             // 비밀번호에 알파벳 포함 여부 확인 (대소문자 포함)
                 !requestDto.getNewPassword().matches(".*[A-Za-z].*") ||
                         // 비밀번호에 숫자 포함 여부 확인

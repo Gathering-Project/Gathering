@@ -31,6 +31,7 @@ public class User extends TimeStamped {
 
     private String location;
 
+    @Column(unique = true)
     private String nickname;
 
     @Column(length = 100, unique = true, nullable = false)
@@ -109,6 +110,10 @@ public class User extends TimeStamped {
 
     public void setProfileImagePath(String profileImagePath) {
         this.profileImagePath = profileImagePath;
+    }
+
+    public void setRandomNickname(String randomNickname) {
+        this.nickname = randomNickname;
     }
 
 }
