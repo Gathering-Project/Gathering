@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 public enum ResponseCode {
 
     // 공통 응답
-    SUCCESS(HttpStatus.OK, "정상 처리되었습니다."),
     INVALID_TIMEOUT(HttpStatus.REQUEST_TIMEOUT, "다시 시도해주세요."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
 
@@ -21,19 +20,31 @@ public enum ResponseCode {
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "잘못된 비밀번호입니다."),
     VIOLATION_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호는 8자 이상이어야 하고, 숫자와 영문자를 포함해야 합니다."),
     USER_ALREADY_DELETED(HttpStatus.GONE, "이미 탈퇴한 회원입니다."),
+    INVALID_ADMIN_TOKEN(HttpStatus.BAD_REQUEST, "관리자 인증이 확인되지 않았습니다"),
+    SAME_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호는 기존 비밀번호와 같을 수 없습니다."),
 
     // 멤버 관련 예외
     NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "해당 멤버를 찾을 수 없습니다."),
-    ALREADY_REQUESTED(HttpStatus.CONFLICT, "이미 가입 된 모임입니다."),
+    ALREADY_REQUESTED(HttpStatus.CONFLICT, "이미 가입된 모임입니다."),
+    ALREADY_MEMBER(HttpStatus.CONFLICT, "이미 가입된 멤버입니다."),
 
     // 소모임 관련 예외
     NOT_FOUND_GATHERING(HttpStatus.NOT_FOUND, "해당 소모임을 찾을 수 없습니다."),
+    NOT_FOUND_GROUP(HttpStatus.NOT_FOUND, "해당 소모임을 찾을 수 없습니다."),
     INVALID_TITLE(HttpStatus.NOT_FOUND, "타이틀을 입력해주세요."),
     INVALID_MAX_COUNT(HttpStatus.NOT_FOUND, "인원 수 입력이 잘못 되었습니다."),
 
 
     // 이벤트 관련 예외
     NOT_FOUND_EVENT(HttpStatus.NOT_FOUND, "해당 이벤트를 찾을 수 없습니다."),
+    ALREADY_PARTICIPATED(HttpStatus.CONFLICT, "이미 참가한 이벤트입니다."),
+    PARTICIPANT_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "참가 가능한 인원이 초과되었습니다."),
+    NOT_PARTICIPATED(HttpStatus.NOT_FOUND, "참가하지 않은 이벤트입니다."),
+    EVENT_CREATOR_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "이벤트 생성자는 참가 취소를 할 수 없습니다."),
+    EVENT_CREATOR_CANNOT_PARTICIPATE(HttpStatus.BAD_REQUEST, "이벤트 생성자는 참가할 수 없습니다."),
+    INVALID_MAX_PARTICIPANTS(HttpStatus.BAD_REQUEST, "현재 참가자 수보다 적은 인원으로 설정할 수 없습니다."),
+    ADMIN_CANNOT_PARTICIPATE(HttpStatus.BAD_REQUEST, "관리자 계정은 이벤트에 참가할 수 없습니다."),
+    ADMIN_CANNOT_CANCEL_PARTICIPATION(HttpStatus.BAD_REQUEST,"관리자 계정은 이벤트 참가를 취소할 수 없습니다"),
 
     // 댓글 관련 예외
     NOT_FOUND_COMMENT(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다."),

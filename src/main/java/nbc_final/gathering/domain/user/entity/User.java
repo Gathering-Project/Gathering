@@ -5,13 +5,18 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
+import nbc_final.gathering.domain.event.entity.Event;
 import nbc_final.gathering.domain.example.attachment.entity.Attachment;
+import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.user.dto.request.UserUpdateRequestDto;
 import nbc_final.gathering.domain.user.enums.InterestType;
 import nbc_final.gathering.domain.user.enums.MbtiType;
 import nbc_final.gathering.domain.user.enums.UserRole;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -26,6 +31,7 @@ public class User extends TimeStamped {
 
     private String location;
 
+    @Column(unique = true)
     private String nickname;
 
     @Column(length = 100, unique = true, nullable = false)
@@ -53,22 +59,24 @@ public class User extends TimeStamped {
     // 이미지 파일 경로
     private String profileImagePath;
 
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-//    private List<Member> members = new ArrayList<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Member> members = new ArrayList<>();
 
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-//    private List<Event> events = new ArrayList<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Event> events = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Attachment attachment;
 
     @Builder
     public User(
+            Long id,
             String nickname,
             String email,
             String password,
             UserRole userRole
     ) {
+        this.id = id;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
@@ -102,6 +110,10 @@ public class User extends TimeStamped {
 
     public void setProfileImagePath(String profileImagePath) {
         this.profileImagePath = profileImagePath;
+    }
+
+    public void setRandomNickname(String randomNickname) {
+        this.nickname = randomNickname;
     }
 
 }

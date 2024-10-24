@@ -22,6 +22,8 @@ public class Gathering extends TimeStamped {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  private Long userId;
+
   @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Member> members = new ArrayList<>();
 
@@ -31,7 +33,7 @@ public class Gathering extends TimeStamped {
   @Column(length = 100, nullable = false)
   private String description;
 
-  @Column(length = 2048, nullable = false)
+  @Column(length = 2048)
   private String gatheringImage;
 
   @Column(nullable = false)
@@ -46,24 +48,40 @@ public class Gathering extends TimeStamped {
   @Column(length = 30, nullable = false)
   private String location;
 
-  public Gathering(String title,
+  public Gathering(Long userId,
+                   String title,
                    String description,
-                   String gatheringImage,
                    Integer gatheringCount,
                    Integer gatheringMaxCount,
                    BigDecimal rating,
                    String location) {
 
+    this.userId = userId;
     this.title = title;
     this.description = description;
-    this.gatheringImage = gatheringImage;
     this.gatheringCount = gatheringCount;
     this.gatheringMaxCount = gatheringMaxCount;
     this.rating = rating;
     this.location = location;
   }
 
-  public void setGatheringImage(String gatheringImage){
-    this. gatheringImage = gatheringImage;
+  public void setGatheringImage(String gatheringImage) {
+    this.gatheringImage = gatheringImage;
+  }
+
+  public void updateDetails(String title,
+                            String description,
+                            Integer gatheringMaxCount,
+                            String location) {
+    this.title = title;
+    this.description = description;
+    this.gatheringMaxCount = gatheringMaxCount;
+    this.location = location;
+  }
+
+  public static Gathering of(Long id) {
+    Gathering gathering = new Gathering();
+    gathering.id = id;
+    return gathering;
   }
 }

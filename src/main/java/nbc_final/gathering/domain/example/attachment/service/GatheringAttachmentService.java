@@ -3,10 +3,8 @@ package nbc_final.gathering.domain.example.attachment.service;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import io.jsonwebtoken.io.IOException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
-import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.example.attachment.dto.AttachmentResponseDto;
@@ -14,10 +12,13 @@ import nbc_final.gathering.domain.example.attachment.entity.Attachment;
 import nbc_final.gathering.domain.example.attachment.repository.AttachmentRepository;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
+import nbc_final.gathering.domain.member.entity.Member;
+import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
@@ -25,6 +26,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class GatheringAttachmentService {
 
     private final AmazonS3 amazonS3;
@@ -42,11 +44,29 @@ public class GatheringAttachmentService {
     // 모임 프로필 등록
     @Transactional
     public AttachmentResponseDto gatheringUploadFile(AuthUser authUser, Long gatheringId, MultipartFile file) throws IOException, java.io.IOException {
+        // 파일 체크
         validateFile(file);
 
-        // Gathering 객체를 조회
         Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+        .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
+//------
+        List<Member> members = gathering.getMembers();
+        Member loginMember = null;
+        for (Member member : members) {
+          // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
+          if (member.getUser().getId().equals(authUser.getUserId())) {
+            loginMember = member;
+          }
+        }
+
+        if (loginMember == null) {
+            // 멤버를 찾지 못한다면
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_USER);
+            // 로그인 한 유저의 역할이 HOST가 아닌 경우
+        } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
+//------
 
         // S3에 파일 업로드 후 URL 반환
         String fileUrl = uploadToS3(file);
@@ -67,17 +87,38 @@ public class GatheringAttachmentService {
 
         // Gathering 객체를 조회
         Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
         // AuthUser에서 User 엔티티 조회
         User user = userRepository.findById(authUser.getUserId())
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+//-----
+        List<Member> members = gathering.getMembers();
+        Member loginMember = null;
 
+        for (Member member : members) {
+            // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
+            if (member.getUser().getId().equals(authUser.getUserId())) {
+                loginMember = member;
+            }
+        }
+
+        if (loginMember == null) {
+            // 멤버를 찾지 못한다면
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_USER);
+            // 로그인 한 유저의 역할이 HOST가 아닌 경우
+        } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
+
+//-----
+        // 유저와 소모임으로 올려진 파일 찾기
         List<Attachment> existingAttachment = attachmentRepository.findByUserAndGathering(user, gathering);
         for (Attachment attachment : existingAttachment) {
             deleteFromS3(attachment.getProfileImagePath());
             attachmentRepository.delete(attachment);
         }
+        // 사진 업로드
         AttachmentResponseDto responseDto = gatheringUploadFile(authUser, gatheringId, file);
         return responseDto;
     }
@@ -87,7 +128,7 @@ public class GatheringAttachmentService {
     public void gatheringDeleteFile(AuthUser authUser, Long gatheringId) {
         // gatheringId를 사용하여 Gathering 엔티티를 조회
         Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
         // AuthUser에서 User 엔티티 조회
         User user = userRepository.findById(authUser.getUserId())
@@ -99,6 +140,11 @@ public class GatheringAttachmentService {
             deleteFromS3(attachment.getProfileImagePath());
             attachmentRepository.delete(attachment);
         }
+
+//-----
+        gathering.setGatheringImage(null);
+//-----
+
     }
 
     // 이미지 예외처리
@@ -136,7 +182,7 @@ public class GatheringAttachmentService {
 
         // gathering이 제대로 전달되는지 확인
         if (gathering == null) {
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP);
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING);
         }
 
         // User 엔티티 조회
