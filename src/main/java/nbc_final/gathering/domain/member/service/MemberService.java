@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,19 +35,38 @@ public class MemberService {
     @Transactional
     public MemberResponseDto requestToJoin(AuthUser authUser, Long gatheringId) {
 
+        // 유저 조회
         User user = findUserById(authUser);
 
+        // 소모임 조회
         Gathering savedGathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
-        if (memberRepository.existsByUserAndGathering(user, savedGathering)) {
-            throw new ResponseCodeException(ResponseCode.ALREADY_REQUESTED);
+        // 이미 소모임에 가입한 적이 있는지 확인
+        Optional<Member> existingMember = memberRepository.findByUserAndGathering(user, savedGathering);
+
+        // 멤버 상태 확인
+        if (existingMember.isPresent()) {
+            Member member = existingMember.get();
+            // REJECT 상태인 경우
+            if (member.getStatus() == MemberStatus.REJECTED) {
+                throw new ResponseCodeException(ResponseCode.REJECTED_MEMBER);
+            }
+            // APPROVED 상태인 경우
+            else if (member.getStatus() == MemberStatus.APPROVED) {
+                throw new ResponseCodeException(ResponseCode.ALREADY_MEMBER);
+            }
+            // PENDING 상태인 경우
+            else if (member.getStatus() == MemberStatus.PENDING) {
+                throw new ResponseCodeException(ResponseCode.ALREADY_REQUESTED);
+            }
         }
 
-        Member member = new Member(user, savedGathering, MemberRole.GUEST, MemberStatus.PENDING);
-        memberRepository.save(member);
+        // 새로운 가입 요청 처리 (PENDING 상태로 저장)
+        Member newMember = new Member(user, savedGathering, MemberRole.GUEST, MemberStatus.PENDING);
+        memberRepository.save(newMember);
 
-        return MemberResponseDto.from(member);
+        return MemberResponseDto.from(newMember);
     }
 
     @Transactional
@@ -87,7 +107,7 @@ public class MemberService {
         // 소모임 최대 인원을 초과할 경우
         if (approvedMembersCount >= gathering.getGatheringMaxCount()) {
             // 멤버는 여전히 PENDING 상태로 유지
-            throw new ResponseCodeException(ResponseCode.FULL_MEMBER, "소모임의 최대 인원을 초과했습니다.");
+            throw new ResponseCodeException(ResponseCode.FULL_MEMBER);
         }
 
         // 인원이 초과되지 않았으면 멤버 승인
