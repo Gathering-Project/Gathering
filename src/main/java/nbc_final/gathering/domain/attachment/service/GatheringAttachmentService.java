@@ -39,7 +39,6 @@ public class GatheringAttachmentService {
     private final AttachmentRepository attachmentRepository;
     private final GatheringRepository gatheringRepository;
     private final UserRepository userRepository;
-    private final EventRepository eventRepository;
     private final MemberRepository memberRepository;
 
     @Value("${cloud.aws.s3.bucket}")
