@@ -30,6 +30,15 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                         .and(member.status.eq(MemberStatus.APPROVED)))
                 .fetchFirst() != null;
     }
+    @Override
+    public boolean isGatheringCreator(Long userId, Long gatheringId) {
+        QGathering gathering = QGathering.gathering;
 
+        return queryFactory.selectOne()
+                .from(gathering)
+                .where(gathering.id.eq(gatheringId)
+                        .and(gathering.userId.eq(userId)))
+                .fetchFirst() != null;
+    }
 }
 
