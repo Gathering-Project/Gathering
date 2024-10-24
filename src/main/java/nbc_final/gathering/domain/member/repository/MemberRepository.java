@@ -22,13 +22,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByIdAndGatheringId(Long memberId, Long gatheringId);
 
-
     Optional<Member> findByUserIdAndGatheringId(Long userId, Long gatheringId);
 
     List<Member> findByUserId(Long userId);
 
-
-  Optional<Member> findByIdAndGatheringId(Long memberId, Long gatheringId);
 
   @Modifying
   @Query("DELETE FROM Member m WHERE m.gathering = :gathering")
