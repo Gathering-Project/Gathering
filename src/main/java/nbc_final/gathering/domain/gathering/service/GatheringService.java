@@ -39,7 +39,6 @@ public class GatheringService {
     // 그룹 생성
     Gathering savedGathering = new Gathering(user.getId(),gatheringRequestDto.getTitle(),
         gatheringRequestDto.getDescription(),
-        gatheringRequestDto.getGatheringImage(),
         1, gatheringRequestDto.getGatheringMaxCount(),
         BigDecimal.valueOf(50), gatheringRequestDto.getLocation()
     );
@@ -102,8 +101,7 @@ public class GatheringService {
     gathering.updateDetails(gatheringRequestDto.getTitle(),
         gatheringRequestDto.getDescription(),
         gatheringRequestDto.getGatheringMaxCount(),
-        gatheringRequestDto.getLocation(),
-        gatheringRequestDto.getGatheringImage());
+        gatheringRequestDto.getLocation());
 
     // 소모임 저장
     gatheringRepository.save(gathering);
