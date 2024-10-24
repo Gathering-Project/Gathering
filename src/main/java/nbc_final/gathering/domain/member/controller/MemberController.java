@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/members")
+@RequestMapping("/api")
 public class MemberController {
 
     private final MemberService memberService;
@@ -24,7 +24,7 @@ public class MemberController {
      * @param authUser 인증된 사용자 정보
      * @return 멤버 가입 요청 결과
      */
-    @PostMapping("/gathering/{gatheringId}/request")
+    @PostMapping("/v1/members/gathering/{gatheringId}/request")
     public ResponseEntity<ApiResponse<MemberResponseDto>> requestToJoin(
             @PathVariable Long gatheringId,
             @AuthenticationPrincipal AuthUser authUser) {
@@ -39,7 +39,7 @@ public class MemberController {
      * @param authUser 인증된 사용자 정보
      * @return 거절된 멤버 정보
      */
-    @PostMapping("/{memberId}/reject")
+    @PostMapping("/v1/members/{memberId}/reject")
     public ResponseEntity<ApiResponse<MemberResponseDto>> rejectMember(
             @PathVariable Long memberId,
             @AuthenticationPrincipal AuthUser authUser) {
@@ -54,7 +54,7 @@ public class MemberController {
      * @param authUser 인증된 사용자 정보
      * @return 멤버 승인 결과
      */
-    @PostMapping("/{memberId}/approve")
+    @PostMapping("/v1/members/{memberId}/approve")
     public ResponseEntity<ApiResponse<MemberResponseDto>> approveMember(
             @PathVariable Long memberId,
             @AuthenticationPrincipal AuthUser authUser) {
@@ -69,7 +69,7 @@ public class MemberController {
      * @param authUser 인증된 사용자 정보
      * @return 소모임의 모든 멤버 리스트
      */
-    @GetMapping("/gathering/{gatheringId}")
+    @GetMapping("/v1/members/gathering/{gatheringId}")
     public ResponseEntity<ApiResponse<List<MemberResponseDto>>> getAllMembers(
             @PathVariable Long gatheringId,
             @AuthenticationPrincipal AuthUser authUser) {
@@ -85,7 +85,7 @@ public class MemberController {
      * @param authUser 인증된 사용자 정보
      * @return 특정 멤버의 정보
      */
-    @GetMapping("/{memberId}/gathering/{gatheringId}")
+    @GetMapping("/v1/members/{memberId}/gathering/{gatheringId}")
     public ResponseEntity<ApiResponse<MemberResponseDto>> getMemberById(
             @PathVariable Long gatheringId,
             @PathVariable Long memberId,
@@ -101,7 +101,7 @@ public class MemberController {
      * @param authUser 인증된 사용자 정보
      * @return 삭제 처리 응답
      */
-    @DeleteMapping("/{memberId}")
+    @DeleteMapping("/v1/members/{memberId}")
     public ResponseEntity<ApiResponse<Void>> deleteMember(
             @PathVariable Long memberId,
             @AuthenticationPrincipal AuthUser authUser) {

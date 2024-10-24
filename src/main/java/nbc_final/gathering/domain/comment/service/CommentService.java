@@ -107,32 +107,32 @@ public class CommentService {
 
     @Transactional
     public void deleteComment(Long commentId, Long userId, Long gatheringId, Long eventId) {
-        //댓글 존재 여부 확인
+
+        // 댓글 존재 여부 확인
         Comment comment = getComment(commentId);
 
-        //소모임 존재 여부 확인
-        Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(()-> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
-                //이벤트 존재 여부 확인
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+                // 소모임 존재 여부 확인
+                Gathering gathering = gatheringRepository.findById(gatheringId)
+                        .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
-        //멤버 확인
-        Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+                // 이벤트 존재 여부 확인
+                Event event = eventRepository.findById(eventId)
+                        .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
-        //댓글 작성자 확인
-        if (!comment.getUser().getId().equals(userId)) {
-            if (member.getRole() != MemberRole.HOST && member.getUser().getUserRole() != UserRole.ROLE_ADMIN) {
-                throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-            }
-        }
+                // 멤버 확인
+                Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
+                        .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
 
-        //댓글 삭제
+                // 멤버의 역할 확인
+                if (member.getRole() != MemberRole.HOST) {
+                    throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+                }
+
+
+
+        // 댓글 삭제
         commentRepository.deleteById(commentId);
-
     }
+
 }
-
-
