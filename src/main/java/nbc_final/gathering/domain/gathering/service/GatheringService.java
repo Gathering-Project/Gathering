@@ -63,8 +63,11 @@ public class GatheringService {
     // 유저가 조회하고자 하는 ID 소모임 조회
     for (Member member : members) {
       Gathering gathering = member.getGathering();
+      // 소모임을 찾았는데, 그 소모임이 request와 같다면
       if (gathering != null && gathering.getId().equals(gatheringId)) {
-        return GatheringResponseDto.of(gathering);
+        if ((member.getStatus() == MemberStatus.APPROVED)) {
+          return GatheringResponseDto.of(gathering);
+        }
       }
     }
     throw new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING);
@@ -80,7 +83,7 @@ public class GatheringService {
 
     for (Member member : members) {
       Gathering gathering = findGatheringByMember(member);
-      if (gathering != null) {
+      if (gathering != null && (member.getStatus() == MemberStatus.APPROVED)) {
         gatheringResponses.add(GatheringResponseDto.of(gathering));
       }
     }
@@ -159,12 +162,16 @@ public class GatheringService {
   private void validateHostAndAdminPermission(AuthUser authUser, Gathering gathering) {
     // 유저 조회
     User user = findUserById(authUser);
-    // 유저와 소모임을 기반으로 멤버 조회
-    Member member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
-        () -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER)
-    );
+    Member member = null;
+    // 유저가 어드민이라면 통과
+    if (!(user.getUserRole() == UserRole.ROLE_ADMIN)) {
+      // 유저와 소모임을 기반으로 멤버 조회
+      member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
+          () -> new ResponseCodeException(ResponseCode.FORBIDDEN, "권한이 없습니다.")
+      );
+    }
     // 호스트가 아니거나, 어드민이 아니면 권한 X
-    if ((member.getRole() != MemberRole.HOST) || (user.getUserRole() != UserRole.ROLE_ADMIN)) {
+    if (!((member == null || (member.getRole() == MemberRole.HOST)))) {
       throw new ResponseCodeException(ResponseCode.FORBIDDEN);
     }
   }
@@ -174,7 +181,7 @@ public class GatheringService {
     User user = findUserById(authUser);
     // 유저와 소모임을 기반으로 멤버 조회
     Member member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
-        () -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER)
+        () -> new ResponseCodeException(ResponseCode.FORBIDDEN, "권한이 없습니다.")
     );
     // 호스트가 아니면 권한 X
     if ((member.getRole() != MemberRole.HOST)) {

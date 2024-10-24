@@ -85,7 +85,6 @@ public class GatheringAttachmentService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 //-----
         validateMemberAndHost(authUser, gathering);
-
 //-----
         // 유저와 소모임으로 올려진 파일 찾기
         List<Attachment> existingAttachment = attachmentRepository.findByUserAndGathering(user, gathering);
@@ -109,11 +108,14 @@ public class GatheringAttachmentService {
         User user = userRepository.findById(authUser.getUserId())
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 //-----
-        Member member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
-            () -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다.")
-        );
+        Member member = null;
+        // 어드민이라면 패스
+        if(!(user.getUserRole() == UserRole.ROLE_ADMIN)) {
+            member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
+                () -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다."));
+        }
         // 유저가 ADMIN 이거나 HOST가 아닌 경우
-        if (!(user.getUserRole().equals(UserRole.ROLE_ADMIN) || (member.getRole().equals(MemberRole.HOST)))) {
+        if (!((member == null || member.getRole() == MemberRole.HOST))) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
 //-----
