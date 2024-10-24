@@ -69,6 +69,7 @@ public class EventService {
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+
         if (event.getCurrentParticipants() > requestDto.getMaxParticipants()) {
             throw new ResponseCodeException(ResponseCode.INVALID_MAX_PARTICIPANTS);
         }
@@ -164,6 +165,21 @@ public class EventService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_PARTICIPATED));
 
         event.removeParticipant(participant);
+    }
+
+
+
+    // 공통 권한 검증 (권한: 소모임 멤버 또는 어드민)
+    private void checkAdminOrGatheringMember(Long userId, Long gatheringId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        boolean isGatheringMember = eventRepositoryCustom.isUserInGathering(gatheringId, userId);
+
+        if (!isAdmin && !isGatheringMember) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
     }
 
     // 이벤트 참가자 조회 (권한: 소모임 멤버 또는 어드민)
