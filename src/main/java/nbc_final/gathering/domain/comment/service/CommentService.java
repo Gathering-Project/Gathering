@@ -58,7 +58,7 @@ public class CommentService {
         commentRepository.save(comment);
 
         return CommentResponseDto.of(comment);
-   }
+    }
 
 
     @Transactional
@@ -109,12 +109,13 @@ public class CommentService {
     public void deleteComment(Long commentId, Long userId, Long gatheringId, Long eventId) {
         //댓글 존재 여부 확인
         Comment comment = getComment(commentId);
+        checkAdminOrEventCreatorForDeletion(userId, gatheringId, eventId);
 
         //소모임 존재 여부 확인
         Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(()-> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
-                //이벤트 존재 여부 확인
+        //이벤트 존재 여부 확인
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
@@ -132,7 +133,21 @@ public class CommentService {
         //댓글 삭제
         commentRepository.deleteById(commentId);
 
+    }
 
+    // 삭제 권한 (어드민 또는 이벤트 생성자)
+    private void checkAdminOrEventCreatorForDeletion(Long userId, Long eventId, Long gatheringId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        boolean isEventCreator = event.getUser().getId().equals(userId);
+
+        if (!isAdmin && !isEventCreator) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
     }
+}
