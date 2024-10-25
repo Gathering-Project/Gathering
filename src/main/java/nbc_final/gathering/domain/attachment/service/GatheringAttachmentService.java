@@ -57,22 +57,8 @@ public class GatheringAttachmentService {
         Gathering gathering = gatheringRepository.findById(gatheringId)
         .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 //------
-        List<Member> members = gathering.getMembers();
-        Member loginMember = null;
-        for (Member member : members) {
-          // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
-          if (member.getUser().getId().equals(authUser.getUserId())) {
-            loginMember = member;
-          }
-        }
-
-        if (loginMember == null) {
-            // 멤버를 찾지 못한다면
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_USER);
-            // 로그인 한 유저의 역할이 HOST가 아닌 경우
-        } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
+        // 멤버인지, 유저라면 Host인지 체크
+        validateMemberAndHost(authUser, gathering);
 //------
 
         // S3에 파일 업로드 후 URL 반환
@@ -100,24 +86,7 @@ public class GatheringAttachmentService {
         User user = userRepository.findById(authUser.getUserId())
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 //-----
-        List<Member> members = gathering.getMembers();
-        Member loginMember = null;
-
-        for (Member member : members) {
-            // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
-            if (member.getUser().getId().equals(authUser.getUserId())) {
-                loginMember = member;
-            }
-        }
-
-        if (loginMember == null) {
-            // 멤버를 찾지 못한다면
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_USER);
-            // 로그인 한 유저의 역할이 HOST가 아닌 경우
-        } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
-
+        validateMemberAndHost(authUser, gathering);
 //-----
         // 유저와 소모임으로 올려진 파일 찾기
         List<Attachment> existingAttachment = attachmentRepository.findByUserAndGathering(user, gathering);
@@ -142,7 +111,18 @@ public class GatheringAttachmentService {
         // AuthUser에서 User 엔티티 조회
         User user = userRepository.findById(authUser.getUserId())
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
+//-----
+        Member member = null;
+        // 어드민이라면 패스
+        if(!(user.getUserRole() == UserRole.ROLE_ADMIN)) {
+            member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
+                () -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다."));
+        }
+        // 유저가 ADMIN 이거나 HOST가 아닌 경우
+        if (!((member == null || member.getRole() == MemberRole.HOST))) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
+//-----
         // 기존 파일 찾기
         List<Attachment> existingAttachment = attachmentRepository.findByUserAndGathering(user, gathering);
         for (Attachment attachment : existingAttachment) {
@@ -158,22 +138,40 @@ public class GatheringAttachmentService {
 
     // 이미지 예외처리
     private void validateFile(MultipartFile file, AuthUser authUser) {
-        if (!SUPPORTED_FILE_TYPES.contains(file.getContentType())) {
-            throw new ResponseCodeException(ResponseCode.NOT_SERVICE);
-        }
+      if (!SUPPORTED_FILE_TYPES.contains(file.getContentType())) {
+        throw new ResponseCodeException(ResponseCode.NOT_SERVICE);
+      }
 
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new ResponseCodeException(ResponseCode.TOO_LARGE_SIZE_FILE);
-        }
+      if (file.getSize() > MAX_FILE_SIZE) {
+        throw new ResponseCodeException(ResponseCode.TOO_LARGE_SIZE_FILE);
+      }
 
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
-        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
-        if (isAdmin) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-        }
+      User user = userRepository.findById(authUser.getUserId())
+          .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+      boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+      if (isAdmin) {
+        throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+      }
     }
+
+  private static void validateMemberAndHost(AuthUser authUser, Gathering gathering) {
+    List<Member> members = gathering.getMembers();
+    Member loginMember = null;
+    for (Member member : members) {
+      // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
+      if (member.getUser().getId().equals(authUser.getUserId())) {
+        loginMember = member;
+      }
+    }
+
+    if (loginMember == null) {
+      // 멤버를 찾지 못한다면
+      throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다.");
+      // 로그인 한 유저의 역할이 HOST가 아닌 경우
+    } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
+      throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+    }
+  }
 
     // 삭제 메서드
     private void deleteFromS3(String fileUrl) {
