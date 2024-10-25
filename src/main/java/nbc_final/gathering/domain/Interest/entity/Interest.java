@@ -29,6 +29,14 @@ public class Interest {
   @OneToMany(mappedBy = "interest", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<UserInterest> userInterests = new HashSet<UserInterest>();
 
+  public Interest(InterestType interestType) {
+    this.interestType = interestType;
+  }
+
+  public void addInterest(InterestType interestType) {
+    this.interestType = interestType;
+  }
+
   // 복합키 생성 및 관심사 유저 추가 메서드
   public void addUserInterest(User user) {
     UserInterestId userInterestId = new UserInterestId(user.getId(), this.id);

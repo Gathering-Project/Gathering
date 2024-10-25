@@ -10,4 +10,6 @@ public interface InterestRepository extends JpaRepository<Interest, Integer> {
 
 
   Optional<Interest> findByInterestType(InterestType interestType);
+
+  boolean existsByInterestType(InterestType type);
 }

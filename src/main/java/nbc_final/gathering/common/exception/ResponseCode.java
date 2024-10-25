@@ -38,7 +38,6 @@ public enum ResponseCode {
     INVALID_TITLE(HttpStatus.NOT_FOUND, "타이틀을 입력해주세요."),
     INVALID_MAX_COUNT(HttpStatus.NOT_FOUND, "인원 수 입력이 잘못 되었습니다."),
 
-
     // 이벤트 관련 예외
     NOT_FOUND_EVENT(HttpStatus.NOT_FOUND, "해당 이벤트를 찾을 수 없습니다."),
     ALREADY_PARTICIPATED(HttpStatus.CONFLICT, "이미 참가한 이벤트입니다."),
@@ -55,6 +54,7 @@ public enum ResponseCode {
 
     // 관심사 관련 예외
     NOT_FOUND_INTEREST(HttpStatus.NOT_FOUND, "해당 관심사를 찾을 수 없습니다."),
+    ALREADY_EXIST_INTEREST(HttpStatus.NOT_FOUND,"이미 존재하는 관심사입니다: "),
 
     // 첨부파일 관련 예외
     NOT_FOUND_FILE(HttpStatus.NOT_FOUND, "해당 첨부파일을 찾을 수 없습니다."),

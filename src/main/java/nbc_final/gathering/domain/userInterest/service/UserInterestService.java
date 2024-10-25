@@ -31,9 +31,13 @@ public class UserInterestService {
     // 관심사 조회
     Interest interest = findInterestByInterestType(requestDto);
 
-    // 사용자와 관심사 관계 추가
+    // 사용자와 관심사 관계 추가 (Set에 추가하기 때문에 중복 자동 처리)
     user.addUserInterest(interest);
     interest.addUserInterest(user);
+
+    // 실제 DB에 반영 (영속성 컨텍스트에서 자동으로 반영)
+    userRepository.save(user);
+    interestRepository.save(interest);
 
     // 관심사 추가 후 응답 DTO 생성
     return UserInterestResponseDto.of(interest);
@@ -50,6 +54,4 @@ public class UserInterestService {
     return userRepository.findById(authUser.getUserId())
         .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
   }
-
-
 }
