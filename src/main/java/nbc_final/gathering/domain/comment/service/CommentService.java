@@ -22,7 +22,8 @@ import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
+import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -36,39 +37,73 @@ public class CommentService {
     private final MemberRepository memberRepository;
     private final EventRepositoryCustom eventRepositoryCustom;
 
-    @Transactional
-    public CommentResponseDto saveComment(CommentRequestDto commentRequestDto, Long gatheringId, Long userId, Long eventId) {
-        //소모임 존재 여부 확인
-        Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
+//    @Transactional
+//    public CommentResponseDto saveComment(CommentRequestDto commentRequestDto, Long gatheringId, Long userId, Long eventId) {
+//        //소모임 존재 여부 확인
+//        Gathering gathering = gatheringRepository.findById(gatheringId)
+//                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
+//
+//        //이벤트 존재 여부 확인
+//        Event event = eventRepository.findById(eventId)
+//                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+//
+//        // 멤버 존재 여부 확인
+//        Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
+//                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+//
+//        // 만약 아직 소모임 멤버가 아니고(신청 승인되지 않은 상태라면)
+//        if (member.getStatus() != MemberStatus.APPROVED) {
+//            // 관리자도 아니라면
+//            if (member.getUser().getUserRole() != UserRole.ROLE_ADMIN) {
+//                throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+//            }
+//        }
+//
+//
+//       //댓글 작성자 존재 여부 확인
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+//
+//        //댓글 생성
+//        Comment comment = new Comment(commentRequestDto.getContent(), event, user);
+//        commentRepository.save(comment);
+//
+//        return CommentResponseDto.of(comment);
+//   }
+@Transactional
+public CommentResponseDto saveComment(CommentRequestDto commentRequestDto, Long gatheringId, Long userId, Long eventId) {
+    //소모임 존재 여부 확인
+    Gathering gathering = gatheringRepository.findById(gatheringId)
+            .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
-        //이벤트 존재 여부 확인
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+    //이벤트 존재 여부 확인
+    Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
-        // 멤버 존재 여부 확인
-        Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+    // 멤버 존재 여부 확인
+    Optional<Member> optionalMember = memberRepository.findByUserIdAndGatheringId(userId, gatheringId);
 
-        // 만약 아직 소모임 멤버가 아니고(신청 승인되지 않은 상태라면)
+    User user = userRepository.findById(userId).get();
+
+    // 참가 신청 권한 없어서 멤버가 아닌(멤버가 없는) 관리자인지 확인 - 유저 7번(관리자) [생성]
+    if ((!optionalMember.isPresent()) && user.getUserRole() != UserRole.ROLE_ADMIN) {
+        throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+    }
+
+    // 멤버 신청은 되었지만 아직 승인되지 않은 경우
+    if (optionalMember.isPresent()) {
+        Member member = optionalMember.get();
         if (member.getStatus() != MemberStatus.APPROVED) {
-            // 관리자도 아니라면
-            if (member.getUser().getUserRole() != UserRole.ROLE_ADMIN) {
-                throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-            }
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
+    }
 
+    //댓글 생성
+    Comment comment = new Comment(commentRequestDto.getContent(), gathering, event, user);
+    commentRepository.save(comment);
 
-       //댓글 작성자 존재 여부 확인
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
-        //댓글 생성
-        Comment comment = new Comment(commentRequestDto.getContent(), event, user);
-        commentRepository.save(comment);
-
-        return CommentResponseDto.of(comment);
-   }
+    return CommentResponseDto.of(comment);
+}
 
 
     @Transactional
@@ -170,6 +205,11 @@ public class CommentService {
         boolean isEventCreator = event.getUser().getId().equals(userId);
         boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
         boolean isHost = isHost(member);
+        //댓글 생성자가 맞는지 확인
+        List<Comment> commentList = commentRepository.findByUser(userId);
+        if (commentList.isEmpty()) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
 
         if (!isEventCreator && !isGatheringCreator && !isHost) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
