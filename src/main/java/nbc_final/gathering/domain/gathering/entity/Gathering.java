@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
+import nbc_final.gathering.domain.attachment.entity.Attachment;
 import nbc_final.gathering.domain.member.entity.Member;
 
 import java.math.BigDecimal;
@@ -26,6 +27,9 @@ public class Gathering extends TimeStamped {
 
   @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Member> members = new ArrayList<>();
+
+  @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Attachment> Attachments = new ArrayList<>();
 
   @Column(length = 30, nullable = false)
   private String title;
