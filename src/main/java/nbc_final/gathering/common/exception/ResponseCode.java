@@ -30,6 +30,7 @@ public enum ResponseCode {
     ALREADY_MEMBER(HttpStatus.CONFLICT, "이미 가입된 멤버입니다."),
     FULL_MEMBER(HttpStatus.CONFLICT, "소모임에 인원이 가득 찼습니다."),
     REJECTED_MEMBER(HttpStatus.CONFLICT, "소모임 참여가 거부되었습니다."),
+    NOT_ACCEPTED_MEMBER(HttpStatus.NOT_ACCEPTABLE, "아직 가입 신청이 처리되지 않은 멤버입니다"),
 
     // 소모임 관련 예외
     NOT_FOUND_GATHERING(HttpStatus.NOT_FOUND, "해당 소모임을 찾을 수 없습니다."),

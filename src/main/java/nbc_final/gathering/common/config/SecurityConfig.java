@@ -1,18 +1,17 @@
 package nbc_final.gathering.common.config;
 
 import lombok.RequiredArgsConstructor;
-import nbc_final.gathering.domain.user.enums.UserRole;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
 @Configuration
 @RequiredArgsConstructor
@@ -35,8 +34,12 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable) // BasicAuthenticationFilter 비활성화
                 .logout(AbstractHttpConfigurer::disable) // LogoutFilter 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/users/login", "/api/v1/users/signup").permitAll()
-                        .requestMatchers("/test").hasAuthority(UserRole.Authority.ADMIN)
+                        .requestMatchers("/api/v1/users/login",
+                                "/api/v1/users/signup"
+//                                "/api/v1/gatherings/{gatheringId}",
+//                                "/api/v1/gatherings"
+                                ).permitAll()
+//                        .requestMatchers("/test").hasAuthority(UserRole.Authority.ADMIN)
                         .anyRequest().authenticated()
                 )
                 .build();
