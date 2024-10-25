@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
+import nbc_final.gathering.domain.Interest.entity.Interest;
 import nbc_final.gathering.domain.event.entity.Event;
 import nbc_final.gathering.domain.attachment.entity.Attachment;
 import nbc_final.gathering.domain.member.entity.Member;
@@ -12,10 +13,14 @@ import nbc_final.gathering.domain.user.dto.request.UserUpdateRequestDto;
 import nbc_final.gathering.domain.user.enums.InterestType;
 import nbc_final.gathering.domain.user.enums.MbtiType;
 import nbc_final.gathering.domain.user.enums.UserRole;
+import nbc_final.gathering.domain.userInterest.entity.UserInterest;
+import nbc_final.gathering.domain.userInterest.entity.UserInterestId;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -60,6 +65,10 @@ public class User extends TimeStamped {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Event> events = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserInterest> userInterests = new HashSet<>();
+
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Attachment attachment;
@@ -111,6 +120,22 @@ public class User extends TimeStamped {
     public void setRandomNickname(String randomNickname) {
         this.nickname = randomNickname;
     }
+
+
+    // 복합키 생성 및 관심사 추가 메서드
+    public void addUserInterest(Interest interest) {
+        UserInterestId userInterestId = new UserInterestId(this.id, interest.getId());
+        UserInterest userInterest = new UserInterest(userInterestId, this, interest);
+        this.userInterests.add(userInterest);
+    }
+    // 관심사 삭제 메서드
+    public void removeUserInterest(Interest interest) {
+        this.userInterests.removeIf(ui -> ui.getInterest().equals(interest));
+    }
+
+
+
+
 
 }
 
