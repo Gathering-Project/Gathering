@@ -22,6 +22,7 @@ public enum ResponseCode {
     USER_ALREADY_DELETED(HttpStatus.GONE, "이미 탈퇴한 회원입니다."),
     INVALID_ADMIN_TOKEN(HttpStatus.BAD_REQUEST, "관리자 인증이 확인되지 않았습니다"),
     SAME_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호는 기존 비밀번호와 같을 수 없습니다."),
+    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 존재하는 닉네임입니다"),
 
     // 멤버 관련 예외
     NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "해당 멤버를 찾을 수 없습니다."),
@@ -29,6 +30,7 @@ public enum ResponseCode {
     ALREADY_MEMBER(HttpStatus.CONFLICT, "이미 가입된 멤버입니다."),
     FULL_MEMBER(HttpStatus.CONFLICT, "소모임에 인원이 가득 찼습니다."),
     REJECTED_MEMBER(HttpStatus.CONFLICT, "소모임 참여가 거부되었습니다."),
+    NOT_ACCEPTED_MEMBER(HttpStatus.NOT_ACCEPTABLE, "아직 가입 신청이 처리되지 않은 멤버입니다"),
 
     // 소모임 관련 예외
     NOT_FOUND_GATHERING(HttpStatus.NOT_FOUND, "해당 소모임을 찾을 수 없습니다."),

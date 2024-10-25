@@ -52,9 +52,6 @@ public class User extends TimeStamped {
     @Enumerated(EnumType.STRING)
     private UserRole userRole; // 운영자/일반 유저
 
-//    @Lob
-//    private byte[] profileImage; //
-
     // 이미지 파일 경로
     private String profileImagePath;
 
