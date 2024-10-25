@@ -108,7 +108,7 @@ public class GatheringAttachmentService {
     User user = userRepository.findById(authUser.getUserId())
         .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 //-----
-    validateHostAndAdimn(user, gathering);
+    validateHostAndAdmin(user, gathering);
 //-----
     // 기존 파일 찾기
     List<Attachment> existingAttachment = attachmentRepository.findByUserAndGathering(user, gathering);
@@ -143,33 +143,29 @@ public class GatheringAttachmentService {
   }
 
   private static void validateMemberAndHost(AuthUser authUser, Gathering gathering) {
-    List<Member> members = gathering.getMembers();
-    Member loginMember = null;
-    for (Member member : members) {
-      // 멤버 하나씩 비교해서 로그인한 유저와 아이디가 같은 경우
-      if (member.getUser().getId().equals(authUser.getUserId())) {
-        loginMember = member;
-      }
-    }
+    // 로그인한 유저와 아이디가 같은 멤버 찾기
+    Member loginMember = gathering.getMembers().stream()
+        .filter(member -> member.getUser().getId().equals(authUser.getUserId()))
+        .findFirst()
+        .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다."));
 
-    if (loginMember == null) {
-      // 멤버를 찾지 못한다면
-      throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다.");
-      // 로그인 한 유저의 역할이 HOST가 아닌 경우
-    } else if (!(loginMember.getRole().equals(MemberRole.HOST))) {
+    // 로그인한 유저의 역할이 HOST가 아닌 경우 예외 발생
+    if (loginMember.getRole() != MemberRole.HOST) {
       throw new ResponseCodeException(ResponseCode.FORBIDDEN);
     }
   }
 
-  private void validateHostAndAdimn(User user, Gathering gathering) {
-    Member member = null;
-    // 어드민이라면 패스
-    if (!(user.getUserRole() == UserRole.ROLE_ADMIN)) {
-      member = memberRepository.findByUserAndGathering(user, gathering).orElseThrow(
-          () -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다."));
+  private void validateHostAndAdmin(User user, Gathering gathering) {
+    // ADMIN이면 바로 통과
+    if (user.getUserRole() == UserRole.ROLE_ADMIN) {
+      return;
     }
-    // 유저가 ADMIN 이거나 HOST가 아닌 경우
-    if (!((member == null || member.getRole() == MemberRole.HOST))) {
+    // 소모임 멤버인지 확인
+    Member member = memberRepository.findByUserAndGathering(user, gathering)
+        .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER, "해당 소모임의 멤버가 아닙니다."));
+
+    // HOST가 아니면 예외 발생
+    if (member.getRole() != MemberRole.HOST) {
       throw new ResponseCodeException(ResponseCode.FORBIDDEN);
     }
   }
