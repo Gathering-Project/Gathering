@@ -7,12 +7,16 @@ import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.Interest.entity.Interest;
 import nbc_final.gathering.domain.Interest.repository.InterestRepository;
 import nbc_final.gathering.domain.user.entity.User;
+import nbc_final.gathering.domain.user.enums.InterestType;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import nbc_final.gathering.domain.userInterest.dto.request.UserInterestRequestDto;
 import nbc_final.gathering.domain.userInterest.dto.response.UserInterestResponseDto;
-import nbc_final.gathering.domain.userInterest.repository.UserInterestRepository;
+import nbc_final.gathering.domain.userInterest.entity.UserInterest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,31 +27,41 @@ public class UserInterestService {
 
   // 관심사 추가 로직
   @Transactional
-  public UserInterestResponseDto addUserInterest(AuthUser authUser, UserInterestRequestDto requestDto) {
-
+  public List<UserInterestResponseDto> addUserInterest(AuthUser authUser, UserInterestRequestDto requestDto) {
     // 유저 조회
     User user = findUserById(authUser);
 
-    // 관심사 조회
-    Interest interest = findInterestByInterestType(requestDto);
+    // List<Interest> 형식으로 변환
+    List<Interest> interests = findInterestsByInterestTypes(requestDto);
 
-    // 사용자와 관심사 관계 추가 (Set에 추가하기 때문에 중복 자동 처리)
-    user.addUserInterest(interest);
-    interest.addUserInterest(user);
+    // 유저와 관심사 각각에 입력
+    for (Interest interest : interests) {
+      user.addUserInterest(interest);
+      interest.addUserInterest(user);
+    }
 
-    // 실제 DB에 반영 (영속성 컨텍스트에서 자동으로 반영)
-    userRepository.save(user);
-    interestRepository.save(interest);
+    List<UserInterestResponseDto> responseDtos = new ArrayList<>();
 
-    // 관심사 추가 후 응답 DTO 생성
-    return UserInterestResponseDto.of(interest);
+    return responseDtos;
   }
 
   ////////////////////////////////////// 예외 처리를 위한 메서드 ////////////////////////////////////
 
-  private Interest findInterestByInterestType(UserInterestRequestDto requestDto) {
-    return interestRepository.findByInterestType(requestDto.getInterestType())
-        .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_INTEREST));
+  private List<Interest> findInterestsByInterestTypes(UserInterestRequestDto requestDto) {
+    // 요청한 관심사들을 Interest로 변환
+    List<String> interests = requestDto.getInterestTypes();
+
+    List<Interest> interestList = new ArrayList<>();
+
+    for (String interestTypeString : interests) {
+      // enum값에 있는지 확인
+      InterestType interestType = InterestType.valueOf(interestTypeString);
+      // DB에 확인 후에 있으면 리스트에 추가
+      Interest interest = interestRepository.findByInterestType(interestType)
+          .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_INTEREST));
+      interestList.add(interest);
+    }
+    return interestList;
   }
 
   private User findUserById(AuthUser authUser) {

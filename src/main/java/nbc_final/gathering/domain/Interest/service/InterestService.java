@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
+import nbc_final.gathering.domain.Interest.dto.request.InterestRequestDto;
 import nbc_final.gathering.domain.Interest.dto.response.InterestResponseDto;
 import nbc_final.gathering.domain.Interest.entity.Interest;
 import nbc_final.gathering.domain.Interest.repository.InterestRepository;
@@ -38,21 +39,25 @@ public class InterestService {
         .map(interest -> toResponseDto(interest))
         .collect(Collectors.toList());
   }
+/*
 
   // 관심사 추가 로직
   @Transactional
-  public InterestResponseDto addInterest(InterestType interestType) {
+  public InterestResponseDto addInterest(InterestRequestDto interestRequestDto) {
+
+    InterestType interestType = InterestType.valueOf(interestRequestDto.getInterestType());
     // 중복 체크
     if (interestRepository.existsByInterestType(interestType)) {
       throw new ResponseCodeException(ResponseCode.ALREADY_EXIST_INTEREST);
     }
 
     Interest interest = new Interest();
-    interest.addInterest(interestType);
+    interest.setInterest(interestType);
 
-    Interest savedInterest = interestRepository.save(interest);
-    return toResponseDto(savedInterest);
+    interestRepository.save(interest);
+    return new InterestResponseDto(interest.getId(), interest.getInterestType());
   }
+*/
 
   //////////////////////////////////// 예외 처리를 위한 메서드 //////////////////////////////////////
 

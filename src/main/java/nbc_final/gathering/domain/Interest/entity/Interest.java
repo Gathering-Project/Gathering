@@ -33,7 +33,7 @@ public class Interest {
     this.interestType = interestType;
   }
 
-  public void addInterest(InterestType interestType) {
+  public void setInterest(InterestType interestType) {
     this.interestType = interestType;
   }
 

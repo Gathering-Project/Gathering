@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+import java.util.Set;
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -27,10 +30,10 @@ public class UserInterestController {
    * @return 멤버 가입 요청 결과
    */
   @PostMapping("/v1/user/interests/add")
-  public ResponseEntity<ApiResponse<UserInterestResponseDto>> addInterest(@AuthenticationPrincipal AuthUser authUser,
+  public ResponseEntity<ApiResponse<List<UserInterestResponseDto>>> addInterest(@AuthenticationPrincipal AuthUser authUser,
                                                                     @RequestBody UserInterestRequestDto requestDto) {
 
-    UserInterestResponseDto response = userInterestService.addUserInterest(authUser, requestDto);
+    List<UserInterestResponseDto> response = userInterestService.addUserInterest(authUser, requestDto);
     return ResponseEntity.ok(ApiResponse.createSuccess(response));
   }
 }

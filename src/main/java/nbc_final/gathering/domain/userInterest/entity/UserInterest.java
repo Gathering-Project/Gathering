@@ -14,8 +14,7 @@ import nbc_final.gathering.domain.user.entity.User;
 @Table(name = "user_interest")
 public class UserInterest {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @EmbeddedId
   private UserInterestId id;
 
   @ManyToOne(fetch = FetchType.LAZY)
