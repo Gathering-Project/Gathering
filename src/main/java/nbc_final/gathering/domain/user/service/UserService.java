@@ -33,15 +33,20 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Value("${admin.token}")
-    private String ADMIN_TOKEN;
-
+    private String ADMIN_TOKEN; // 관리자가 맞는지 확인 토큰
 
     // 유저 회원가입
     @Transactional
     public SignUpResponseDto signup(SignupRequestDto signupRequest) {
 
+        // 이미 있는 이메일인지 확인
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
             throw new ResponseCodeException(ResponseCode.DUPLICATE_EMAIL);
+        }
+
+        // 이미 있는 닉네임인지 확인
+        if (userRepository.existsByNickname(signupRequest.getNickname()) && signupRequest.getNickname() != null) {
+            throw new ResponseCodeException(ResponseCode.DUPLICATE_NICKNAME);
         }
 
         String email = signupRequest.getEmail();
@@ -52,6 +57,7 @@ public class UserService {
 
         UserRole userRole = UserRole.of(signupRequest.getUserRole());
 
+        // 유저(회원) 생성
         User newUser = User.builder()
                 .nickname(signupRequest.getNickname())
                 .email(signupRequest.getEmail())
@@ -59,17 +65,21 @@ public class UserService {
                 .userRole(userRole)
                 .build();
 
-        if (newUser.getNickname() == null) {
-            String randomNickname = GenerateRandomNickname.generateNickname();
-            newUser.setRandomNickname(randomNickname);
+        while (newUser.getNickname() == null) {
+            try {
+                String randomNickname = GenerateRandomNickname.generateNickname();
+                if (userRepository.existsByNickname(randomNickname)) {
+                    throw new ResponseCodeException(ResponseCode.DUPLICATE_NICKNAME);
+                }
+                newUser.setRandomNickname(randomNickname);
+            } catch (ResponseCodeException e) {
+                log.info("중복되는 닉네임이 생성되어 닉네임을 재부여합니다");
+            }
         }
 
-
-        User savedUser = userRepository.save(newUser);
-
+        User savedUser = userRepository.save(newUser); //회원 저장
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserRole(), savedUser.getNickname());
-
-        return new SignUpResponseDto(bearerToken);
+        return new SignUpResponseDto(bearerToken); // 토큰 반환
     }
 
     // 유저 로그인
@@ -83,7 +93,7 @@ public class UserService {
 
         String inputPassword = requestDto.getPassword();
         String correctPassword = user.getPassword();
-        validateCorrectPassword(inputPassword, correctPassword);
+        validateCorrectPassword(inputPassword, correctPassword); // 비밀번호 맞는지 검증
 
         String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole(), user.getNickname());
         jwtUtil.addJwtToCookie(bearerToken, response);
@@ -99,7 +109,7 @@ public class UserService {
 
         String inputPassword = requestDto.getPassword();
         String correctPassword = user.getPassword();
-        validateCorrectPassword(inputPassword, correctPassword);
+        validateCorrectPassword(inputPassword, correctPassword); // 비밀번호 검증
 
         user.updateIsDeleted(); // 회원 탈퇴
     }
@@ -183,7 +193,7 @@ public class UserService {
                         requestDto.getNewPassword().length() < 8 ||
                         requestDto.getNewPassword().length() > 20
         ) {
-            throw new ResponseCodeException(ResponseCode.INVALID_PASSWORD);
+            throw new ResponseCodeException(ResponseCode.VIOLATION_PASSWORD);
         }
     }
 

@@ -14,12 +14,14 @@ import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
+import nbc_final.gathering.domain.member.enums.MemberStatus;
 import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 
 
@@ -44,27 +46,29 @@ public class CommentService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
-        //댓글 작성자 존재 여부 확인
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
-        //멤버 확인 여부
-        boolean isMember = memberRepository.existsByUserIdAndGatheringId(userId, gatheringId);
-
+        // 멤버 존재 여부 확인
         Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
 
-        //만약 멤버도 아니고 어드민도 아니라면 예외 발생
-        if (!isMember && !isAdmin(user)) {
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
+        // 만약 아직 소모임 멤버가 아니고(신청 승인되지 않은 상태라면)
+        if (member.getStatus() != MemberStatus.APPROVED) {
+            // 관리자도 아니라면
+            if (member.getUser().getUserRole() != UserRole.ROLE_ADMIN) {
+                throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+            }
         }
+
+
+       //댓글 작성자 존재 여부 확인
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
 
         //댓글 생성
         Comment comment = new Comment(commentRequestDto.getContent(), event, user);
         commentRepository.save(comment);
 
         return CommentResponseDto.of(comment);
-    }
+   }
 
 
     @Transactional
@@ -163,7 +167,6 @@ public class CommentService {
         Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
 
-        //equals보다 ==으로 쓰는게 더 효율적
         boolean isEventCreator = event.getUser().getId().equals(userId);
         boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
         boolean isHost = isHost(member);
