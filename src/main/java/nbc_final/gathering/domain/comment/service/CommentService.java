@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -45,22 +44,27 @@ public class CommentService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
-        //멤버 확인 여부
-        boolean isMember = memberRepository.existsByUserIdAndGatheringId(userId, gatheringId);
-        if (!isMember) {
-            throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
-        }
-
         //댓글 작성자 존재 여부 확인
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+        //멤버 확인 여부
+        boolean isMember = memberRepository.existsByUserIdAndGatheringId(userId, gatheringId);
+
+        Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+
+        //만약 멤버도 아니고 어드민도 아니라면 예외 발생
+        if (!isMember && !isAdmin(user)) {
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER);
+        }
 
         //댓글 생성
         Comment comment = new Comment(commentRequestDto.getContent(), event, user);
         commentRepository.save(comment);
 
         return CommentResponseDto.of(comment);
-   }
+    }
 
 
     @Transactional
