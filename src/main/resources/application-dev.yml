@@ -2,9 +2,13 @@ server:
   port: 8080
 
 spring:
-  jwt:
-    secret:
-      key: 7Iqk7YyM66W07YOA7L2U65Sp7YG065+9U3ByaW5n6rCV7J2Y7Yqc7YSw7LWc7JuQ67mI7J6F64uI64ukLg\\=\\=
+  config:
+    import: optional:file:.env[.properties]
+    datasource:
+      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
+      username: minjooig
+      password: wanduek3612
+      driver-class-name: com.mysql.cj.jdbc.Driver
 
   cloud:
     aws:
@@ -18,17 +22,10 @@ spring:
       stack:
         auto: false
 
-  config:
-    import: optional:file:.env[.properties]
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
-    username: ${MYSQL_NAME}
-    password: ${MYSQL_PASSWORD}
-
   jpa:
     hibernate:
       ddl-auto: update
+      show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
