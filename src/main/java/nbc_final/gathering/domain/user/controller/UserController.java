@@ -1,8 +1,10 @@
 package nbc_final.gathering.domain.user.controller;
 
+import com.sun.security.auth.UserPrincipal;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import nbc_final.gathering.common.config.JwtUtil;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.user.dto.request.*;
@@ -14,7 +16,9 @@ import nbc_final.gathering.domain.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -24,6 +28,7 @@ public class UserController {
 
     private final UserService userService;
     private final KakaoService kakaoService;
+    private final JwtUtil jwtUtil;
     
     /**
      * 유저 회원가입
@@ -65,13 +70,22 @@ public class UserController {
     /**
      * 유저 회원 탈퇴
      *
-     * @param authUser 인증 사용자
+//     * @param authUser 인증 사용자
      * @param requestDto 생성 요청 데이터
      * @return 성공 여부
      */
     @DeleteMapping("/v1/users")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid UserDeleteRequestDto requestDto) {
-        userService.deleteUser(authUser.getUserId(), requestDto);
+    public ResponseEntity<ApiResponse<Void>> deleteUser(
+            @RequestHeader("Authorization") String token, // 헤더에서 JWT 토큰 받기
+            @RequestBody @Valid UserDeleteRequestDto requestDto
+    ) {
+        // "Bearer " 접두사 제거
+        String extractedToken = jwtUtil.substringToken(token);
+        // 토큰에서 사용자 ID 추출
+        Long userId = Long.parseLong(jwtUtil.getUserInfoFromToken(extractedToken).getSubject());
+
+        // 사용자 ID를 이용해 회원 탈퇴 처리
+        userService.deleteUser(userId, requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 

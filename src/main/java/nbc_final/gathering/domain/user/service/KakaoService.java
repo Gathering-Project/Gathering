@@ -18,6 +18,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -42,6 +43,9 @@ public class KakaoService {
 
     @Value("${kakao.redirect.url}")
     private String redirectUri;
+
+    @Value("${kakao.api.unlink.url}")
+    private String unlinkUrl;
 
     // 클라이언트 설정을 반환하는 메서드
     public Map<String, String> getKakaoConfig() {
@@ -134,5 +138,23 @@ public class KakaoService {
                 .kakaoId(userInfo.getId())
                 .build();
         return userRepository.save(newUser);
+    }
+
+    // 카카오 계정 연결 해제(회원탈퇴) 메서드
+    public void unlinkKakaoAccount(String accessToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        try {
+            restTemplate.exchange(unlinkUrl, HttpMethod.POST, entity, Void.class);
+            log.info("카카오 계정 연결 해제가 성공적으로 완료되었습니다.");
+        } catch (HttpClientErrorException.Unauthorized e) {
+            log.error("Access Token 만료 또는 유효하지 않음: " + e.getMessage());
+            throw new ResponseCodeException(ResponseCode.INVALID_TOKEN);
+        } catch (Exception e) {
+            log.error("카카오 계정 연결 해제 중 오류 발생: " + e.getMessage());
+            throw new ResponseCodeException(ResponseCode.UNLINK_FAILED);
+        }
     }
 }

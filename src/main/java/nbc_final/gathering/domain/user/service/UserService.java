@@ -31,6 +31,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final KakaoService kakaoService;
 
     @Value("${admin.token}")
     private String ADMIN_TOKEN; // 관리자가 맞는지 확인 토큰
@@ -104,14 +105,22 @@ public class UserService {
     // 유저 회원 탈퇴
     @Transactional
     public void deleteUser(Long userId, UserDeleteRequestDto requestDto) {
-
         User user = getUserById(userId);
 
-        String inputPassword = requestDto.getPassword();
-        String correctPassword = user.getPassword();
-        validateCorrectPassword(inputPassword, correctPassword); // 비밀번호 검증
+        if (user.getKakaoId() != null) { // 카카오 회원인 경우
+            String accessToken = getAccessTokenForUser(user); // 유효한 액세스 토큰을 가져오기
+            kakaoService.unlinkKakaoAccount(accessToken); // 카카오 계정 연결 해제
+            log.info("카카오 계정 연결 해제 성공");
+        } else {
+            // 일반 회원일 경우 비밀번호 검증
+            String inputPassword = requestDto.getPassword();
+            String correctPassword = user.getPassword();
+            validateCorrectPassword(inputPassword, correctPassword); // 비밀번호 검증
+            log.info("일반 회원 비밀번호 검증 성공");
+        }
 
-        user.updateIsDeleted(); // 회원 탈퇴
+        user.updateIsDeleted(); // 회원 탈퇴 처리
+        log.info("회원 탈퇴 처리 완료, userId: {}", userId);
     }
 
     // 유저 정보 조회
@@ -204,7 +213,10 @@ public class UserService {
         }
     }
 
-
+    private String getAccessTokenForUser(User user) {
+        // 임시로 사용자 accessToken 반환;
+        return "access-token";
+    }
 }
 
 
