@@ -29,6 +29,7 @@ public enum ResponseCode {
     KAKAO_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "카카오 서버와의 통신 중 오류가 발생했습니다."),
     INTERNAL_SERVER_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "내부 서버 오류가 발생했습니다."),
     UNLINK_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "카카오 서버와의 통신 오류로 계정 연결 해제에 실패했습니다."),
+    NO_PERMISSION_CHANGE_PASSWORD(HttpStatus.FORBIDDEN,"SNS 로그인 사용자는 비밀번호를 변경할 수 없습니다."),
 
     // 멤버 관련 예외
     NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "해당 멤버를 찾을 수 없습니다."),

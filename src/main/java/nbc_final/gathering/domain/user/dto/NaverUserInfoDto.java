@@ -5,13 +5,13 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class KakaoUserInfoDto {
-    private Long id;
+public class NaverUserInfoDto {
+    private String id;
     private String nickname;
     private String email;
 
-    public static KakaoUserInfoDto of(Long id, String nickname, String email) {
-        KakaoUserInfoDto dto = new KakaoUserInfoDto();
+    public static NaverUserInfoDto of(String id, String nickname, String email) {
+        NaverUserInfoDto dto = new NaverUserInfoDto();
         dto.id = id;
         dto.nickname = nickname;
         dto.email = email;

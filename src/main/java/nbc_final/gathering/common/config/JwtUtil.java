@@ -91,11 +91,11 @@ public class JwtUtil {
     }
 
 
-    public String substringToken(String tokenValue) {
+    public String substringToken(String tokenValue) throws ServerException {
         if (StringUtils.hasText(tokenValue) && tokenValue.startsWith(BEARER_PREFIX)) {
             return tokenValue.substring(7);
         }
-        return "";  // 접두사가 없는 경우 빈 문자열 반환 또는 예외 대신 다른 기본 처리
+        throw new ServerException("Not Found Token");
     }
 
     public boolean validateToken(String token) {
@@ -124,9 +124,4 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
-
-    public void addJwtToHeader(String token, HttpServletResponse response) {
-        response.setHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + token);  // 헤더에 Bearer와 함께 토큰 추가
-    }
-
 }

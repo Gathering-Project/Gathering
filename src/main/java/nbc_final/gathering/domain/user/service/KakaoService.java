@@ -103,7 +103,7 @@ public class KakaoService {
         String nickname = (String) properties.get("nickname");
         String email = (String) kakaoAccount.get("email");
 
-        return new KakaoUserInfoDto(id, nickname, email);
+        return KakaoUserInfoDto.of(id, nickname, email);
     }
 
     // 카카오 사용자 정보로 회원 가입 또는 로그인 처리하는 메서드

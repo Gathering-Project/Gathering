@@ -37,12 +37,14 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/users/login",
                                 "/api/v1/users/signup",
-                                "/api/v1/users/kakao/callback",
                                 "/login.html",
-                                "/css/**",  // 정적 CSS 파일 경로 허용
-                                "/js/**",   // 정적 JS 파일 경로 허용
-                                "/images/**", // 이미지 파일 경로 허용
-                                "/api/v1/auth/kakao-url"
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/api/v1/auth/kakao-url",
+                                "/api/v1/users/kakao/callback",
+                                "/api/v1/auth/naver-url",
+                                "/api/v1/users/naver/callback"
 //                                "/api/v1/gatherings/{gatheringId}",
 //                                "/api/v1/gatherings"
                                 ).permitAll()
