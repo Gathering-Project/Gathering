@@ -2,14 +2,6 @@ server:
   port: 8080
 
 spring:
-  config:
-    import: optional:file:.env[.properties]
-    datasource:
-      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
-      username: ${MYSQL_NAME}
-      password: ${MYSQL_PASSWORD}
-      driver-class-name: com.mysql.cj.jdbc.Driver
-
   cloud:
     aws:
       s3:
@@ -21,6 +13,40 @@ spring:
         static: ${cloud.aws.s3.region.static}
       stack:
         auto: false
+
+#  config:
+#    import: optional:file:.env[.properties]
+#    datasource:
+#      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
+#      username: minjooig
+#      password:
+#      driver-class-name: com.mysql.cj.jdbc.Driver
+
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
+    username: ${MYSQL_NAME}
+    password: ${MYSQL_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  data:
+    redis:
+      port: 6379
+      host: 127.0.0.1
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+      enabled: true
 
   security:
     oauth2:
@@ -41,30 +67,9 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-      show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-
-  data:
-    redis:
-      port: 6379
-      host: 127.0.0.1
-
-  servlet:
-    multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
-      enabled: true
-
 jwt:
   secret:
     key: ${JWT_SECRET_KEY}
 
 admin:
   token: ${ADMIN_TOKEN}
-
-
