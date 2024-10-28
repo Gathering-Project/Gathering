@@ -28,6 +28,9 @@ public class User extends TimeStamped {
     @Column(name = "user_id")
     private Long id;
 
+    @Column(unique = true)
+    private Long kakaoId;
+
     private String location;
 
     @Column(unique = true)
@@ -67,12 +70,14 @@ public class User extends TimeStamped {
     @Builder
     public User(
             Long id,
+            Long kakaoId,
             String nickname,
             String email,
             String password,
             UserRole userRole
     ) {
         this.id = id;
+        this.kakaoId = kakaoId;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
@@ -102,6 +107,10 @@ public class User extends TimeStamped {
         this.mbtiType = requestDto.getMbtiType();
         this.interestType = requestDto.getInterestType();
 
+    }
+
+    public void updateKakaoId(Long kakaoId) {
+        this.kakaoId = kakaoId;
     }
 
     public void setProfileImagePath(String profileImagePath) {
