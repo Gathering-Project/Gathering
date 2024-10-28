@@ -34,8 +34,15 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable) // BasicAuthenticationFilter 비활성화
                 .logout(AbstractHttpConfigurer::disable) // LogoutFilter 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/users/login",
-                                "/api/v1/users/signup"
+                        .requestMatchers(
+                                "/api/v1/users/login",
+                                "/api/v1/users/signup",
+                                "/api/v1/users/kakao/callback",
+                                "/login.html",
+                                "/css/**",  // 정적 CSS 파일 경로 허용
+                                "/js/**",   // 정적 JS 파일 경로 허용
+                                "/images/**", // 이미지 파일 경로 허용
+                                "/api/v1/auth/kakao-url"
 //                                "/api/v1/gatherings/{gatheringId}",
 //                                "/api/v1/gatherings"
                                 ).permitAll()
