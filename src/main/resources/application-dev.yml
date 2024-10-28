@@ -2,10 +2,6 @@ server:
   port: 8080
 
 spring:
-  jwt:
-    secret:
-      key: 7Iqk7YyM66W07YOA7L2U65Sp7YG065+9U3ByaW5n6rCV7J2Y7Yqc7YSw7LWc7JuQ67mI7J6F64uI64ukLg\\=\\=
-
   cloud:
     aws:
       s3:
@@ -18,11 +14,19 @@ spring:
       stack:
         auto: false
 
+#  config:
+#    import: optional:file:.env[.properties]
+#    datasource:
+#      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
+#      username: minjooig
+#      password:
+#      driver-class-name: com.mysql.cj.jdbc.Driver
+
   config:
     import: optional:file:.env[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
     username: ${MYSQL_NAME}
     password: ${MYSQL_PASSWORD}
 
@@ -44,11 +48,28 @@ spring:
       max-request-size: 5MB
       enabled: true
 
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${kakao.client.id}
+            client-secret: ${kakao.client.secret}
+            redirect-uri: ${kakao.redirect.url}
+            authorization-grant-type: authorization_code
+            scope:
+              - profile
+              - account_email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
 jwt:
   secret:
     key: ${JWT_SECRET_KEY}
 
 admin:
   token: ${ADMIN_TOKEN}
-
-

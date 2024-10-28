@@ -9,10 +9,13 @@ import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
 import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
+import nbc_final.gathering.domain.user.service.KakaoService;
 import nbc_final.gathering.domain.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final KakaoService kakaoService;
     
     /**
      * 유저 회원가입
@@ -96,4 +100,31 @@ public class UserController {
         UserGetResponseDto res = userService.updateInfo(authUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
     }
+
+    //----------------- OAuth 2.0  ------------- //
+
+    /**
+     * 카카오 로그인
+     *
+     * @param code 카카오 인가 코드
+     * @param response HTTP 응답 객체 (JWT 토큰을 쿠키에 저장)
+     * @return 로그인 결과 (JWT 토큰 및 유저 정보)
+     */
+    @GetMapping("/v1/users/kakao/callback")
+    public ResponseEntity<ApiResponse<LoginResponseDto>> kakaoLogin(@RequestParam String code, HttpServletResponse response) {
+        LoginResponseDto loginResponse = kakaoService.kakaoLogin(code, response);
+        return ResponseEntity.ok(ApiResponse.createSuccess(loginResponse));
+    }
+
+    /**
+     * 카카오 설정 정보 가져오기
+     *
+     * @return 카카오 API 설정 정보 (클라이언트 ID, 리다이렉트 URL 등)
+     */
+    @GetMapping("/v1/users/kakao/config")
+    public ResponseEntity<Map<String, String>> getKakaoConfig() {
+        Map<String, String> config = kakaoService.getKakaoConfig();
+        return ResponseEntity.ok(config);
+    }
+
 }

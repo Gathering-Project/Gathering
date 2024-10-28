@@ -24,6 +24,11 @@ public enum ResponseCode {
     SAME_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호는 기존 비밀번호와 같을 수 없습니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 존재하는 닉네임입니다"),
 
+    // OAuth 2.0 관련 예외
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
+    KAKAO_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "카카오 서버와의 통신 중 오류가 발생했습니다."),
+    INTERNAL_SERVER_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "내부 서버 오류가 발생했습니다."),
+
     // 멤버 관련 예외
     NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "해당 멤버를 찾을 수 없습니다."),
     ALREADY_REQUESTED(HttpStatus.CONFLICT, "이미 가입 신청한 멤버입니다."),
