@@ -6,8 +6,8 @@ spring:
     import: optional:file:.env[.properties]
     datasource:
       url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
-      username: minjooig
-      password: wanduek3612
+      username: ${MYSQL_NAME}
+      password: ${MYSQL_PASSWORD}
       driver-class-name: com.mysql.cj.jdbc.Driver
 
   cloud:
@@ -40,13 +40,6 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
-  config:
-    import: optional:file:.env[.properties]
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
-    username: ${MYSQL_NAME}
-    password: ${MYSQL_PASSWORD}
 
   jpa:
     hibernate:
