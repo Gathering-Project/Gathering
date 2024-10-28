@@ -6,6 +6,5 @@ import lombok.Getter;
 @Getter
 public class UserDeleteRequestDto {
 
-    @NotBlank
     private String password;
 }

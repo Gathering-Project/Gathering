@@ -19,7 +19,7 @@
     </div>
     <div class="social-buttons">
         <button class="kakao-btn">Kakao로 시작하기</button>
-        <button class="naver-btn" onclick="location.href='#'">Naver로 시작하기</button>
+        <button class="naver-btn">Naver로 시작하기</button>
     </div>
     <div class="button-group">
         <button onclick="location.href='/api/v1/user/signup'">회원가입</button>
@@ -41,6 +41,19 @@
                 alert("카카오 인증 URL을 불러오는 데 문제가 발생했습니다.");
             }
         });
+    });
+
+    $.ajax({
+        type: "GET",
+        url: "/api/v1/auth/naver-url",
+        success: function(authUrl) {
+            $(".naver-btn").on("click", function() {
+                window.location.href = authUrl;
+            });
+        },
+        error: function() {
+            alert("네이버 인증 URL을 불러오는 데 문제가 발생했습니다.");
+        }
     });
 </script>
 </body>
