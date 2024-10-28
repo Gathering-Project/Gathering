@@ -2,13 +2,13 @@ server:
   port: 8080
 
 spring:
-  config:
-    import: optional:file:.env[.properties]
-    datasource:
-      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
-      username: minjooig
-      password: wanduek3612
-      driver-class-name: com.mysql.cj.jdbc.Driver
+#  config:
+#    import: optional:file:.env[.properties]
+#    datasource:
+#      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
+#      username: ${RDS_USERNAME}
+#      password: ${RDS_PASSWORD}
+#      driver-class-name: com.mysql.cj.jdbc.Driver
 
   cloud:
     aws:
