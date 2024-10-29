@@ -8,6 +8,7 @@ import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
+import nbc_final.gathering.domain.gathering.dto.response.GatheringWithCountResponseDto;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
@@ -19,13 +20,17 @@ import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +41,9 @@ public class GatheringService {
   private final UserRepository userRepository;
   private final MemberRepository memberRepository;
   private final RedisTemplate redisTemplate;
+
+  private static final String TODAY_RANKING_KEY = "todayCardRanking";
+  public static Long previousViewCount = 0L;
 
   // 그룹 생성 로직
   @Transactional
@@ -62,7 +70,7 @@ public class GatheringService {
   }
 
   // 소모임 단 건 조회 로직
-  public GatheringResponseDto getGathering(AuthUser authUser, Long gatheringId) {
+  public GatheringWithCountResponseDto getGathering(AuthUser authUser, Long gatheringId) {
 
     List<Member> members = findMembersByUserId(authUser);
 
@@ -72,11 +80,36 @@ public class GatheringService {
       // 소모임을 찾았는데, 그 소모임이 request와 같다면
       if (gathering != null && gathering.getId().equals(gatheringId)) {
         if ((member.getStatus() == MemberStatus.APPROVED)) {
-          return GatheringResponseDto.of(gathering);
+          // Redis Set 의 Key 설정
+          String todayGatheringViewSetKey = "todayGatheringSet:" + gatheringId;
+
+          // 유저 ID를 Set 에 추가하고, 반환된 값으로 추가 성공 여부 확인
+          redisTemplate.opsForSet().add(todayGatheringViewSetKey, authUser.getUserId().toString());
+
+          // 조회수를 Set의 크기로 계산
+          Long todayGatheringViewCount = redisTemplate.opsForSet().size(todayGatheringViewSetKey);
+
+          // 가장 인기 있는 Top3 카드 업데이트
+          updateTopGatheringTitles(gatheringId);
+
+          // Dto 반환
+          return new GatheringWithCountResponseDto(gathering, todayGatheringViewCount);
         }
       }
     }
     throw new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING);
+  }
+
+  // 인기 소모임 Top3 조회 ( redis )
+  public Map<String, Integer> getTopViewGatheringList() {
+    Set<ZSetOperations.TypedTuple<Object>> topGatheringsWithScores =
+            redisTemplate.opsForZSet().reverseRangeWithScores(TODAY_RANKING_KEY, 0 ,2);
+
+    return topGatheringsWithScores.stream()
+            .collect(Collectors.toMap(
+                    tuple -> tuple.getValue().toString(), // title
+                    tuple -> tuple.getScore().intValue()  // 조회수 ( score )
+            ));
   }
 
   // 유저가 가입한 소모임 다 건 조회 로직
@@ -215,7 +248,7 @@ public class GatheringService {
     }
   }
 
-  ////////////////////// Redis 메서드 ///////////////////////
+  ////////////////////// Redis 조회 메서드 ///////////////////////
 
   // 소모임 제목을 Redis 에서 가져오고, 없으면 데이터베이스에서 조회 후 Redis 에 저장
   private String getGatheringTitle(Long gatheringId) {
@@ -232,6 +265,58 @@ public class GatheringService {
     }
 
     return title;
+  }
+
+  // Gathering DB에서 조회
+  public Gathering findGathering(Long gatheringId) {
+    Gathering gathering = gatheringRepository.findById(gatheringId).orElseThrow(null);
+    return gathering;
+  }
+
+  // Gathering DB에 저장
+  public void saveGathering(Gathering gathering) {
+    gatheringRepository.save(gathering);
+  }
+
+  // TOP3 Gathering 업데이트 메서드
+  private void updateTopGatheringTitles (Long gatheringId) {
+    // Key : gatheringViewSet{gatheringId}
+    String todayGatheringViewSetKey = "todayGatheringViewSet" + gatheringId;
+
+    // 현제 gathering 조회수 가져오기
+    Long viewCount = redisTemplate.opsForSet().size(todayGatheringViewSetKey);
+
+    // 조회수가 증가하는지 확인
+    if (viewCount > previousViewCount) {
+      String snapshotKey = "gathering:snapshot(1h):" + gatheringId;
+      redisTemplate.opsForValue().increment(snapshotKey, 1); // snapshotKey 값을 1 증가
+    }
+
+    previousViewCount = viewCount; // 이전 조회수 업데이트
+
+    // 카드 제목 가져오기 (Redis 사용)
+    String gatheringTitle = getGatheringTitle(gatheringId);
+
+    // 카드 제목과 조회수를 Sorted Set에 추가
+    redisTemplate.opsForZSet().add(TODAY_RANKING_KEY, gatheringTitle, viewCount);
+
+    // 상위 3개 카드 제목만 유지
+    maintainTopGathering();
+
+  }
+
+  // Top Gathering 제목 가져오는 메서드
+  private void maintainTopGathering() {
+    // 전체 소모임 수 가져오기
+    Long size = redisTemplate.opsForZSet().zCard(TODAY_RANKING_KEY);
+
+    // 카드 3개 이하라면 아무것도 지우지 않음
+    if (size == null || size <= 3) {
+      return;
+    }
+
+    // 상위 3개를 제외한 나머지 카드 제거
+    redisTemplate.opsForZSet().removeRange(TODAY_RANKING_KEY, 0, size - 4);
   }
 
 }

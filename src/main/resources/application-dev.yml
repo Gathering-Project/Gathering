@@ -48,7 +48,7 @@ jwt:
 admin:
   token: ${ADMIN_TOKEN}
 
-logging:
-   level:
-     root: TRACE
+#logging:
+#   level:
+#     root: TRACE
 
