@@ -61,35 +61,34 @@ public class JwtUtil {
                         .compact();
     }
 
+//    //생성된 JWT cookie에 저장해서 응답 객체에 반환
+//    public void addJwtToCookie(String token, HttpServletResponse res) {
+//        try {
+//            token = URLEncoder.encode(token, "utf-8").replaceAll("\\+", "%20"); // Cookie Value 에는 공백이 불가능해서 encoding 진행
+//            Cookie cookie = new Cookie(AUTHORIZATION_HEADER, token); // Name-Value
+//            cookie.setPath("/");
+//            // Response 객체에 Cookie 추가
+//            res.addCookie(cookie);
+//        } catch (UnsupportedEncodingException e) {
+//            System.out.println(e);
+//        }
+//    }
 
-    //생성된 JWT cookie에 저장해서 응답 객체에 반환
-    public void addJwtToCookie(String token, HttpServletResponse res) {
-        try {
-            token = URLEncoder.encode(token, "utf-8").replaceAll("\\+", "%20"); // Cookie Value 에는 공백이 불가능해서 encoding 진행
-            Cookie cookie = new Cookie(AUTHORIZATION_HEADER, token); // Name-Value
-            cookie.setPath("/");
-            // Response 객체에 Cookie 추가
-            res.addCookie(cookie);
-        } catch (UnsupportedEncodingException e) {
-            System.out.println(e);
-        }
-    }
-    public String getTokenFromRequest(HttpServletRequest httpServletRequest) {
-        Cookie[] cookies = httpServletRequest.getCookies();
-        if(cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(AUTHORIZATION_HEADER)) {
-                    try {
-                        return URLDecoder.decode(cookie.getValue(), "UTF-8"); // Encode 되어 넘어간 Value 다시 Decode
-                    } catch (UnsupportedEncodingException e) {
-                        return null;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
+//    public String getTokenFromRequest(HttpServletRequest httpServletRequest) {
+//        Cookie[] cookies = httpServletRequest.getCookies();
+//        if(cookies != null) {
+//            for (Cookie cookie : cookies) {
+//                if (cookie.getName().equals(AUTHORIZATION_HEADER)) {
+//                    try {
+//                        return URLDecoder.decode(cookie.getValue(), "UTF-8"); // Encode 되어 넘어간 Value 다시 Decode
+//                    } catch (UnsupportedEncodingException e) {
+//                        return null;
+//                    }
+//                }
+//            }
+//        }
+//        return null;
+//    }
 
     public String substringToken(String tokenValue) throws ServerException {
         if (StringUtils.hasText(tokenValue) && tokenValue.startsWith(BEARER_PREFIX)) {

@@ -1,7 +1,19 @@
 server:
-  port: 8080
+  port: 9090
 
 spring:
+  cloud:
+    aws:
+      s3:
+        bucket: ${cloud.aws.s3.bucket}
+      credentials:
+        accessKey: ${cloud.aws.s3.credentials.access-key}
+        secretKey: ${cloud.aws.s3.credentials.secret-key}
+      region:
+        static: ${cloud.aws.s3.region.static}
+      stack:
+        auto: false
+
   config:
     import: optional:file:.env[.properties]
   datasource:
@@ -36,4 +48,7 @@ jwt:
 admin:
   token: ${ADMIN_TOKEN}
 
+logging:
+   level:
+     root: TRACE
 

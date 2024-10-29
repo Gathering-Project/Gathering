@@ -79,6 +79,7 @@ public class UserService {
 
         User savedUser = userRepository.save(newUser); //회원 저장
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserRole(), savedUser.getNickname());
+
         return new SignUpResponseDto(bearerToken); // 토큰 반환
     }
 
@@ -96,7 +97,7 @@ public class UserService {
         validateCorrectPassword(inputPassword, correctPassword); // 비밀번호 맞는지 검증
 
         String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole(), user.getNickname());
-        jwtUtil.addJwtToCookie(bearerToken, response);
+//        jwtUtil.addJwtToCookie(bearerToken, response);
 
         return new LoginResponseDto(bearerToken);
     }

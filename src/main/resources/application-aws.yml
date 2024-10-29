@@ -1,28 +1,16 @@
-spring:
-  config:
-    import: optional:file:.env[.properties]
-    datasource:
-      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
-      username: minjooig
-      password: wanduek3612
-      driver-class-name: com.mysql.cj.jdbc.Driver
-
-  cloud:
-    aws:
-      s3:
-        bucket: ${cloud.aws.s3.bucket}
-      credentials:
-        accessKey: ${cloud.aws.s3.credentials.access-key}
-        secretKey: ${cloud.aws.s3.credentials.secret-key}
-      region:
-        static: ${cloud.aws.s3.region.static}
-      stack:
-        auto: false
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-      show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+#spring:
+#  config:
+#    import: optional:file:.env[.properties]
+#    datasource:
+#      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
+#      username: minjooig
+#      password: wanduek3612
+#      driver-class-name: com.mysql.cj.jdbc.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#      show-sql: true
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.MySQLDialect

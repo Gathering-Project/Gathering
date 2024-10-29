@@ -1,5 +1,7 @@
 package nbc_final.gathering.domain.gathering.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
@@ -15,12 +17,15 @@ import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +35,7 @@ public class GatheringService {
   private final GatheringRepository gatheringRepository;
   private final UserRepository userRepository;
   private final MemberRepository memberRepository;
+  private final RedisTemplate redisTemplate;
 
   // 그룹 생성 로직
   @Transactional
@@ -75,6 +81,16 @@ public class GatheringService {
 
   // 유저가 가입한 소모임 다 건 조회 로직
   public List<GatheringResponseDto> getAllGatherings(AuthUser authUser) {
+    String cacheKey = "userGathering:" + authUser.getUserId();
+    ValueOperations<String, List<GatheringResponseDto>> valueOperations = redisTemplate.opsForValue();
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    // Redis에서 캐시 조회
+    Object cachedData = valueOperations.get(cacheKey);
+    if (cachedData != null ) {
+      // JSON 형식으로 저장된 데이터를 List<GatheringResponseDto>로 역직렬화
+      return objectMapper.convertValue(cachedData, new TypeReference<List<GatheringResponseDto>>() {});
+    }
 
     List<Member> members = memberRepository.findByUserId(authUser.getUserId());
 
@@ -87,6 +103,9 @@ public class GatheringService {
         gatheringResponses.add(GatheringResponseDto.of(gathering));
       }
     }
+
+    // Redis에 캐싱
+    valueOperations.set(cacheKey, gatheringResponses, 10, TimeUnit.MINUTES);
 
     // DTO List 변환
     return gatheringResponses;
@@ -194,6 +213,25 @@ public class GatheringService {
     if (gathering.getGatheringCount() > gatheringRequestDto.getGatheringMaxCount()) {
       throw new ResponseCodeException(ResponseCode.INVALID_MAX_COUNT);
     }
+  }
+
+  ////////////////////// Redis 메서드 ///////////////////////
+
+  // 소모임 제목을 Redis 에서 가져오고, 없으면 데이터베이스에서 조회 후 Redis 에 저장
+  private String getGatheringTitle(Long gatheringId) {
+    String gatheringTitleKey = "gatheringTitle:" + gatheringId;
+    String title = (String) redisTemplate.opsForValue().get(gatheringTitleKey);
+
+    if (title == null) {
+      Gathering gathering = gatheringRepository.findById(gatheringId)
+              .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
+
+      title = gathering.getTitle();
+      // Redis 에 캐시
+      redisTemplate.opsForValue().set(gatheringTitleKey, title);
+    }
+
+    return title;
   }
 
 }

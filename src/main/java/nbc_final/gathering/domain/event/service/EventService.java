@@ -1,6 +1,11 @@
 package nbc_final.gathering.domain.event.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
@@ -21,11 +26,15 @@ import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import nbc_final.gathering.domain.comment.entity.Comment;
 
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +48,7 @@ public class EventService {
     private final EventRepositoryCustom eventRepositoryCustom;
     private final GatheringRepository gatheringRepository;
     private final CommentRepository commentRepository;
+    private final RedisTemplate redisTemplate;
 
     // 이벤트 생성 (권한: 소모임 멤버 또는 어드민)
     @Transactional
@@ -76,10 +86,33 @@ public class EventService {
     }
 
     // 이벤트 다건 조회 (권한: 소모임 멤버 또는 어드민)
-    public EventListResponseDto getAllEvents(Long userId, Long gatheringId) {
+    public EventListResponseDto getAllEvents(Long userId, Long gatheringId) throws JsonProcessingException {
         checkAdminOrGatheringMemberForView(userId, gatheringId);
+
+        String cacheKey = "userEvent:" + userId;
+        ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule()); // LocalDateTime 지원
+
+        // Redis 캐시 조회
+        String cacheData = valueOperations.get(cacheKey);
+        if (cacheData != null ) {
+            // JSON 형식으로 저장된 데이터를 EventListResponseDto 역직렬화
+            return new ObjectMapper().readValue(cacheData, EventListResponseDto.class);
+        }
+
         List<Event> events = eventRepository.findAllByGatheringId(gatheringId);
-        return EventListResponseDto.of(events, userId);
+
+        // EventListResponseDto 객체 생성
+        EventListResponseDto eventListResponseDto = EventListResponseDto.of(events, userId);
+
+        // Redis에 캐싱
+        String jsonValue = objectMapper.writeValueAsString(eventListResponseDto);
+        valueOperations.set(cacheKey, jsonValue, 10, TimeUnit.MINUTES);
+
+        return eventListResponseDto;
+
+
     }
 
     // 이벤트 단건 조회 (권한: 소모임 멤버 또는 어드민)
