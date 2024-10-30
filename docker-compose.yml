@@ -1,10 +1,57 @@
 version: '3.7'
 services:
-  rabbitmq:
-    image: rabbitmq:latest
+#  rabbitmq:
+#    image: rabbitmq:latest
+#    ports:
+#      - "5672:5672" # rabbit amqp port
+#      - "15672:15672" # manage port
+#    environment:
+#      - RABBITMQ_DEFAULT_USER=admin       # 기본사용자 이름
+#      - RABBITMQ_DEFAULT_PASS=admin       # 기본사용자 비밀번호
+
+  redis-master:
+    image: redis:6-alpine
+    volumes:
+      - "./.data:/data"
     ports:
-      - "5672:5672" # rabbit amqp port
-      - "15672:15672" # manage port
-    environment:
-      - RABBITMQ_DEFAULT_USER=admin       # 기본사용자 이름
-      - RABBITMQ_DEFAULT_PASS=admin       # 기본사용자 비밀번호
+      - "6379:6379"
+    networks:
+      - redis-net
+
+  redis-slave:
+    image: redis:6-alpine
+    command: redis-server --slaveof redis-master 6379
+    links:
+      - redis-master
+    volumes:
+      - "./.data:/data"
+    networks:
+      - redis-net
+
+  redis-sentinel:
+    build:
+      context: ./redis-sentinel
+    links:
+      - redis-master
+    networks:
+      - redis-net
+
+  redis-sentinel2:
+    build:
+      context: ./redis-sentinel
+    links:
+      - redis-master
+    networks:
+      - redis-net
+
+  redis-sentinel3:
+    build:
+      context: ./redis-sentinel
+    links:
+      - redis-master
+    networks:
+      - redis-net
+
+networks:
+  redis-net:
+    driver: bridge

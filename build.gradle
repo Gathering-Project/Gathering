@@ -72,6 +72,9 @@ dependencies {
     //OAuth2.0
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    //Redisson
+    implementation 'org.redisson:redisson-spring-boot-starter:3.17.6'
 }
 
 tasks.named('test') {
