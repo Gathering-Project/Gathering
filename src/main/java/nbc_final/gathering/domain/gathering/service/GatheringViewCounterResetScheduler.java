@@ -23,6 +23,7 @@ public class GatheringViewCounterResetScheduler {
 
         // 초기화 전에 쌓인 조회수 털기
         resetSnapshotKeys();
+
         // "todayCardViewSet, todayCardRanking 초기화"
         Set<String> keysToDelete = redisTemplate.keys("todayGatheringViewSet:*");
         keysToDelete.addAll(redisTemplate.keys("todayGatheringRanking"));
@@ -32,13 +33,36 @@ public class GatheringViewCounterResetScheduler {
         }
     }
 
-    // 9시부터 21시까지 1시간 마다 snapshot 초기화
-    @Scheduled(cron = "0 0  9-22 * * ?")
+    // 9시부터 18시까지 1시간 마다 snapshot 초기화
+    @Scheduled(cron = "0 0  9-18 * * ?")
+    public void resetSnapshotKeysHourly() {
+        System.out.println("정각마다 소모임 스냅샷 업데이트 (09_18시)");
+
+        resetSnapshotKeys();
+    }
+
+    // 18시에서 22시까지 누적 조회수를 한 번만 업데이트
+    @Scheduled(cron = "0 0 18 * * ?")
+    public void resetSnapshotOnceEvening() {
+        System.out.println("저녁 한 번만 소모임 스냅샷 업데이트 (18시)");
+
+        resetSnapshotKeys();
+    }
+
+    // 22시부터 자정까지 매 정각마다 조회수 스냅샷 업데이트
+    @Scheduled(cron = "0 0 22-23 * * ?")
+    public void resetSnapshotKeysHourlyEvening() {
+        System.out.println("정각마다 소모임 스냅샷 업데이트 (22-23시)");
+
+        resetSnapshotKeys();
+    }
+
+
     public void resetSnapshotKeys() {
-        System.out.println("card:snapshot 키 초기화");
+        System.out.println("gathering:snapshot 키 초기화");
 
         // "card:snapshot:*" 모든 키 조회
-        Set<String> keysToDelete = redisTemplate.keys("card:snapshot(1h):*");
+        Set<String> keysToDelete = redisTemplate.keys("gathering:snapshot(1h):*");
 
         if (keysToDelete != null && !keysToDelete.isEmpty()) {
             for (String key : keysToDelete) {
@@ -58,14 +82,18 @@ public class GatheringViewCounterResetScheduler {
                     // gathering 객체 저장
                     gatheringService.saveGathering(gathering);
                 }
+
+                // Redis에 개별 소모임의 PreviousViewCount 삭제
+                String previousViewCountKey = "previousViewCount:" + gatheringId;
+                redisTemplate.delete(previousViewCountKey);
             }
-            GatheringService.previousViewCount = 0L;
 
             // Redis 에서 모든 snapshot 키 삭제
             redisTemplate.delete(keysToDelete);
             System.out.println(keysToDelete.size() + "개의 snapshot 키가 삭제되었습니다.");
         }
     }
+
 
     // "gathering:snapshot:{gatheringId}"에서 gatheringId 추출 메서드
     private Long extractGatheringIdFromKey (String key ){
