@@ -112,7 +112,6 @@ public class EventService {
 
         return eventListResponseDto;
 
-
     }
 
     // 이벤트 단건 조회 (권한: 소모임 멤버 또는 어드민)
