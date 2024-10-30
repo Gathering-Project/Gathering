@@ -3,16 +3,21 @@ package nbc_final.gathering.domain.user.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import nbc_final.gathering.common.config.JwtUtil;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
 import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
+import nbc_final.gathering.domain.user.service.KakaoService;
+import nbc_final.gathering.domain.user.service.NaverService;
 import nbc_final.gathering.domain.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,7 +25,10 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-    
+    private final KakaoService kakaoService;
+    private final JwtUtil jwtUtil;
+    private final NaverService naverService;
+
     /**
      * 유저 회원가입
      *
@@ -37,7 +45,7 @@ public class UserController {
      * 유저 로그인
      *
      * @param requestDto 생성 요청 데이터
-     * @param response http 응답
+     * @param response   http 응답
      * @return 유저 로그인
      */
     @PostMapping("/v1/users/login")
@@ -47,7 +55,8 @@ public class UserController {
     }
 
 
-    /**유저 조회
+    /**
+     * 유저 조회
      *
      * @param userId 유저 ID
      * @return 조회된 유저 정보
@@ -60,13 +69,17 @@ public class UserController {
 
     /**
      * 유저 회원 탈퇴
+     * <p>
+     * //     * @param authUser 인증 사용자
      *
-     * @param authUser 인증 사용자
      * @param requestDto 생성 요청 데이터
      * @return 성공 여부
      */
     @DeleteMapping("/v1/users")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(@AuthenticationPrincipal AuthUser authUser, @RequestBody @Valid UserDeleteRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody @Valid UserDeleteRequestDto requestDto
+    ) {
         userService.deleteUser(authUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
@@ -74,7 +87,7 @@ public class UserController {
     /**
      * 유저 비밀번호 변경
      *
-     * @param authUser 인증 사용자
+     * @param authUser   인증 사용자
      * @param requestDto 생성 요청 데이터
      * @return 성공 여부
      */
@@ -87,7 +100,7 @@ public class UserController {
     /**
      * 유저 정보 수정
      *
-     * @param authUser 인증 사용자
+     * @param authUser   인증 사용자
      * @param requestDto 생성 요청 데이터
      * @return 수정된 유저 상세 정보
      */
@@ -95,5 +108,50 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserGetResponseDto>> updateMyInfo(@AuthenticationPrincipal AuthUser authUser, @RequestBody UserUpdateRequestDto requestDto) {
         UserGetResponseDto res = userService.updateInfo(authUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
+    }
+
+    //----------------- OAuth 2.0  ------------- //
+
+    /**
+     * 카카오 로그인
+     *
+     * @param code     카카오 인가 코드
+     * @param response HTTP 응답 객체 (JWT 토큰을 쿠키에 저장)
+     * @return 로그인 결과 (JWT 토큰 및 유저 정보)
+     */
+    @GetMapping("/v1/users/kakao/callback")
+    public ResponseEntity<ApiResponse<LoginResponseDto>> kakaoLogin(@RequestParam String code, HttpServletResponse response) {
+        LoginResponseDto loginResponse = kakaoService.kakaoLogin(code, response);
+        return ResponseEntity.ok(ApiResponse.createSuccess(loginResponse));
+    }
+
+    /**
+     * 카카오 설정 정보 가져오기
+     *
+     * @return 카카오 API 설정 정보 (클라이언트 ID, 리다이렉트 URL 등)
+     */
+    @GetMapping("/v1/users/kakao/config")
+    public ResponseEntity<ApiResponse<Map<String, String>>> getKakaoConfig() {
+        Map<String, String> config = kakaoService.getKakaoConfig();
+        return ResponseEntity.ok(ApiResponse.createSuccess(config));
+    }
+
+    /**
+     * 네이버 로그인 엔드포인트
+     *
+     *
+     * @param code     네이버에서 전달받은 인증 코드
+     * @param state    네이버에서 전달받은 state 값 (CSRF 방지용)
+     * @param response HTTP 응답 객체 (JWT 토큰을 쿠키에 저장)
+     * @return 로그인 결과로 JWT 토큰과 유저 정보를 포함하는 ApiResponse 객체
+     */
+    @GetMapping("/v1/users/naver/callback")
+    public ResponseEntity<ApiResponse<LoginResponseDto>> naverCallback(
+            @RequestParam String code,
+            @RequestParam String state,
+            HttpServletResponse response
+    ) {
+        LoginResponseDto loginResponse = naverService.naverLogin(code, state, response);
+        return ResponseEntity.ok(ApiResponse.createSuccess(loginResponse));
     }
 }

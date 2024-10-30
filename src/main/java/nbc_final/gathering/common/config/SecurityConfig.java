@@ -34,8 +34,17 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable) // BasicAuthenticationFilter 비활성화
                 .logout(AbstractHttpConfigurer::disable) // LogoutFilter 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/users/login",
-                                "/api/v1/users/signup"
+                        .requestMatchers(
+                                "/api/v1/users/login",
+                                "/api/v1/users/signup",
+                                "/login.html",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/api/v1/auth/kakao-url",
+                                "/api/v1/users/kakao/callback",
+                                "/api/v1/auth/naver-url",
+                                "/api/v1/users/naver/callback"
 //                                "/api/v1/gatherings/{gatheringId}",
 //                                "/api/v1/gatherings"
                                 ).permitAll()
