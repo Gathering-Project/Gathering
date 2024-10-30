@@ -1,11 +1,8 @@
 package nbc_final.gathering.domain.event.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
@@ -32,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import nbc_final.gathering.domain.comment.entity.Comment;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -49,6 +45,7 @@ public class EventService {
     private final GatheringRepository gatheringRepository;
     private final CommentRepository commentRepository;
     private final RedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper;
 
     // 이벤트 생성 (권한: 소모임 멤버 또는 어드민)
     @Transactional
@@ -91,14 +88,12 @@ public class EventService {
 
         String cacheKey = "userEvent:" + userId;
         ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule()); // LocalDateTime 지원
 
         // Redis 캐시 조회
         String cacheData = valueOperations.get(cacheKey);
         if (cacheData != null ) {
             // JSON 형식으로 저장된 데이터를 EventListResponseDto 역직렬화
-            return new ObjectMapper().readValue(cacheData, EventListResponseDto.class);
+            return objectMapper.readValue(cacheData, EventListResponseDto.class);
         }
 
         List<Event> events = eventRepository.findAllByGatheringId(gatheringId);

@@ -2,7 +2,6 @@ package nbc_final.gathering.domain.event.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.domain.event.entity.Event;

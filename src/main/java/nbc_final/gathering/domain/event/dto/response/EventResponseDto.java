@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
@@ -18,6 +17,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventResponseDto {
 
+    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+
     private Long eventId;
     private Long userId;
     private String title;
@@ -26,7 +27,11 @@ public class EventResponseDto {
     private String location;
     private Integer maxParticipants;
     private Integer currentParticipants;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT)
     private LocalDateTime createdAt;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT)
     private LocalDateTime updatedAt;
 
     private List<CommentResponseDto> comments;
