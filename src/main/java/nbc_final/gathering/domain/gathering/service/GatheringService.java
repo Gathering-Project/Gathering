@@ -3,6 +3,7 @@ package nbc_final.gathering.domain.gathering.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import nbc_final.gathering.common.config.RedisLimiter;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
@@ -21,6 +22,7 @@ import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +42,7 @@ public class GatheringService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     private static final String TODAY_RANKING_KEY = "todayGatheringRanking";
+    private final RedisLimiter redisLimiter;
 
     // 그룹 생성 로직
     @Transactional
@@ -67,6 +70,13 @@ public class GatheringService {
 
     // 소모임 단 건 조회 로직
     public GatheringWithCountResponseDto getGathering(AuthUser authUser, Long gatheringId) {
+
+        // 레이트 리미팅 체크 (10초 동안 최대 5번 허용)
+        boolean isAllowed = redisLimiter.isAllowed(authUser, "getGathering" + gatheringId,10, 5);
+
+        if (!isAllowed) {
+            throw new ResponseCodeException(ResponseCode.TOO_MANY_REQUSETS);
+        }
 
         // 소모임 조회
         Gathering gathering = findGatheringById(gatheringId);
