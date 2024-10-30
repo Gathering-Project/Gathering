@@ -39,7 +39,7 @@ public class GatheringService {
     private final MemberRepository memberRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private static final String TODAY_RANKING_KEY = "todayCardRanking";
+    private static final String TODAY_RANKING_KEY = "todayGatheringRanking";
 
     // 그룹 생성 로직
     @Transactional
@@ -296,8 +296,8 @@ public class GatheringService {
         Long size = redisTemplate.opsForZSet().zCard(TODAY_RANKING_KEY);
 
         // 상위 3개를 제외한 나머지 제거 (3개 이하일 때는 아무것도 제거하지 않음)
-        if (size == null || size <= 3) {
-            redisTemplate.opsForZSet().removeRange(TODAY_RANKING_KEY, 0, size - 4);
+        if (size == null || size > 3) {
+            redisTemplate.opsForZSet().removeRange(TODAY_RANKING_KEY, 3, size - 1);
         }
     }
 
