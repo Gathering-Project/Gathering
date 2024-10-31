@@ -12,7 +12,6 @@ import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringWithCountResponseDto;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
-import nbc_final.gathering.domain.gathering.repository.GatheringRepositoryCustom;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.member.enums.MemberStatus;
@@ -20,11 +19,9 @@ import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,11 +77,6 @@ public class GatheringService {
     }
 
     // 그룹 생성 로직
-    @Transactional
-    public GatheringResponseDto createGroup(AuthUser authUser, GatheringRequestDto gatheringRequestDto) {
-        // 유저 조회
-        User user = findUserById(authUser);
-        // 그룹 생성 로직
         @Transactional
         public GatheringResponseDto createGroup (AuthUser authUser, GatheringRequestDto gatheringRequestDto){
             // 유저 조회
@@ -353,4 +345,4 @@ public class GatheringService {
     }
 
 }
-}
+

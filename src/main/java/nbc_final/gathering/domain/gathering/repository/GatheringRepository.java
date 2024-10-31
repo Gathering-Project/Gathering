@@ -11,6 +11,4 @@ public interface GatheringRepository extends JpaRepository<Gathering, Long>, Que
   Optional<Gathering> findByMembers(Member member);
 
   Optional<Gathering> findByTitle(String title);
-
-  List<Gathering> findAllByTitleContaining(String title);
 }

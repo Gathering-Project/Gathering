@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 9090
 
 spring:
   cloud:
@@ -85,6 +85,6 @@ admin:
 #   level:
 #     root: TRACE
 
-logging:
-  level:
-    root: DEBUG
+#logging:
+#  level:
+#    root: DEBUG
