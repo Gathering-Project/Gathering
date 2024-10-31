@@ -73,3 +73,7 @@ jwt:
 
 admin:
   token: ${ADMIN_TOKEN}
+
+#logging:
+#  level:
+#    root: TRACE

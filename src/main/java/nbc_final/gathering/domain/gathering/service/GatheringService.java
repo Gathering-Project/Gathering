@@ -8,6 +8,7 @@ import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
+import nbc_final.gathering.domain.gathering.repository.GatheringRepositoryCustom;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.member.enums.MemberStatus;
@@ -15,6 +16,7 @@ import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,39 @@ public class GatheringService {
   private final GatheringRepository gatheringRepository;
   private final UserRepository userRepository;
   private final MemberRepository memberRepository;
+
+  // 제목으로 모임을 검색하고 찾지 못한 경우 NOT_FOUND_GROUP 예외 처리
+  @Transactional(readOnly = true)
+  public Gathering getGatheringByTitle(String title) {
+    return gatheringRepository.findByTitle(title)
+            .orElseThrow(()-> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
+  }
+
+  // 제목을 기준으로 모임을 검색하여 결과를 반환
+  @Transactional(readOnly = true)
+  public List<Gathering> searchGatheringsByTitle(String title) {
+    return gatheringRepository.searchGatheringsByTitle(title);
+  }
+
+  // 지역을 기준으로 모임을 검색하고 검색 소요 시간을 로그로 기록
+  @Transactional(readOnly = true)
+  public List<Gathering> searchGatheringsByLocation(String location) {
+    long startTime = System.currentTimeMillis();
+    List<Gathering> results = gatheringRepository.searchGatheringsByLocation(location);
+    long endTime = System.currentTimeMillis();
+    System.out.println("지역 검색 소요 시간: " + (endTime - startTime) + "ms");
+    return results;
+  }
+
+  // 제목과 지역을 기준으로 모임을 검색하고 검색 소요 시간을 로그로 기록
+  @Transactional(readOnly = true)
+  public List<Gathering> searchGatheringsByTitleAndLocation(String title, String location) {
+    long startTime = System.currentTimeMillis();
+    List<Gathering> results = gatheringRepository.searchGatheringsByTitleAndLocation(title, location);
+    long endTime = System.currentTimeMillis();
+    System.out.println("이름 및 지역 검색 소요 시간: " + (endTime - startTime) + "ms");
+    return results;
+  }
 
   // 그룹 생성 로직
   @Transactional
