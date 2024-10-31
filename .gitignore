@@ -42,4 +42,5 @@ out/
 
 ### env ###
 .data
+/docker.dev.env
 
