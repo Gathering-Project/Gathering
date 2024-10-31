@@ -23,7 +23,9 @@ import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import nbc_final.gathering.domain.comment.entity.Comment;
 
@@ -110,7 +112,7 @@ public class EventService {
         eventRepository.delete(event);
     }
 
-    // 이벤트 참가 (권한: 어드민 불가, 이벤트 생성자 불가, 게더링 멤버 가능)
+    // 이벤트 참가 (권한: 어드민 불가, 이벤트 생성자 불가, 게더링 멤버 가능) 분산락 X
     @Transactional
     public void participateInEvent(Long userId, Long gatheringId, Long eventId) {
         User user = getUserOrThrow(userId);
@@ -128,40 +130,48 @@ public class EventService {
         event.addParticipant(participant);
     }
 
-    //분산락 참가신청
-    @Transactional
+    // 락을 사용한 이벤트 참가
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public void participateInEventWithDistributedLock(Long userId, Long gatheringId, Long eventId) {
+
         String lockKey = "event:" + eventId + ":lock";
         RLock lock = redissonClient.getLock(lockKey);
+        int maxRetries = 5;
+        int attempts = 0;
 
-        try {
-            boolean available = lock.tryLock(3, 5, TimeUnit.SECONDS); // 대기 시간: 3초, 락 유지 시간: 5초
-            if (!available) {
+        while (attempts < maxRetries) {
+            try {
+                if (!lock.tryLock(10, 10, TimeUnit.SECONDS)) { // 충분한 대기 및 유지 시간
+                    attempts++;
+                    continue;
+                }
+
+                // 현재 인원 체크 (락 획득 후)
+                Event event = getEventOrThrow(eventId);
+                if (event.getCurrentParticipants() >= event.getMaxParticipants()) {
+                    throw new ResponseCodeException(ResponseCode.PARTICIPANT_LIMIT_EXCEEDED); // 인원 초과 시 예외 던지기
+                }
+
+                User user = getUserOrThrow(userId);
+                validateParticipantConditions(user, event, userId);
+
+                Participant participant = Participant.of(event, user);
+                event.addParticipant(participant);
+                eventRepository.saveAndFlush(event);
+
+                return;
+
+            } catch (CannotAcquireLockException | InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new ResponseCodeException(ResponseCode.LOCK_ACQUISITION_FAILED);
-            }
-
-            // 참여 조건 검사와 동시에 필요한 필드 업데이트
-            User user = getUserOrThrow(userId);
-            Event event = getEventOrThrow(eventId);
-            validateParticipantConditions(user, event, userId);
-
-            if (event.getCurrentParticipants() >= event.getMaxParticipants()) {
-                throw new ResponseCodeException(ResponseCode.PARTICIPANT_LIMIT_EXCEEDED);
-            }
-
-            checkAdminOrGatheringMemberForCreation(userId, gatheringId);
-
-            // 참가자 추가
-            Participant participant = Participant.of(event, user);
-            event.addParticipant(participant);
-
-        } catch (InterruptedException e) {
-            throw new ResponseCodeException(ResponseCode.LOCK_ACQUISITION_FAILED);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock(); // 락 해제 보장
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
             }
         }
+
+        throw new ResponseCodeException(ResponseCode.LOCK_ACQUISITION_FAILED);
     }
 
 

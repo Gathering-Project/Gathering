@@ -68,7 +68,9 @@ public enum ResponseCode {
     ONLY_ONE_FILE(HttpStatus.BAD_REQUEST, "한 번에 하나의 파일만 업로드할 수 있습니다."),
     NOT_YET_CHOOOSE_FILE(HttpStatus.BAD_REQUEST,"파일이 선택되지 않았습니다."),
 
-    //락 관련 예외
+    // 락 관련 예외
+    LOCK_TIMEOUT(HttpStatus.REQUEST_TIMEOUT, "락을 획득하는 데 실패했습니다."),
+    TRANSACTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "요청 처리 중 오류가 발생했습니다. 다시 시도해 주세요."),
     LOCK_ACQUISITION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "현재 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.");
 
     private final HttpStatus httpStatus;

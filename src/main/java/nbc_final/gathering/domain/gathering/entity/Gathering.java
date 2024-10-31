@@ -28,7 +28,7 @@ public class Gathering extends TimeStamped {
 
   private Long userId;
 
-  @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL)
   private List<Member> members = new ArrayList<>();
 
   @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -76,10 +76,10 @@ public class Gathering extends TimeStamped {
     Gathering gathering = new Gathering();
     gathering.title = title;
     gathering.gatheringMaxCount = gatheringMaxCount;
-    gathering.gatheringCount = 0; // 초기값 설정
-    gathering.rating = BigDecimal.ZERO; // 초기 평점 설정
-    gathering.location = "Default Location"; // 기본 위치 설정 (필요 시 변경)
-    gathering.description = description; // description 설정
+    gathering.gatheringCount = 0;
+    gathering.rating = BigDecimal.ZERO;
+    gathering.location = "Default Location";
+    gathering.description = description;
     return gathering;
   }
   public void setGatheringImage(String gatheringImage) {

@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -57,24 +58,19 @@ public class EventServiceConcurrencyTest {
     public void setUp() {
         System.out.println("테스트 데이터 준비: 사용자와 소모임 생성");
 
-        // 소모임 엔티티를 생성하고 데이터베이스에 저장
         Gathering gathering = gatheringRepository.save(getGatheringOrThrow(1L));
         gatheringId = gathering.getId();
         System.out.println("소모임 " + gatheringId + "이 생성되었습니다.");
 
-        // 테스트용 사용자 생성 및 게더링 멤버로 등록
         for (int i = 1; i <= 105; i++) {
-            User user = userRepository.save(getUserOrThrow((long) i));  // User 저장
-            gathering.addMember(user, MemberRole.GUEST, MemberStatus.APPROVED);  // 멤버로 추가
-            System.out.println("사용자 " + i + "가 생성되고 게더링 멤버로 추가되었습니다.");
+            User user = userRepository.save(getUserOrThrow((long) i));
+            gathering.addMember(user, MemberRole.GUEST, MemberStatus.APPROVED);
         }
-
-        // Gathering을 다시 저장하여 members 관계가 DB에 반영되도록 설정
         gatheringRepository.save(gathering);
+        System.out.println("총 105명의 사용자가 생성되고 게더링 멤버로 추가되었습니다.");
 
-        // Event 생성
         User eventCreator = getUserOrThrow(userId);
-        userRepository.save(eventCreator); // 반드시 저장 후 사용
+        userRepository.save(eventCreator);
 
         EventCreateRequestDto requestDto = EventCreateRequestDto.of(
                 "Test Event",
@@ -86,68 +82,172 @@ public class EventServiceConcurrencyTest {
 
         Event event = Event.of(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(),
                 requestDto.getLocation(), requestDto.getMaxParticipants(), gathering, eventCreator);
-        eventRepository.save(event); // 이벤트 저장
+        eventRepository.save(event);
         eventId = event.getId();
         System.out.println("이벤트 " + eventId + "가 생성되었습니다.");
     }
 
     @Test
-    @DisplayName("100명의 동시 참가 시, 최대 참가자 수 내에서 정상 처리")
-    public void shouldAllowConcurrentParticipationWithinLimit() throws InterruptedException {
-        int concurrentUsers = 100; // 동시 참여할 사용자 수
+    @DisplayName("1. 최대 참가자 수 내에서 이벤트 참가 신청 테스트")
+    public void shouldAllowMaxParticipants() throws InterruptedException {
+        System.out.println("테스트 시작: 최대 참가자 수 내에서 이벤트 참가 신청");
+
+        int concurrentUsers = 100;
         ExecutorService executorService = Executors.newFixedThreadPool(concurrentUsers);
         CountDownLatch latch = new CountDownLatch(concurrentUsers);
 
-        System.out.println("동시 참가 테스트 시작: " + concurrentUsers + "명의 사용자");
-
         for (int i = 0; i < concurrentUsers; i++) {
-            long testUserId = i + 2; // 각기 다른 사용자 ID
+            long testUserId = i + 2;
             executorService.submit(() -> {
                 try {
                     eventService.participateInEventWithDistributedLock(testUserId, gatheringId, eventId);
-                    System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 성공적으로 참여했습니다.");
+                    System.out.println("사용자 " + testUserId + "이(가) 이벤트 참가에 성공했습니다.");
                 } catch (ResponseCodeException e) {
-                    System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + " 참여에 실패했습니다: " + e.getMessage());
+                    System.out.println("사용자 " + testUserId + "이(가) 이벤트 참가에 실패했습니다: " + e.getMessage());
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+        latch.await(10, TimeUnit.SECONDS);
+        executorService.shutdown();
+
+        Event event = eventRepository.findById(eventId).orElseThrow();
+        System.out.println("최종 참가자 수: " + event.getCurrentParticipants());
+        assertThat(event.getCurrentParticipants()).isLessThanOrEqualTo(event.getMaxParticipants());
+        System.out.println("테스트 종료: 최대 참가자 수 내에서 이벤트 참가 신청 테스트");
+    }
+
+    @Test
+    @DisplayName("2. 동시 참가 시도 시 분산 락을 적용하여 인원 제한 확인")
+    public void shouldLimitConcurrentParticipantsWithLock() throws InterruptedException {
+        System.out.println("테스트 시작: 동시 참가 시도 시 분산 락을 적용하여 인원 제한 확인");
+
+        int concurrentUsers = 105;
+        ExecutorService executorService = Executors.newFixedThreadPool(concurrentUsers);
+        CountDownLatch latch = new CountDownLatch(concurrentUsers);
+
+        for (int i = 0; i < concurrentUsers; i++) {
+            long testUserId = i + 2;
+            executorService.submit(() -> {
+                try {
+                    eventService.participateInEventWithDistributedLock(testUserId, gatheringId, eventId);
+                    System.out.println("사용자 " + testUserId + "이(가) 이벤트 참가에 성공했습니다.");
+                } catch (ResponseCodeException e) {
+                    System.out.println("사용자 " + testUserId + "이(가) 이벤트 참가에 실패했습니다: " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
             });
         }
 
-        latch.await(10, TimeUnit.SECONDS);
+        latch.await(3, TimeUnit.SECONDS);
         executorService.shutdown();
 
         Event event = eventRepository.findById(eventId).orElseThrow();
-        System.out.println("테스트 완료: 현재 참가자 수 = " + event.getCurrentParticipants());
-        assertThat(event.getCurrentParticipants()).isLessThanOrEqualTo(event.getMaxParticipants());
+        System.out.println("최종 참가자 수: " + event.getCurrentParticipants());
+        assertThat(event.getCurrentParticipants()).isEqualTo(100);
+        System.out.println("테스트 종료: 동시 참가 시도 시 분산 락을 적용하여 인원 제한 확인");
     }
 
     @Test
-    @DisplayName("참가 인원을 초과할 경우, 예외 발생 확인")
-    public void shouldThrowExceptionWhenParticipationExceedsLimit() {
-        int overLimitUsers = 105; // 제한 인원보다 많은 사용자 수
-        System.out.println("초과 참여 테스트 시작: " + overLimitUsers + "명의 사용자");
+    @DisplayName("3. 인원 초과 시 참가 불가 확인")
+    public void shouldRejectWhenExceedingParticipantLimit() {
+        System.out.println("테스트 시작: 인원 초과 시 참가 불가 확인");
 
-        for (int i = 0; i < overLimitUsers; i++) {
+        for (int i = 0; i < 120; i++) {
             final long testUserId = i + 2;
-
-            // 테스트를 위한 사용자 미리 생성
-            userRepository.save(getUserOrThrow(testUserId));
-
             if (i < 100) {
                 eventService.participateInEventWithDistributedLock(testUserId, gatheringId, eventId);
-                System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 성공적으로 참여했습니다.");
+                System.out.println("사용자 " + testUserId + "이(가) 이벤트 참가에 성공했습니다.");
             } else {
-                System.out.println("참가자 수를 초과하여 사용자 " + testUserId + "가 참여를 시도합니다.");
                 assertThrows(ResponseCodeException.class, () -> {
                     eventService.participateInEventWithDistributedLock(testUserId, gatheringId, eventId);
-                    System.out.println("사용자 " + testUserId + "는 이벤트 " + eventId + "에 참여할 수 없어야 합니다.");
                 });
+                System.out.println("사용자 " + testUserId + "이(가) 인원 초과로 이벤트 참가에 실패해야 합니다.");
             }
         }
-
-        System.out.println("초과 참여 테스트 완료");
+        System.out.println("테스트 종료: 인원 초과 시 참가 불가 확인");
     }
+
+    @Test
+    @DisplayName("4. 중복 참가 신청 차단 확인")
+    public void shouldRejectDuplicateParticipation() {
+        System.out.println("테스트 시작: 중복 참가 신청 차단 확인");
+
+        long testUserId = 2; // 동일 사용자 ID 사용
+        for (int i = 0; i < 30; i++) {
+            if (i == 0) {
+                eventService.participateInEventWithDistributedLock(testUserId, gatheringId, eventId);
+                System.out.println("사용자 " + testUserId + "이(가) 이벤트 참가에 성공했습니다.");
+            } else {
+                assertThrows(ResponseCodeException.class, () -> {
+                    eventService.participateInEventWithDistributedLock(testUserId, gatheringId, eventId);
+                });
+                System.out.println("사용자 " + testUserId + "이(가) 중복 신청으로 이벤트 참가에 실패해야 합니다.");
+            }
+        }
+        System.out.println("테스트 종료: 중복 참가 신청 차단 확인");
+    }
+
+    @Test
+    @DisplayName("5. 락 획득 성공 확인")
+    public void shouldAcquireLockSuccessfully() throws InterruptedException {
+        System.out.println("테스트 시작: 락 획득 성공 확인");
+
+        String lockKey = "event:" + eventId + ":lock";
+        RLock lock = redissonClient.getLock(lockKey);
+
+        boolean isLockAcquired = lock.tryLock(5, 10, TimeUnit.SECONDS);
+        assertThat(isLockAcquired).isTrue();
+        System.out.println("락이 성공적으로 획득되었습니다.");
+
+        if (lock.isHeldByCurrentThread()) {
+            lock.unlock();
+            System.out.println("락이 성공적으로 해제되었습니다.");
+        }
+
+        System.out.println("테스트 종료: 락 획득 성공 확인");
+    }
+
+    @Test
+    @DisplayName("6. 락 획득 실패 확인")
+    public void shouldFailToAcquireLockWhenAlreadyLocked() throws InterruptedException {
+        System.out.println("테스트 시작: 락 획득 실패 확인");
+
+        String lockKey = "event:" + eventId + ":lock";
+        RLock lock = redissonClient.getLock(lockKey);
+
+        boolean isLockAcquiredByFirstThread = lock.tryLock(5, 10, TimeUnit.SECONDS);
+        assertThat(isLockAcquiredByFirstThread).isTrue();
+        System.out.println("첫 번째 스레드가 락을 성공적으로 획득했습니다.");
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        CountDownLatch latch = new CountDownLatch(1);
+
+        executorService.submit(() -> {
+            try {
+                boolean isLockAcquiredBySecondThread = lock.tryLock(2, 5, TimeUnit.SECONDS);
+                assertThat(isLockAcquiredBySecondThread).isFalse();
+                System.out.println("두 번째 스레드는 락을 획득하지 못했습니다.");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        latch.await();
+        executorService.shutdown();
+
+        if (lock.isHeldByCurrentThread()) {
+            lock.unlock();
+            System.out.println("첫 번째 스레드가 락을 성공적으로 해제했습니다.");
+        }
+
+        System.out.println("테스트 종료: 락 획득 실패 확인");
+    }
+
 
     private User getUserOrThrow(Long userId) {
         String uniqueEmail = "testUser" + userId + System.nanoTime() + "@example.com";
