@@ -32,6 +32,9 @@ public class JwtSecurityFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse httpResponse,
             @NonNull FilterChain chain
     ) throws ServletException, IOException {
+
+
+
         String tokenValue = jwtUtil.getTokenFromRequest(httpRequest);
         if (StringUtils.hasText(tokenValue)) {
             String jwt = jwtUtil.substringToken(tokenValue);
@@ -64,3 +67,4 @@ public class JwtSecurityFilter extends OncePerRequestFilter {
         chain.doFilter(httpRequest, httpResponse);
     }
 }
+

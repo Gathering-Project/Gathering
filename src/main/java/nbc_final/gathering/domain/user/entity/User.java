@@ -31,6 +31,9 @@ public class User extends TimeStamped {
     @Column(unique = true)
     private Long kakaoId;
 
+    @Column(unique = true)
+    private String naverId;
+
     private String location;
 
     @Column(unique = true)
@@ -42,6 +45,7 @@ public class User extends TimeStamped {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
     @Enumerated(EnumType.STRING)
@@ -71,6 +75,7 @@ public class User extends TimeStamped {
     public User(
             Long id,
             Long kakaoId,
+            String naverId,
             String nickname,
             String email,
             String password,
@@ -78,6 +83,7 @@ public class User extends TimeStamped {
     ) {
         this.id = id;
         this.kakaoId = kakaoId;
+        this.naverId = naverId;
         this.nickname = nickname;
         this.email = email;
         this.password = password;
@@ -111,6 +117,10 @@ public class User extends TimeStamped {
 
     public void updateKakaoId(Long kakaoId) {
         this.kakaoId = kakaoId;
+    }
+
+    public void updateNaverId(String naverId) {
+        this.naverId = naverId;
     }
 
     public void setProfileImagePath(String profileImagePath) {

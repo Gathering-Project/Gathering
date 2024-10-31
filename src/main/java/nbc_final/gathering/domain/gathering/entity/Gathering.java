@@ -58,6 +58,8 @@ public class Gathering extends TimeStamped {
   @Column(length = 30, nullable = false)
   private String location;
 
+  private long totalGatheringViewCount;
+
   public Gathering(Long userId,
                    String title,
                    String description,
@@ -93,5 +95,9 @@ public class Gathering extends TimeStamped {
     Gathering gathering = new Gathering();
     gathering.id = id;
     return gathering;
+  }
+
+  public void updateTotalGatheirngViewCount(long totalGatheringViewCount) {
+    this.totalGatheringViewCount = totalGatheringViewCount;
   }
 }

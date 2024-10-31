@@ -1,6 +1,8 @@
 package nbc_final.gathering.domain.user.service;
 
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +33,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final KakaoService kakaoService;
+    private final NaverService naverService;
 
     @Value("${admin.token}")
     private String ADMIN_TOKEN; // 관리자가 맞는지 확인 토큰
+
+    @PersistenceContext // EntityManager 주입
+    private EntityManager entityManager;
 
     // 유저 회원가입
     @Transactional
@@ -79,6 +86,7 @@ public class UserService {
 
         User savedUser = userRepository.save(newUser); //회원 저장
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserRole(), savedUser.getNickname());
+
         return new SignUpResponseDto(bearerToken); // 토큰 반환
     }
 
@@ -104,16 +112,28 @@ public class UserService {
     // 유저 회원 탈퇴
     @Transactional
     public void deleteUser(Long userId, UserDeleteRequestDto requestDto) {
-
         User user = getUserById(userId);
 
-        String inputPassword = requestDto.getPassword();
-        String correctPassword = user.getPassword();
-        validateCorrectPassword(inputPassword, correctPassword); // 비밀번호 검증
-
-        user.updateIsDeleted(); // 회원 탈퇴
+        try {
+            if (user.getKakaoId() != null) {
+                kakaoService.unlinkKakaoAccount(getAccessTokenForUser(user));
+            } else if (user.getNaverId() != null) {
+                try {
+                    naverService.expireNaverAccessToken(getAccessTokenForUser(user));
+                    log.info("Naver access token expired successfully for userId: {}", userId);
+                } catch (ResponseCodeException e) {
+                    log.warn("네이버 토큰 만료 실패, 예외 무시하고 회원 탈퇴 계속 진행");
+                }
+            } else {
+                validateCorrectPassword(requestDto.getPassword(), user.getPassword());
+            }
+            user.updateIsDeleted();
+            log.info("회원 탈퇴 처리 완료 및 DB 반영됨, userId: {}", userId);
+        } catch (Exception e) {
+            log.error("회원 탈퇴 처리 중 오류 발생, userId: {}: {}", userId, e.getMessage());
+            throw new ResponseCodeException(ResponseCode.UNLINK_FAILED);
+        }
     }
-
     // 유저 정보 조회
     public UserGetResponseDto getUser(Long userId) {
         User user = getUserById(userId);
@@ -124,17 +144,21 @@ public class UserService {
     @Transactional
     public void changePassword(UserChangePwRequestDto requestDto, Long userId) {
 
-        validateNewPassword(requestDto); // 새로 변경하려는 비밀번호가 규칙에 맞는지 검증
         User user = getUserById(userId);
-
-
-        if (passwordEncoder.matches(requestDto.getNewPassword(), user.getPassword())) {
-            throw new ResponseCodeException(ResponseCode.SAME_PASSWORD);
+        // SNS 로그인 유저는 권한 없음 예외 발생
+        if (user.getKakaoId() != null || user.getNaverId() != null) {
+            throw new ResponseCodeException(ResponseCode.NO_PERMISSION_CHANGE_PASSWORD);
         }
+
+        validateNewPassword(requestDto); // 새로 변경하려는 비밀번호가 규칙에 맞는지 검증
 
         String inputOldPassword = requestDto.getOldPassword();
         String correctPassword = user.getPassword();
         validateCorrectPassword(inputOldPassword, correctPassword);
+
+        if (passwordEncoder.matches(requestDto.getNewPassword(), user.getPassword())) {
+            throw new ResponseCodeException(ResponseCode.SAME_PASSWORD);
+        }
 
         log.info(requestDto.getNewPassword());
         user.changePassword(passwordEncoder.encode(requestDto.getNewPassword()));
@@ -204,7 +228,9 @@ public class UserService {
         }
     }
 
-
+    private String getAccessTokenForUser(User user) {
+        return "access-token"; // 실제 액세스 토큰 반환으로 변경 필요
+    }
 }
 
 

@@ -1,5 +1,6 @@
 package nbc_final.gathering.domain.event.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
@@ -71,7 +72,7 @@ public class EventController {
     @GetMapping("/v1/gatherings/{gatheringId}/events")
     public ResponseEntity<ApiResponse<EventListResponseDto>> getAllEvents(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long gatheringId) {
+            @PathVariable Long gatheringId) throws JsonProcessingException {
         EventListResponseDto events = eventService.getAllEvents(authUser.getUserId(), gatheringId);
         return ResponseEntity.ok(ApiResponse.createSuccess(events));
     }
