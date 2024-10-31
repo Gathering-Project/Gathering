@@ -86,6 +86,7 @@ public class UserService {
 
         User savedUser = userRepository.save(newUser); //회원 저장
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserRole(), savedUser.getNickname());
+
         return new SignUpResponseDto(bearerToken); // 토큰 반환
     }
 

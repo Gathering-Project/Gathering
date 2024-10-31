@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 9090
 
 spring:
   cloud:
@@ -14,14 +14,6 @@ spring:
       stack:
         auto: false
 
-#  config:
-#    import: optional:file:.env[.properties]
-#    datasource:
-#      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
-#      username: minjooig
-#      password:
-#      driver-class-name: com.mysql.cj.jdbc.Driver
-
   config:
     import: optional:file:.env[.properties]
   datasource:
@@ -33,6 +25,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+      show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -87,3 +80,11 @@ jwt:
 
 admin:
   token: ${ADMIN_TOKEN}
+
+#logging:
+#   level:
+#     root: TRACE
+
+logging:
+  level:
+    root: DEBUG
