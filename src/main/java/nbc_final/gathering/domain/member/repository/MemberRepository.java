@@ -2,6 +2,7 @@ package nbc_final.gathering.domain.member.repository;
 
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.member.entity.Member;
+import nbc_final.gathering.domain.member.enums.MemberStatus;
 import nbc_final.gathering.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -26,8 +27,11 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     List<Member> findByUserId(Long userId);
 
+    Optional<Member> findByUserIdAndGatheringIdAndStatus(Long userId, Long gatheringId, MemberStatus status);
 
-  @Modifying
+
+
+    @Modifying
   @Query("DELETE FROM Member m WHERE m.gathering = :gathering")
   void deleteByGathering(@Param("gathering") Gathering gathering);
 }

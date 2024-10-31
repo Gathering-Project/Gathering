@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.attachment.entity.Attachment;
 import nbc_final.gathering.domain.member.entity.Member;
+import nbc_final.gathering.domain.member.enums.MemberRole;
+import nbc_final.gathering.domain.member.enums.MemberStatus;
+import nbc_final.gathering.domain.user.entity.User;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -69,6 +72,16 @@ public class Gathering extends TimeStamped {
     this.location = location;
   }
 
+  public static Gathering of(String title, int gatheringMaxCount, String description) {
+    Gathering gathering = new Gathering();
+    gathering.title = title;
+    gathering.gatheringMaxCount = gatheringMaxCount;
+    gathering.gatheringCount = 0; // 초기값 설정
+    gathering.rating = BigDecimal.ZERO; // 초기 평점 설정
+    gathering.location = "Default Location"; // 기본 위치 설정 (필요 시 변경)
+    gathering.description = description; // description 설정
+    return gathering;
+  }
   public void setGatheringImage(String gatheringImage) {
     this.gatheringImage = gatheringImage;
   }
@@ -87,5 +100,10 @@ public class Gathering extends TimeStamped {
     Gathering gathering = new Gathering();
     gathering.id = id;
     return gathering;
+  }
+
+  public void addMember(User user, MemberRole role, MemberStatus status) {
+    Member newMember = new Member(user, this, role, status);
+    this.members.add(newMember);
   }
 }

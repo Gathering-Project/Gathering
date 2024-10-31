@@ -66,7 +66,10 @@ public enum ResponseCode {
     TOO_LARGE_SIZE_FILE(HttpStatus.PAYLOAD_TOO_LARGE, "파일 크기가 너무 큽니다."),
     NOT_USER_OR_GATHERING(HttpStatus.NOT_FOUND,"유저나 소모임의 정보가 없습니다."),
     ONLY_ONE_FILE(HttpStatus.BAD_REQUEST, "한 번에 하나의 파일만 업로드할 수 있습니다."),
-    NOT_YET_CHOOOSE_FILE(HttpStatus.BAD_REQUEST,"파일이 선택되지 않았습니다.");
+    NOT_YET_CHOOOSE_FILE(HttpStatus.BAD_REQUEST,"파일이 선택되지 않았습니다."),
+
+    //락 관련 예외
+    LOCK_ACQUISITION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "현재 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.");
 
     private final HttpStatus httpStatus;
     private final String message;

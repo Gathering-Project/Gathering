@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import nbc_final.gathering.domain.event.entity.Event;
+import nbc_final.gathering.domain.gathering.entity.Gathering;
+import nbc_final.gathering.domain.user.entity.User;
 
 @Getter
 @NoArgsConstructor
@@ -25,4 +28,20 @@ public class EventCreateRequestDto {
 
     @NotNull(message = "최대 참가자 수를 입력해주세요.")
     private Integer maxParticipants;
+
+    private EventCreateRequestDto(String title, String description, String date, String location, Integer maxParticipants) {
+        this.title = title;
+        this.description = description;
+        this.date = date;
+        this.location = location;
+        this.maxParticipants = maxParticipants;
+    }
+
+    public static EventCreateRequestDto of(String title, String description, String date, String location, Integer maxParticipants) {
+        return new EventCreateRequestDto(title, description, date, location, maxParticipants);
+    }
+
+    public Event toEntity(User creator, Gathering gathering) {
+        return Event.of(title, description, date, location, maxParticipants, gathering, creator);
+    }
 }
