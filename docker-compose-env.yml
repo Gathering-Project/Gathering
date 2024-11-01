@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: wemeetnow:latest  # 사용할 Docker 이미지 이름으로 변경하세요
+    image: 971422688020.dkr.ecr.ap-northeast-2.amazonaws.com/wemeetnow_ecr  # 사용할 Docker 이미지 이름으로 변경하세요
     ports:
       - "9090:9090"  # Spring Boot 앱의 포트를 9090으로 매핑
     environment:
@@ -27,7 +27,7 @@ services:
     env_file:
       - .env  # .env 파일을 사용해 나머지 변수들을 불러옵니다.
 
-  db:
+  localhost:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
