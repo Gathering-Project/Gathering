@@ -19,4 +19,8 @@ public class EventListResponseDto {
                 .collect(Collectors.toList());
         return new EventListResponseDto(eventResponseDtos);
     }
+
+    public static EventListResponseDto of(List<EventResponseDto> eventResponseDtos) {
+        return new EventListResponseDto(eventResponseDtos);
+    }
 }

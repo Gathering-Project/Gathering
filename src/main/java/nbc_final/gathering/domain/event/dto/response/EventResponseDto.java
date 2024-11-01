@@ -21,7 +21,8 @@ public class EventResponseDto {
     private String date;
     private String location;
     private Integer maxParticipants;
-    private Integer currentParticipants;
+//    private Integer currentParticipants;
+    private long currentParticipants;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<CommentResponseDto> comments;
@@ -57,4 +58,39 @@ public class EventResponseDto {
                 comments
         );
     }
+
+    // Redis 참가자 수 포함 생성자
+    public static EventResponseDto of(Event event, Long userId, long currentParticipantsCount) {
+        return new EventResponseDto(
+                event.getId(),
+                userId,
+                event.getTitle(),
+                event.getDescription(),
+                event.getDate(),
+                event.getLocation(),
+                event.getMaxParticipants(),
+                currentParticipantsCount,  // Redis에서 가져온 참가자 수 할당
+                event.getCreatedAt(),
+                event.getUpdatedAt(),
+                null
+        );
+    }
+
+    public static EventResponseDto of(Event event, Long userId, List<CommentResponseDto> comments, long currentParticipantsCount) {
+        return new EventResponseDto(
+                event.getId(),
+                userId,
+                event.getTitle(),
+                event.getDescription(),
+                event.getDate(),
+                event.getLocation(),
+                event.getMaxParticipants(),
+                currentParticipantsCount,  // Redis에서 가져온 참가자 수 할당
+                event.getCreatedAt(),
+                event.getUpdatedAt(),
+                comments
+        );
+    }
+
+
 }
