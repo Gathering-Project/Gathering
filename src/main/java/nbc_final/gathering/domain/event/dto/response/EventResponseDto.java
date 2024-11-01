@@ -3,6 +3,7 @@ package nbc_final.gathering.domain.event.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
 import nbc_final.gathering.domain.event.entity.Event;
 
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventResponseDto {
@@ -21,7 +23,6 @@ public class EventResponseDto {
     private String date;
     private String location;
     private Integer maxParticipants;
-//    private Integer currentParticipants;
     private long currentParticipants;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

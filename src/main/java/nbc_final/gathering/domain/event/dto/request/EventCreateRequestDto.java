@@ -41,7 +41,4 @@ public class EventCreateRequestDto {
         return new EventCreateRequestDto(title, description, date, location, maxParticipants);
     }
 
-    public Event toEntity(User creator, Gathering gathering) {
-        return Event.of(title, description, date, location, maxParticipants, gathering, creator);
-    }
 }

@@ -26,8 +26,7 @@ public class Event extends TimeStamped {
     private String date;
     private String location;
     private Integer maxParticipants;
-
-    private Integer currentParticipants = 0;
+    private Integer currentParticipants = null;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gathering_id")
@@ -61,24 +60,9 @@ public class Event extends TimeStamped {
         this.maxParticipants = maxParticipants;
     }
 
-    public void addParticipant(Participant participant) {
-        this.participants.add(participant);
-        incrementParticipantCount();
-    }
-
     public void removeParticipant(Participant participant) {
         this.participants.remove(participant);
         decrementParticipantCount();
-    }
-
-    public void resetCurrentParticipants() {
-        this.currentParticipants = 0;
-    }
-
-    public void incrementParticipantCount() {
-        if (this.currentParticipants < this.maxParticipants) {
-            this.currentParticipants++;
-        }
     }
 
     public void decrementParticipantCount() {

@@ -2,12 +2,14 @@ package nbc_final.gathering.domain.event.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import nbc_final.gathering.domain.event.entity.Event;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
 public class EventListResponseDto {
 
