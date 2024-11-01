@@ -7,17 +7,9 @@ WORKDIR /app
 # JAR 파일을 컨테이너의 /app 디렉토리로 복사
 COPY build/libs/Gathering-0.0.1-SNAPSHOT.jar app.jar
 
+# S3에서 .env 파일 다운로드 후 환경 변수 설정 스크립트 복사
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # 애플리케이션 실행
-ENTRYPOINT ["java","-jar","/app/app.jar"]
-
-
-#FROM jenkins/jenkins:lts
-#
-#USER root
-#
-## AWS CLI 설치
-#RUN apt-get update && \
-#    apt-get install -y awscli && \
-#    apt-get clean
-#
-#USER jenkins
+ENTRYPOINT ["/app/start.sh","java","-jar","/app/app.jar"]
