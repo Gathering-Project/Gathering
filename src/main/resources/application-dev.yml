@@ -97,6 +97,10 @@ admin:
 
 logging:
   level:
-    root: INFO # 전체 로그 레벨을 INFO로 설정
-    org.springframework.security: DEBUG # Spring Security에 대해서만 DEBUG 레벨 설정
-
+    org:
+      springframework:
+        security: ERROR
+      hibernate:
+        orm:
+          jdbc:
+            bind: info
