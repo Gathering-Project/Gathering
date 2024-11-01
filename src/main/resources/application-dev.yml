@@ -18,7 +18,7 @@ spring:
     import: optional:file:.env[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
     username: ${MYSQL_NAME}
     password: ${MYSQL_PASSWORD}
 
@@ -46,21 +46,21 @@ spring:
       client:
         registration:
           kakao:
-            client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ${KAKAO_CLIENT_SECRET}
-            redirect-uri: ${KAKAO_REDIRECT_URL}
+            client-id: ${kakao.client.id}
+            client-secret: ${kakao.client.secret}
+            redirect-uri: ${kakao.redirect.url}
             authorization-grant-type: authorization_code
             scope:
               - profile
               - account_email
           naver: # 네이버 OAuth 설정 추가
-            client-id: ${NAVER_CLIENT_ID}
-            client-secret: ${NAVER_CLIENT_SECRET}
+            client-id: ${naver.client.id}
+            client-secret: ${naver.client.secret}
             scope:
               - email
               - nickname
             client-name: Naver
-            redirect-uri: ${NAVER_REDIRECT_URL}
+            redirect-uri: ${naver.redirect.url}
             authorization-grant-type: authorization_code
         provider:
           kakao:

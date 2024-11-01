@@ -39,13 +39,13 @@ public class NaverService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${NAVER_CLIENT_ID}")
+    @Value("${naver.client.id}")
     private String clientId;
 
-    @Value("${NAVER_CLIENT_SECRET}")
+    @Value("${naver.client.secret}")
     private String clientSecret;
 
-    @Value("${NAVER_REDIRECT_URL}")
+    @Value("${naver.redirect.url}")
     private String redirectUri;
 
     // 상태 값 생성 메서드
