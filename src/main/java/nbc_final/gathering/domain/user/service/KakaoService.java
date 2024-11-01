@@ -38,13 +38,13 @@ public class KakaoService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${kakao.client.id}")
+    @Value("${KAKAO_CLIENT_ID}")
     private String clientId;
 
-    @Value("${kakao.redirect.url}")
+    @Value("${KAKAO_REDIRECT_URL}")
     private String redirectUri;
 
-    @Value("${kakao.api.unlink.url}")
+    @Value("${KAKAO_API_UNLINK_URL}")
     private String unlinkUrl;
 
     // 클라이언트 설정을 반환하는 메서드
