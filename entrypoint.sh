@@ -6,4 +6,5 @@ aws s3 cp s3://wearemeetnow/wemeetnowenv/.env /app/.env
 export $(cat /app/.env | xargs)
 
 # 애플리케이션 시작
-exec "$@"
+#exec "$@"
+exec java -jar /app/app.jar
