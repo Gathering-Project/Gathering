@@ -12,5 +12,4 @@ COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # 애플리케이션 실행
-#ENTRYPOINT ["/app/start.sh","java","-jar","/app/app.jar"]
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh", "java", "-jar", "/app/app.jar"]
