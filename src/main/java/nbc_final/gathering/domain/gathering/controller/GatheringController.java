@@ -4,9 +4,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
+import nbc_final.gathering.common.exception.ResponseCode;
+import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringWithCountResponseDto;
+import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.service.GatheringService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +24,28 @@ import java.util.Map;
 public class GatheringController {
 
     private final GatheringService gatheringService;
+    /**
+     * 제목/위치를 기준으로 모임을 검색
+     *
+     * @param title
+     * @param location
+     * @return
+     * @throws ResponseCodeException 'title' 또는 'location'이 모두 제공되지 않은 경우 발생.
+     */
+    @GetMapping("/search")
+    public List<Gathering> searchGatherings(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String location) {
+        if (title != null && location != null) {
+            return gatheringService.searchGatheringsByTitleAndLocation(title, location);
+        } else if (title != null) {
+            return gatheringService.searchGatheringsByTitle(title);
+        } else if (location != null) {
+            return gatheringService.searchGatheringsByLocation(location);
+        } else {
+            throw new ResponseCodeException(ResponseCode.INVALID_SEARCH);
+        }
+    }
 
     /**
      * 소모임 생성

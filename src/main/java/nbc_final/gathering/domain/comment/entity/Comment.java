@@ -36,8 +36,9 @@ public class Comment extends TimeStamped {
     private User user;
 
     //댓글 생성자
-    public Comment(String content, Event event, User user) {
+    public Comment(String content, Gathering gathering, Event event, User user) {
         this.content = content;
+        this.gathering = gathering;
         this.event = event;
         this.user = user;
     }

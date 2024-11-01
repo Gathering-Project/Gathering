@@ -85,6 +85,6 @@ admin:
 #   level:
 #     root: TRACE
 
-logging:
-  level:
-    root: DEBUG
+#logging:
+#  level:
+#    root: DEBUG

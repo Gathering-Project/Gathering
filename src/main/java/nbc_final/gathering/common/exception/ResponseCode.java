@@ -12,6 +12,9 @@ public enum ResponseCode {
     INVALID_TIMEOUT(HttpStatus.REQUEST_TIMEOUT, "다시 시도해주세요."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
 
+    // Search 관련 예외
+    INVALID_SEARCH(HttpStatus.NOT_FOUND, "검색 조건이 필요합니다."),
+
     // 유저 관련 예외
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다."),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "해당 사용자는 존재하지 않습니다."),
