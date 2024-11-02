@@ -15,18 +15,18 @@ spring:
         auto: false
 
   config:
+    datasource:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?serverTimezone=Asia/Seoul
+      username: minjooig
+      password: wanduek3612
 #    import: optional:file:.env[.properties]
 #  datasource:
 #    driver-class-name: com.mysql.cj.jdbc.Driver
 #    url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
 #    username: ${MYSQL_NAME}
 #    password: ${MYSQL_PASSWORD}
-  import: optional:file:.env[.properties]
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?serverTimezone=Asia/Seoul
-    username: minjooig
-    password: wanduek3612
+
 
   jpa:
     hibernate:
