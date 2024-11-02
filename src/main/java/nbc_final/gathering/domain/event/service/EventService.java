@@ -59,19 +59,28 @@ public class EventService {
 
         resetParticipantCount(event); // Redis에 참가자 초기 카운트를 설정
 
+        Participant creatorParticipant = Participant.of(event, user);
+        participantRepository.save(creatorParticipant);
+
         long currentParticipantsCount = getParticipantCountRedis(event.getId()); // 초기화된 카운트를 바로 가져오기
 
         return EventResponseDto.of(event, userId, currentParticipantsCount); // 초기화된 카운트 반영
     }
 
-    // 이벤트 수정 (권한: 이벤트 생성자만 가능, 어드민 불가능)
+    // 이벤트 수정 (권한: 이벤트 생성자만 가능, 어드민 본인 이벤트만 가능)
     @Transactional
     public EventUpdateResponseDto updateEvent(Long userId, Long gatheringId, Long eventId, EventUpdateRequestDto requestDto) {
 
-        verifyMembership(userId, gatheringId);
+        User user = getUserOrThrow(userId);
         Event event = getEventOrThrow(eventId);
 
-        if (!isEventCreator(userId, event)) {
+        // 어드민이 아닌 경우에만 멤버십 검증
+        if (!user.getUserRole().equals(UserRole.ROLE_ADMIN)) {
+            verifyMembership(userId, gatheringId);
+        }
+
+        // 이벤트 생성자가 아니거나 어드민이면서 생성자가 아닌 경우 예외 발생
+        if (!(isEventCreator(userId, event) || (user.getUserRole().equals(UserRole.ROLE_ADMIN) && isEventCreator(userId, event)))) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
 
@@ -122,10 +131,13 @@ public class EventService {
     // 이벤트 삭제 (권한: 이벤트 생성자 또는 어드민)
     @Transactional
     public void deleteEvent(Long userId, Long gatheringId, Long eventId) {
-        verifyDeletionPermission(userId, eventId, gatheringId);
+        User user = getUserOrThrow(userId);
+
+        if (!user.getUserRole().equals(UserRole.ROLE_ADMIN)) {
+            verifyDeletionPermission(userId, eventId, gatheringId);
+        }
 
         Event event = getEventOrThrow(eventId);
-
         eventRepository.delete(event);
     }
 
@@ -217,19 +229,15 @@ public class EventService {
 
     // 이벤트 삭제 권한 검증: 어드민이 아니고 이벤트 생성자가 아닌 경우
     private void verifyDeletionPermission(Long userId, Long eventId, Long gatheringId) {
-
         boolean isGatheringMember = eventRepositoryCustom.isUserInGathering(gatheringId, userId);
         if (!isGatheringMember) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
 
         Event event = getEventOrThrow(eventId);
-        User user = getUserOrThrow(userId);
-
-        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
         boolean isEventCreator = event.getUser().getId().equals(userId);
 
-        if (!isAdmin && !isEventCreator) {
+        if (!isEventCreator) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
     }
