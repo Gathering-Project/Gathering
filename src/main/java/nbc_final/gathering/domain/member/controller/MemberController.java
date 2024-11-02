@@ -3,6 +3,7 @@ package nbc_final.gathering.domain.member.controller;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
+import nbc_final.gathering.domain.member.dto.request.MessageRequestDto;
 import nbc_final.gathering.domain.member.dto.response.MemberResponseDto;
 import nbc_final.gathering.domain.member.service.MemberService;
 import org.springframework.http.ResponseEntity;
@@ -106,6 +107,26 @@ public class MemberController {
             @PathVariable Long memberId,
             @AuthenticationPrincipal AuthUser authUser) {
         memberService.removeMember(authUser, memberId);
+        return ResponseEntity.ok(ApiResponse.createSuccess(null));
+    }
+
+    /**
+     * 소모임 호스트가 게스트 멤버들에게 전체 알림 전송
+     * @param gatheringId 알림을 전송할 소모임의 ID
+     * @param request 메시지 내용을 담은 요청 DTO
+     * @param authUser 인증된 사용자 정보
+     * @return 성공적으로 전송 시 성공 응답 반환
+     */
+    @PostMapping("/v1/members/gathering/{gatheringId}/notify")
+    public ResponseEntity<ApiResponse<Void>> notifyGuests(
+            @PathVariable Long gatheringId,
+            @RequestBody MessageRequestDto request,
+            @AuthenticationPrincipal AuthUser authUser) {
+
+        // 서비스 메서드 호출을 통해 알림 전송
+        memberService.notifyAllGuests(authUser, gatheringId, request.getText());
+
+        // 성공 응답 반환
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 }
