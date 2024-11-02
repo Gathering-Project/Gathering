@@ -26,7 +26,7 @@ public class Event extends TimeStamped {
     private String date;
     private String location;
     private Integer maxParticipants;
-    private Integer currentParticipants = null;
+    private Integer currentParticipants = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gathering_id")
@@ -39,7 +39,6 @@ public class Event extends TimeStamped {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
 
-    // 정적 팩토리 메서드
     public static Event of(String title, String description, String date, String location, Integer maxParticipants, Gathering gathering, User user) {
         Event event = new Event();
         event.title = title;

@@ -75,12 +75,16 @@ public class EventService {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
 
+        long currentParticipantsCount = getParticipantCountRedis(eventId);
+
+        if (requestDto.getMaxParticipants() < currentParticipantsCount) {
+            throw new ResponseCodeException(ResponseCode.INVALID_MAX_PARTICIPANTS);
+        }
+
         validateParticipantLimit(event, requestDto.getMaxParticipants());
 
         event.updateEvent(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(),
                 requestDto.getLocation(), requestDto.getMaxParticipants());
-
-        long currentParticipantsCount = getParticipantCountRedis(eventId);
 
         return EventUpdateResponseDto.of(event, currentParticipantsCount);
     }
@@ -304,6 +308,7 @@ public class EventService {
         String participantCountKey = "event:" + event.getId() + ":currentParticipants";
         RAtomicLong currentParticipants = redissonClient.getAtomicLong(participantCountKey);
         currentParticipants.set(1);
+        eventRepository.save(event);
     }
 
 // ------- 참여 관련 메서드 -------
