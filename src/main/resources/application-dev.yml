@@ -10,7 +10,7 @@ spring:
         accessKey: ${CLOUD_AWS_S3_ACCESS_KEY}
         secretKey: ${CLOUD_AWS_S3_SECRET_KEY}
       region:
-        static: ${CLOUD_AWS_S3_SECRET_KEY}
+        static: ${CLOUD_AWS_S3_REGION_STATIC}
       stack:
         auto: false
 
@@ -18,7 +18,7 @@ spring:
     import: optional:file:.env[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
     username: ${MYSQL_NAME}
     password: ${MYSQL_PASSWORD}
 
