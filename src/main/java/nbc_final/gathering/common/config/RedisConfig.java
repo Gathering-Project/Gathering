@@ -1,6 +1,8 @@
 package nbc_final.gathering.common.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.lettuce.core.ReadFrom;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +12,7 @@ import org.springframework.data.redis.connection.RedisStaticMasterReplicaConfigu
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -19,14 +22,24 @@ public class RedisConfig {
     @Autowired
     private RedisSentinelProperties redisSentinelProperties;
 
+    public ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule()); // LocalDateTime을 지원하도록 모듈 등록
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // 직렬화 시 타임스탬프 사용하지 않음
+        return objectMapper;
+    }
+
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-
         // Redis Sentinel 설정
-        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder().readFrom(ReadFrom.REPLICA_PREFERRED).build();
+        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+                .readFrom(ReadFrom.REPLICA_PREFERRED)
+                .build();
 
         final RedisSentinelProperties.RedisMasterProperties masterConfig = redisSentinelProperties.getMaster();
-        RedisStaticMasterReplicaConfiguration staticMasterReplicaConfiguration = new RedisStaticMasterReplicaConfiguration(masterConfig.getHost(), masterConfig.getPort());
+        RedisStaticMasterReplicaConfiguration staticMasterReplicaConfiguration =
+                new RedisStaticMasterReplicaConfiguration(masterConfig.getHost(), masterConfig.getPort());
+
         redisSentinelProperties.getNodes().forEach(node -> {
             String[] nodeInfo = node.split(":");
             staticMasterReplicaConfiguration.addNode(nodeInfo[0], Integer.parseInt(nodeInfo[1]));
@@ -36,22 +49,18 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate() {
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory());
+        template.setConnectionFactory(redisConnectionFactory);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.findAndRegisterModules(); // LocalDateTime 같은 타입을 위한 모듈 자동 등록
-        objectMapper.deactivateDefaultTyping(); // @class 제거
+        // GenericJackson2JsonRedisSerializer에 ObjectMapper를 주입하여 직렬화 설정
+        GenericJackson2JsonRedisSerializer genericSerializer = new GenericJackson2JsonRedisSerializer(objectMapper);
 
-        // Jackson2JsonRedisSerializer 설정
-        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
-
-        // 키는 String, 값은 JSON 형식으로 처리
+        // Key는 String으로, Value는 JSON으로 직렬화
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(serializer);
+        template.setValueSerializer(genericSerializer); // Value에 JSON 직렬화 사용
         template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(serializer);
+        template.setHashValueSerializer(genericSerializer); // Hash Value에도 JSON 직렬화 사용
 
         return template;
     }

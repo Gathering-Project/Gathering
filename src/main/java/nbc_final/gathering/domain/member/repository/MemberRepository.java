@@ -30,8 +30,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByUserIdAndGatheringIdAndStatus(Long userId, Long gatheringId, MemberStatus status);
 
 
+    // 승인된 멤버를 조회하는 메서드 추가
+    List<Member> findAllByGatheringAndStatus(Gathering gathering, MemberStatus status);
 
-    @Modifying
+  @Modifying
   @Query("DELETE FROM Member m WHERE m.gathering = :gathering")
   void deleteByGathering(@Param("gathering") Gathering gathering);
 }

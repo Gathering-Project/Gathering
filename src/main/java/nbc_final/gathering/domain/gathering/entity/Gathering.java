@@ -19,7 +19,13 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "gatherings")
+@Table(name = "gatherings",
+        indexes = {
+                @Index(name = "idx_gathering_title", columnList = "title"),
+                @Index(name = "idx_gathering_location", columnList = "location"),
+                @Index(name = "idx_gathering_title_location", columnList = "title, location")
+        }
+)
 public class Gathering extends TimeStamped {
 
   @Id
@@ -54,6 +60,8 @@ public class Gathering extends TimeStamped {
 
   @Column(length = 30, nullable = false)
   private String location;
+
+  private long totalGatheringViewCount;
 
   public Gathering(Long userId,
                    String title,
@@ -105,5 +113,9 @@ public class Gathering extends TimeStamped {
   public void addMember(User user, MemberRole role, MemberStatus status) {
     Member newMember = new Member(user, this, role, status);
     this.members.add(newMember);
+  }
+
+  public void updateTotalGatheirngViewCount(long totalGatheringViewCount) {
+    this.totalGatheringViewCount = totalGatheringViewCount;
   }
 }

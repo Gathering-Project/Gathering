@@ -36,6 +36,10 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     runtimeOnly 'com.h2database:h2'
 
+    // jackson 직렬화/역직렬화
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
     // Spring-Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
@@ -45,6 +49,9 @@ dependencies {
 
      // AWS S3
     implementation 'software.amazon.awssdk:s3:2.20.89'
+
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // aws
     implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
@@ -71,6 +78,15 @@ dependencies {
 
     //Redisson
     implementation 'org.redisson:redisson-spring-boot-starter:3.21.1'
+
+
+    implementation 'org.springframework.kafka:spring-kafka:3.2.4'
+    implementation 'org.apache.kafka:kafka-clients:3.8.0' // 이 부분은 원하는 Kafka 클라이언트 버전으로 설정
+
+    implementation 'org.apache.kafka:kafka-streams'
+    implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
 }
 
 tasks.named('test') {

@@ -12,6 +12,9 @@ public enum ResponseCode {
     INVALID_TIMEOUT(HttpStatus.REQUEST_TIMEOUT, "다시 시도해주세요."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
 
+    // Search 관련 예외
+    INVALID_SEARCH(HttpStatus.NOT_FOUND, "검색 조건이 필요합니다."),
+
     // 유저 관련 예외
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다."),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "해당 사용자는 존재하지 않습니다."),
@@ -44,6 +47,7 @@ public enum ResponseCode {
     NOT_FOUND_GROUP(HttpStatus.NOT_FOUND, "해당 소모임을 찾을 수 없습니다."),
     INVALID_TITLE(HttpStatus.NOT_FOUND, "타이틀을 입력해주세요."),
     INVALID_MAX_COUNT(HttpStatus.NOT_FOUND, "인원 수 입력이 잘못 되었습니다."),
+    TOO_MANY_REQUSETS(HttpStatus.TOO_MANY_REQUESTS, "너무 많은 요청입니다. 나중에 다시 시도해주세요"),
 
 
     // 이벤트 관련 예외

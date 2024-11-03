@@ -61,7 +61,6 @@ public class JwtUtil {
                         .compact();
     }
 
-
     //생성된 JWT cookie에 저장해서 응답 객체에 반환
     public void addJwtToCookie(String token, HttpServletResponse res) {
         try {
@@ -74,6 +73,7 @@ public class JwtUtil {
             System.out.println(e);
         }
     }
+
     public String getTokenFromRequest(HttpServletRequest httpServletRequest) {
         Cookie[] cookies = httpServletRequest.getCookies();
         if(cookies != null) {
@@ -89,7 +89,6 @@ public class JwtUtil {
         }
         return null;
     }
-
 
     public String substringToken(String tokenValue) throws ServerException {
         if (StringUtils.hasText(tokenValue) && tokenValue.startsWith(BEARER_PREFIX)) {

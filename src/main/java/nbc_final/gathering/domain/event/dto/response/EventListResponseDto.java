@@ -1,5 +1,7 @@
 package nbc_final.gathering.domain.event.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,10 +12,16 @@ import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class EventListResponseDto {
 
     private List<EventResponseDto> events;
+
+    @JsonCreator  // Jackson에서 역직렬화 가능하도록 생성자 추가
+    public EventListResponseDto(
+            @JsonProperty("events"
+            ) List<EventResponseDto> events) {
+        this.events = events;
+    }
 
     public static EventListResponseDto of(List<Event> eventList, Long userId) {
         List<EventResponseDto> eventResponseDtos = eventList.stream()

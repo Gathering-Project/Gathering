@@ -1,6 +1,5 @@
 package nbc_final.gathering.domain.member.dto.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.domain.member.entity.Member;

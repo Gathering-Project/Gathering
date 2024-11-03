@@ -1,8 +1,11 @@
 package nbc_final.gathering.domain.event.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
+import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
 import nbc_final.gathering.domain.comment.repository.CommentRepository;
 import nbc_final.gathering.domain.event.dto.ParticipantResponseDto;
@@ -18,6 +21,9 @@ import nbc_final.gathering.domain.event.repository.EventRepositoryCustom;
 import nbc_final.gathering.domain.event.repository.ParticipantRepository;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
+import nbc_final.gathering.domain.member.entity.Member;
+import nbc_final.gathering.domain.member.enums.MemberStatus;
+import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
@@ -25,6 +31,7 @@ import org.redisson.api.RAtomicLong;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +40,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -44,6 +52,8 @@ public class EventService {
     private final EventRepositoryCustom eventRepositoryCustom;
     private final GatheringRepository gatheringRepository;
     private final CommentRepository commentRepository;
+    private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final MemberRepository memberRepository;
     private final RedissonClient redissonClient;
 
     // 이벤트 생성 (권한: 소모임 멤버 또는 어드민)
@@ -53,6 +63,8 @@ public class EventService {
 
         Gathering gathering = getGatheringOrThrow(gatheringId);
         User user = getUserOrThrow(userId);
+        List<Member> members = memberRepository.findAllByGatheringId(gatheringId);
+
 
         Event event = createEventInstance(requestDto, gathering, user);
         eventRepository.save(event);
@@ -63,6 +75,20 @@ public class EventService {
         participantRepository.save(creatorParticipant);
 
         long currentParticipantsCount = getParticipantCountRedis(event.getId()); // 초기화된 카운트를 바로 가져오기
+
+        // APPROVED 상태의 멤버만 필터링
+        List<Member> approvedMembers = members.stream()
+                .filter(member -> member.getStatus() == MemberStatus.APPROVED)
+                .collect(Collectors.toList());
+
+        // 이벤트 생성 알림 메시지
+        String message = "이벤트 '" + event.getTitle() + "'이(가) 생성되었습니다.";
+
+        // 승인된 멤버에게 알림 전송
+        approvedMembers.forEach(member -> {
+            kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(), message);
+            log.info("Kafka 알림 전송: 멤버 ID={}, 메시지={}", member.getUser().getId(), message);
+        });
 
         return EventResponseDto.of(event, userId, currentParticipantsCount); // 초기화된 카운트 반영
     }
@@ -95,6 +121,12 @@ public class EventService {
         event.updateEvent(requestDto.getTitle(), requestDto.getDescription(), requestDto.getDate(),
                 requestDto.getLocation(), requestDto.getMaxParticipants());
 
+        List<Participant> participants = participantRepository.findAllByEvent(event);
+
+        // 각 참가자에게 이벤트 수정 알림 전송
+        participants.forEach(participant -> {
+            kafkaNotificationUtil.notifyMember(participant.getUser().getId(), "이벤트가 수정되었습니다.");
+        });
         return EventUpdateResponseDto.of(event, currentParticipantsCount);
     }
 
@@ -138,6 +170,16 @@ public class EventService {
         }
 
         Event event = getEventOrThrow(eventId);
+
+        // 이벤트 참가자 조회
+        List<Participant> participants = participantRepository.findAllByEvent(event);
+
+
+        // 각 참가자에게 알림 전송
+        participants.forEach(participant -> {
+            kafkaNotificationUtil.notifyMember(participant.getUser().getId(), "이벤트가 삭제되었습니다.");
+        });
+
         eventRepository.delete(event);
     }
 
@@ -161,12 +203,15 @@ public class EventService {
 
             registerParticipant(user, event);
 
-        } catch (CannotAcquireLockException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new ResponseCodeException(ResponseCode.LOCK_ACQUISITION_FAILED);
-        } finally {
-            releaseLock(lock);
-        }
+    } catch (CannotAcquireLockException | InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new ResponseCodeException(ResponseCode.LOCK_ACQUISITION_FAILED);
+    } finally {
+        releaseLock(lock);
+    }
+
+        // 참가자에게 알림 전송
+        kafkaNotificationUtil.notifyMember(userId, "이벤트 참가 신청이 완료되었습니다.");
     }
 
     // 이벤트 취소 (분산락, 권한: 어드민 불가, 이벤트 생성자 불가)
@@ -174,12 +219,13 @@ public class EventService {
     public void cancelParticipation(Long userId, Long gatheringId, Long eventId) {
         verifyMembership(userId, gatheringId);
         RLock lock = getDistributedLock(eventId);
+        Event event;
 
         try {
             acquireLock(lock);
 
             User user = getUserOrThrow(userId);
-            Event event = getEventOrThrow(eventId);
+            event = getEventOrThrow(eventId);
 
             checkCancelPermission(user, event);
             removeParticipant(userId, event);
@@ -190,6 +236,14 @@ public class EventService {
         } finally {
             releaseLock(lock);
         }
+
+        Participant participant = participantRepository.findByEventAndUserId(event, userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_PARTICIPATED));
+
+        event.removeParticipant(participant);
+
+        // 참가 취소 알림 전송
+        kafkaNotificationUtil.notifyMember(userId, "이벤트 참가가 취소되었습니다.");
     }
 
     // 이벤트 참가자 조회 (권한: 소모임 멤버 또는 어드민)

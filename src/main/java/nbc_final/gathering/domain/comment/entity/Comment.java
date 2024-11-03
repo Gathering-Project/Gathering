@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.event.entity.Event;
-import nbc_final.gathering.domain.event.entity.QEvent;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.user.entity.User;
 
@@ -37,8 +36,9 @@ public class Comment extends TimeStamped {
     private User user;
 
     //댓글 생성자
-    public Comment(String content, Event event, User user) {
+    public Comment(String content, Gathering gathering, Event event, User user) {
         this.content = content;
+        this.gathering = gathering;
         this.event = event;
         this.user = user;
     }

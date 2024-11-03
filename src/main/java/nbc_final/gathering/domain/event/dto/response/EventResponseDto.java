@@ -1,6 +1,9 @@
 package nbc_final.gathering.domain.event.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,6 +19,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventResponseDto {
 
+    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+
     private Long eventId;
     private Long userId;
     private String title;
@@ -24,9 +29,40 @@ public class EventResponseDto {
     private String location;
     private Integer maxParticipants;
     private long currentParticipants;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT)
     private LocalDateTime createdAt;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT)
     private LocalDateTime updatedAt;
+
     private List<CommentResponseDto> comments;
+
+    @JsonCreator
+    public EventResponseDto(
+            @JsonProperty("eventId") Long eventId,
+            @JsonProperty("userId") Long userId,
+            @JsonProperty("title") String title,
+            @JsonProperty("description") String description,
+            @JsonProperty("date") String date,
+            @JsonProperty("location") String location,
+            @JsonProperty("maxParticipants") Integer maxParticipants,
+            @JsonProperty("currentParticipants") Integer currentParticipants,
+            @JsonProperty("createdAt") LocalDateTime createdAt,
+            @JsonProperty("updatedAt") LocalDateTime updatedAt,
+            @JsonProperty("comments") List<CommentResponseDto> comments) {
+        this.eventId = eventId;
+        this.userId = userId;
+        this.title = title;
+        this.description = description;
+        this.date = date;
+        this.location = location;
+        this.maxParticipants = maxParticipants;
+        this.currentParticipants = currentParticipants;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.comments = comments;
+    }
 
     public static EventResponseDto of(Event event, Long userId) {
         return new EventResponseDto(
@@ -86,7 +122,7 @@ public class EventResponseDto {
                 event.getDate(),
                 event.getLocation(),
                 event.getMaxParticipants(),
-                currentParticipantsCount,  // Redis에서 가져온 참가자 수 할당
+                currentParticipantsCount,
                 event.getCreatedAt(),
                 event.getUpdatedAt(),
                 comments
