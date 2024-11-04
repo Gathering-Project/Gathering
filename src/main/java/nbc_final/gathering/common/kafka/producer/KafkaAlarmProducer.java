@@ -8,17 +8,17 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class KafkaAlarmProducer {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void notifyUser(Long userId, String message) {
+    public void notifyUser(Long userId, Object message) {
         kafkaTemplate.send("user-notification-topic", userId.toString(), message);
     }
 
-    public void notifyGuestMember(Long memberId, String message) {
+    public void notifyGuestMember(Long memberId, Object message) {
         kafkaTemplate.send("guest-member-notification-topic", memberId.toString(), message);
     }
 
-    public void notifyHostMember(Long memberId, String message) {
+    public void notifyHostMember(Long memberId, Object message) {
         kafkaTemplate.send("host-member-notification-topic", memberId.toString(), message);
     }
 }
