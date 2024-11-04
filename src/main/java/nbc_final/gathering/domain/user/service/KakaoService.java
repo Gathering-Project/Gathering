@@ -38,7 +38,7 @@ public class KakaoService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${KAKAO_CLIENT_ID=}")
+    @Value("${KAKAO_CLIENT_ID}")
     private String clientId;
 
     @Value("${KAKAO_REDIRECT_URL}")
