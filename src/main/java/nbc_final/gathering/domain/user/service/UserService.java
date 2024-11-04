@@ -36,7 +36,7 @@ public class UserService {
     private final KakaoService kakaoService;
     private final NaverService naverService;
 
-    @Value("${admin.token}")
+    @Value("${ADMIN_TOKEN}")
     private String ADMIN_TOKEN; // 관리자가 맞는지 확인 토큰
 
     @PersistenceContext // EntityManager 주입
