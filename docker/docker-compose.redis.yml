@@ -26,7 +26,7 @@ services:
     container_name: sentinel1
     image: 'bitnami/redis-sentinel:latest'
     environment:
-      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=3000
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=${REDIS_PORT}
       - REDIS_MASTER_SET=mymaster
@@ -41,7 +41,7 @@ services:
     container_name: sentinel2
     image: 'bitnami/redis-sentinel:latest'
     environment:
-      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=3000
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=${REDIS_PORT}
       - REDIS_MASTER_SET=mymaster
@@ -56,7 +56,7 @@ services:
     container_name: sentinel3
     image: 'bitnami/redis-sentinel:latest'
     environment:
-      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=3000
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=10000
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=${REDIS_PORT}
       - REDIS_MASTER_SET=mymaster
