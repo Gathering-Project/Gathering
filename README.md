@@ -2,6 +2,8 @@
 WE MEET NOW 
 =============
 
+<br>
+
 ## 📢 프로젝트 소개
 
 ### **우리 지금 만나 : WE MEET NOW** 
@@ -9,8 +11,7 @@ WE MEET NOW
 웹 기반으로 다양한 활동을 함께할 사람들과 자유롭게 소모임을 구성할 수 있으며, 
 안전하고 간편하게 소모임을 생성하고 활발한 커뮤니티를 형성할 수 있도록 직관적인 사용자 경험과 신뢰 기반의 환경을 제공합니다.
 
-
-
+<br>
 
 ## 🛠️ 기술 스택
 ### Backend
@@ -90,6 +91,8 @@ WE MEET NOW
 [//]: # (    - [x] Grafana와 Prometheus를 통해 실시간 모니터링과 통계 제공)
 [//]: # (    - [x] 통계를 활용해 소모임 운영 효율성을 높이고 개선 가능)
 
+<br>
+
 ## 📑 API 명세서
 <details>
   <summary><span style="font-size:1.2em"><strong>유저</strong></span></summary>
@@ -145,18 +148,27 @@ WE MEET NOW
 
 </details>
 
+<br>
+
 ## 🎨 와이어프레임
-![erd.png](/assets/1105.png)
+![와이어프레임](/assets/1105.png)
+
+<br>
 
 ## 📊 ERD
-![erd.png](/assets/erd1105.png)
+![erd](/assets/ERD1105.png)
+
+<br>
 
 ## 🖥️ 인프라 설계도
-![erd.png](/assets/infra1105.png)
+![infra](/assets/infra1105.png)
+
+<br>
 
 ## 🔫 트러블 슈팅
 ## [WIKI 바로가기](https://github.com/Gathering-Project/Gathering/wiki)
 
+<br>
 <br>
 
 ## 💪 TEAM 같이의 가치
@@ -212,7 +224,7 @@ WE MEET NOW
     </tr>
     <tr>
       <td align="center">
-        <img src="/assets/profile2.jpg" width="100px;" alt="Profile Image"/><br/>
+        <img src="/assets/profile2.JPG" width="100px;" alt="Profile Image"/><br/>
         <sub><b>김민경</b></sub><td align="center">🫅🏻 Member</td>
       <td align="left">
         - 댓글 도메인 백엔드 개발<br/>
