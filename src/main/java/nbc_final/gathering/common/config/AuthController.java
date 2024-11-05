@@ -17,10 +17,10 @@ import java.util.Base64;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    @Value("${kakao.client.id}")
+    @Value("${KAKAO_CLIENT_ID}")
     private String clientId; // 환경변수에서 클라이언트 ID 가져오기
 
-    @Value("${kakao.redirect.url}")
+    @Value("${KAKAO_REDIRECT_URL}")
     private String redirectUrl; // 환경변수에서 리다이렉트 URL 가져오기
 
     @GetMapping("/kakao-url")
@@ -29,10 +29,10 @@ public class AuthController {
         return ResponseEntity.ok(authUrl);
     }
 
-    @Value("${naver.client.id}")
+    @Value("${NAVER_CLIENT_ID}")
     private String naverClientId;
 
-    @Value("${naver.redirect.url}")
+    @Value("${NAVER_REDIRECT_URL}")
     private String naverRedirectUrl;
 
     @GetMapping("/naver-url")

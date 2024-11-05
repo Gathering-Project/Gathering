@@ -38,7 +38,7 @@ public class UserService {
     private final NaverService naverService;
     private final KafkaNotificationUtil kafkaNotificationUtil;
 
-    @Value("${admin.token}")
+    @Value("${ADMIN_TOKEN}")
     private String ADMIN_TOKEN; // 관리자가 맞는지 확인 토큰
 
     @PersistenceContext // EntityManager 주입
