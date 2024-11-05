@@ -1,35 +1,49 @@
-server:
-  port: 8080
 
 spring:
   cloud:
     aws:
       s3:
-        bucket: ${CLOUD_AWS_S3_BUCKET}
+        bucket: ${cloud.aws.s3.bucket}
       credentials:
-        accessKey: ${CLOUD_AWS_S3_ACCESS_KEY}
-        secretKey: ${CLOUD_AWS_S3_SECRET_KEY}
+        accessKey: ${cloud.aws.s3.credentials.access-key}
+        secretKey: ${cloud.aws.s3.credentials.secret-key}
       region:
-        static: ${CLOUD_AWS_S3_REGION_STATIC}
+        static: ${cloud.aws.s3.region.static}
       stack:
         auto: false
 
-  config:
-    datasource:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?serverTimezone=Asia/Seoul
-      username: minjooig
-      password: wanduek3612
+#  config:
 #    import: optional:file:.env[.properties]
-#  datasource:
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
-#    username: root
-#    password: 1234
+#    datasource:
+#      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
+#      username: minjooig
+#      password:
+#      driver-class-name: com.mysql.cj.jdbc.Driver
+
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://mysql_container:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
+    username: ${MYSQL_NAME}
+    password: ${MYSQL_PASSWORD}
+
+  kafka:
+    bootstrap-servers: "localhost:19092,localhost:19093,localhost:19094"
+#  kafka:
+#    bootstrap-servers: "kafka1:9092,kafka2:9093,kafka3:9094"
+
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
   jpa:
     hibernate:
       ddl-auto: update
-      show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect

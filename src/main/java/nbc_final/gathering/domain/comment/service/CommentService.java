@@ -22,7 +22,7 @@ import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
+import java.util.Optional;
 
 
 @Service
@@ -36,6 +36,7 @@ public class CommentService {
     private final MemberRepository memberRepository;
     private final EventRepositoryCustom eventRepositoryCustom;
 
+
     @Transactional
     public CommentResponseDto saveComment(CommentRequestDto commentRequestDto, Long gatheringId, Long userId, Long eventId) {
         //소모임 존재 여부 확인
@@ -47,28 +48,29 @@ public class CommentService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
         // 멤버 존재 여부 확인
-        Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+        Optional<Member> optionalMember = memberRepository.findByUserIdAndGatheringId(userId, gatheringId);
 
-        // 만약 아직 소모임 멤버가 아니고(신청 승인되지 않은 상태라면)
-        if (member.getStatus() != MemberStatus.APPROVED) {
-            // 관리자도 아니라면
-            if (member.getUser().getUserRole() != UserRole.ROLE_ADMIN) {
+        User user = userRepository.findById(userId).get();
+
+        // 참가 신청 권한 없어서 멤버가 아닌(멤버가 없는) 관리자인지 확인 - 유저 7번(관리자) [생성]
+        if ((!optionalMember.isPresent()) && user.getUserRole() != UserRole.ROLE_ADMIN) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        }
+
+        // 멤버 신청은 되었지만 아직 승인되지 않은 경우
+        if (optionalMember.isPresent()) {
+            Member member = optionalMember.get();
+            if (member.getStatus() != MemberStatus.APPROVED) {
                 throw new ResponseCodeException(ResponseCode.FORBIDDEN);
             }
         }
 
-
-       //댓글 작성자 존재 여부 확인
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-
         //댓글 생성
-        Comment comment = new Comment(commentRequestDto.getContent(), event, user);
+        Comment comment = new Comment(commentRequestDto.getContent(), gathering, event, user);
         commentRepository.save(comment);
 
         return CommentResponseDto.of(comment);
-   }
+    }
 
 
     @Transactional
@@ -121,13 +123,13 @@ public class CommentService {
         // 댓글 존재 여부 확인
         Comment comment = getComment(commentId);
 
-        // 권한 확인 (메서드 이름 수정)
-        checkAdminOrEventCreatorOrGatheringCreator(userId, eventId, gatheringId);
-
         // 댓글 작성자 확인
         if (!comment.getUser().getId().equals(userId)) {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+
+            // 권한 확인 (메서드 이름 수정)
+            checkAdminOrEventCreatorOrGatheringCreator(userId, eventId, gatheringId);
 
             // ADMIN 권한을 가진 경우는 추가 검증 없이 삭제 허용
             if (user.getUserRole() != UserRole.ROLE_ADMIN) {
@@ -149,42 +151,41 @@ public class CommentService {
                 }
             }
         }
-
         // 댓글 삭제
         commentRepository.deleteById(commentId);
     }
 
-    // 삭제 기능 (권한: 어드민, 이벤트 생성자, 소모임 생성자)
-    private void checkAdminOrEventCreatorOrGatheringCreator(Long userId, Long eventId, Long gatheringId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-        if (isAdmin(user)) {
-            return;
+        // 삭제 기능 (권한: 어드민, 이벤트 생성자, 소모임 생성자)
+        private void checkAdminOrEventCreatorOrGatheringCreator (Long userId, Long eventId, Long gatheringId){
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+            if (isAdmin(user)) {
+                return;
+            }
+            Event event = eventRepository.findById(eventId)
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
+
+            Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+
+            boolean isEventCreator = event.getUser().getId().equals(userId);
+            boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
+            boolean isHost = isHost(member);
+
+            if (!isEventCreator && !isGatheringCreator && !isHost) {
+                    throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+            }
         }
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
-        Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
+        private boolean isHost (Member member){
+            boolean isHost = member.getRole().equals(MemberRole.HOST);
+            return isHost;
+        }
 
-        boolean isEventCreator = event.getUser().getId().equals(userId);
-        boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
-        boolean isHost = isHost(member);
-
-        if (!isEventCreator && !isGatheringCreator && !isHost) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
+        private boolean isAdmin (User user){
+            boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+            return isAdmin;
         }
     }
-
-    private boolean isHost(Member member) {
-        boolean isHost = member.getRole().equals(MemberRole.HOST);
-        return isHost;
-    }
-
-    private boolean isAdmin(User user) {
-        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
-        return isAdmin;
-    }
-}
 
 
