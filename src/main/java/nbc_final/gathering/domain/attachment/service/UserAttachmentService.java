@@ -32,7 +32,7 @@ public class UserAttachmentService {
     private final UserRepository userRepository;
 
 
-    @Value("${cloud.aws.s3.bucket}")
+    @Value("${CLOUD_AWS_S3_BUCKET}")
     private String bucketName;
 
     // 지원되는 파일 형식과 크기 제한

@@ -5,12 +5,12 @@ spring:
   cloud:
     aws:
       s3:
-        bucket: ${cloud.aws.s3.bucket}
+        bucket: ${CLOUD_AWS_S3_BUCKET}
       credentials:
-        accessKey: ${cloud.aws.s3.credentials.access-key}
-        secretKey: ${cloud.aws.s3.credentials.secret-key}
+        accessKey: ${CLOUD_AWS_S3_ACCESS_KEY}
+        secretKey: ${CLOUD_AWS_S3_SECRET_KEY}
       region:
-        static: ${cloud.aws.s3.region.static}
+        static: ${CLOUD_AWS_S3_REGION_STATIC}
       stack:
         auto: false
 
@@ -74,21 +74,21 @@ spring:
       client:
         registration:
           kakao:
-            client-id: ${kakao.client.id}
-            client-secret: ${kakao.client.secret}
-            redirect-uri: ${kakao.redirect.url}
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            redirect-uri: ${KAKAO_REDIRECT_URL}
             authorization-grant-type: authorization_code
             scope:
               - profile
               - account_email
           naver: # 네이버 OAuth 설정 추가
-            client-id: ${naver.client.id}
-            client-secret: ${naver.client.secret}
+            client-id: ${NAVER_CLIENT_ID}
+            client-secret: ${NAVER_CLIENT_SECRET}
             scope:
               - email
               - nickname
             client-name: Naver
-            redirect-uri: ${naver.redirect.url}
+            redirect-uri: ${NAVER_REDIRECT_URL}
             authorization-grant-type: authorization_code
         provider:
           kakao:
