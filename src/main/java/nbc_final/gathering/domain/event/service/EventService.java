@@ -96,14 +96,13 @@ public class EventService {
     public EventUpdateResponseDto updateEvent(Long userId, Long gatheringId, Long eventId, EventUpdateRequestDto requestDto) {
 
         User user = getUserOrThrow(userId);
-        Event event = getEventOrThrow(eventId);
 
-        // 어드민이 아닌 경우에만 멤버십 검증
         if (!user.getUserRole().equals(UserRole.ROLE_ADMIN)) {
             verifyMembership(userId, gatheringId);
         }
 
-        // 이벤트 생성자가 아니거나 어드민이면서 생성자가 아닌 경우 예외 발생
+        Event event = getEventOrThrow(eventId);
+
         if (!(isEventCreator(userId, event) || (user.getUserRole().equals(UserRole.ROLE_ADMIN) && isEventCreator(userId, event)))) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
