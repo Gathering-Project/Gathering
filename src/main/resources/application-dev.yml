@@ -1,25 +1,6 @@
 
 spring:
 
-#  kafka:
-#    bootstrap-servers: ${KAFKA_BROKER}
-#    consumer:
-#      group-id: notification-group
-#      auto-offset-reset: latest
-#      enable-auto-commit: true
-#      session-timeout-ms: 30000
-#      heartbeat-interval-ms: 10000
-#      max-poll-interval-ms: 300000
-#      max-poll-records: 100
-#    producer:
-#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-#      retries: 3
-#      request-timeout-ms: 5000
-#      max-block-ms: 1000
-#    listener:
-#      missing-topics-fatal: false
-#      concurrency: 1
 
   cloud:
     aws:
@@ -45,17 +26,15 @@ spring:
     import: optional:file:.env[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: jdbc:mysql://mysql_container:3306/gathering?serverTimezone=Asia/Seoul
 #    url: jdbc:mysql://mysql_container:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
     url: jdbc:mysql://localhost:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
-#    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
     username: ${MYSQL_NAME}
     password: ${MYSQL_PASSWORD}
 
-#  kafka:
-#    bootstrap-servers: "localhost:19092,localhost:19093,localhost:19094"
   kafka:
-    bootstrap-servers: "kafka1:9092,kafka2:9093,kafka3:9094"
+    bootstrap-servers: "localhost:19092,localhost:19093,localhost:19094"
+#  kafka:
+#    bootstrap-servers: "kafka1:9092,kafka2:9093,kafka3:9094"
 
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
