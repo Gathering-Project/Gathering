@@ -165,8 +165,8 @@ WE MEET NOW
 
 <br>
 
-## 🔫 트러블 슈팅
-## [WIKI 바로가기](https://github.com/Gathering-Project/Gathering/wiki)
+## 🔫 인사이트 & 트러블 슈팅
+## [WE MEET NOW WIKI 바로가기](https://github.com/Gathering-Project/Gathering/wiki)
 
 <br>
 <br>
