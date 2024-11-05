@@ -225,7 +225,7 @@ WE MEET NOW
     <tr>
       <td align="center">
         <img src="/assets/profile2.JPG" width="100px;" alt="Profile Image"/><br/>
-        <sub><b>김민경</b></sub><td align="center">🫅🏻 Member</td>
+        <sub><b>장민경</b></sub><td align="center">🫅🏻 Member</td>
       <td align="left">
         - 댓글 도메인 백엔드 개발<br/>
         - 인덱싱을 통한 검색 최적화 적용
