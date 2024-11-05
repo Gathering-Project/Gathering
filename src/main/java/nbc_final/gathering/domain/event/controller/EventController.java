@@ -125,7 +125,7 @@ public class EventController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId,
             @PathVariable Long eventId) {
-        eventService.participateInEvent(authUser.getUserId(), gatheringId, eventId);
+        eventService.joinEventWithLock(authUser.getUserId(), gatheringId, eventId);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 

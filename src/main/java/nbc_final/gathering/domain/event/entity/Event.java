@@ -59,13 +59,18 @@ public class Event extends TimeStamped {
         this.maxParticipants = maxParticipants;
     }
 
-    public void addParticipant(Participant participant) {
-        this.participants.add(participant);
-        this.currentParticipants++;
-    }
-
     public void removeParticipant(Participant participant) {
         this.participants.remove(participant);
-        this.currentParticipants--;
+        decrementParticipantCount();
+    }
+
+    public void decrementParticipantCount() {
+        if (this.currentParticipants > 0) {
+            this.currentParticipants--;
+        }
+    }
+
+    public int getCurrentParticipants() {
+        return currentParticipants;
     }
 }
