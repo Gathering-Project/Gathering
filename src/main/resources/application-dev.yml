@@ -25,9 +25,9 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 #    url: jdbc:mysql://mysql_container:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
-    url: jdbc:mysql://localhost:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE}?serverTimezone=Asia/Seoul
     username: ${MYSQL_NAME}
-    password: ${MYSQL_PASSWORD}
+    password: ${MYSQL_ROOT_PASSWORD}
 
   kafka:
     bootstrap-servers: "localhost:19092,localhost:19093,localhost:19094"
