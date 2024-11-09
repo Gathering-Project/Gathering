@@ -3,11 +3,13 @@ package nbc_final.gathering.domain.event.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class EventUpdateRequestDto {
 
     @NotBlank(message = "이벤트 제목을 입력해주세요.")

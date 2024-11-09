@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventResponseDto {
 
@@ -26,7 +28,7 @@ public class EventResponseDto {
     private String date;
     private String location;
     private Integer maxParticipants;
-    private Integer currentParticipants;
+    private long currentParticipants;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT)
     private LocalDateTime createdAt;
@@ -93,4 +95,39 @@ public class EventResponseDto {
                 comments
         );
     }
+
+    // Redis 참가자 수 포함 생성자
+    public static EventResponseDto of(Event event, Long userId, long currentParticipantsCount) {
+        return new EventResponseDto(
+                event.getId(),
+                userId,
+                event.getTitle(),
+                event.getDescription(),
+                event.getDate(),
+                event.getLocation(),
+                event.getMaxParticipants(),
+                currentParticipantsCount,  // Redis에서 가져온 참가자 수 할당
+                event.getCreatedAt(),
+                event.getUpdatedAt(),
+                null
+        );
+    }
+
+    public static EventResponseDto of(Event event, Long userId, List<CommentResponseDto> comments, long currentParticipantsCount) {
+        return new EventResponseDto(
+                event.getId(),
+                userId,
+                event.getTitle(),
+                event.getDescription(),
+                event.getDate(),
+                event.getLocation(),
+                event.getMaxParticipants(),
+                currentParticipantsCount,
+                event.getCreatedAt(),
+                event.getUpdatedAt(),
+                comments
+        );
+    }
+
+
 }

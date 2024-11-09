@@ -1,4 +1,4 @@
-package nbc_final.gathering.common.config;
+package nbc_final.gathering.domain.user.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

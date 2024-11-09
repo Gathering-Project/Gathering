@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.attachment.entity.Attachment;
 import nbc_final.gathering.domain.member.entity.Member;
+import nbc_final.gathering.domain.member.enums.MemberRole;
+import nbc_final.gathering.domain.member.enums.MemberStatus;
+import nbc_final.gathering.domain.user.entity.User;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -31,7 +34,7 @@ public class Gathering extends TimeStamped {
 
   private Long userId;
 
-  @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL)
   private List<Member> members = new ArrayList<>();
 
   @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -77,6 +80,16 @@ public class Gathering extends TimeStamped {
     this.location = location;
   }
 
+  public static Gathering of(String title, int gatheringMaxCount, String description) {
+    Gathering gathering = new Gathering();
+    gathering.title = title;
+    gathering.gatheringMaxCount = gatheringMaxCount;
+    gathering.gatheringCount = 0;
+    gathering.rating = BigDecimal.ZERO;
+    gathering.location = "Default Location";
+    gathering.description = description;
+    return gathering;
+  }
   public void setGatheringImage(String gatheringImage) {
     this.gatheringImage = gatheringImage;
   }
@@ -95,6 +108,11 @@ public class Gathering extends TimeStamped {
     Gathering gathering = new Gathering();
     gathering.id = id;
     return gathering;
+  }
+
+  public void addMember(User user, MemberRole role, MemberStatus status) {
+    Member newMember = new Member(user, this, role, status);
+    this.members.add(newMember);
   }
 
   public void updateTotalGatheirngViewCount(long totalGatheringViewCount) {

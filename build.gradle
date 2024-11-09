@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'jacoco'
 }
 
 group = 'nbc_final'
@@ -80,6 +81,9 @@ dependencies {
     //OAuth2.0
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    //Redisson
+    implementation 'org.redisson:redisson-spring-boot-starter:3.21.1'
 
 
     implementation 'org.springframework.kafka:spring-kafka:3.2.4'

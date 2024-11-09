@@ -2,6 +2,7 @@ package nbc_final.gathering.domain.event.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.domain.event.entity.Event;
@@ -26,6 +27,10 @@ public class EventListResponseDto {
         List<EventResponseDto> eventResponseDtos = eventList.stream()
                 .map(event -> EventResponseDto.of(event, userId))
                 .collect(Collectors.toList());
+        return new EventListResponseDto(eventResponseDtos);
+    }
+
+    public static EventListResponseDto of(List<EventResponseDto> eventResponseDtos) {
         return new EventListResponseDto(eventResponseDtos);
     }
 }
