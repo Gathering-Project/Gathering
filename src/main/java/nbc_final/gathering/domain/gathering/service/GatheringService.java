@@ -13,6 +13,7 @@ import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringWithCountResponseDto;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
+import nbc_final.gathering.domain.gathering.repository.GatheringElasticSearchRepository;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
@@ -43,6 +44,7 @@ public class GatheringService {
     private final MemberRepository memberRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final GatheringElasticSearchRepository gatheringElasticSearchRepository;
 
 
     private static final String TODAY_RANKING_KEY = "todayGatheringRanking";
@@ -100,6 +102,7 @@ public class GatheringService {
 
             // 그룹 저장
             gatheringRepository.save(savedGathering);
+            gatheringElasticSearchRepository.save(savedGathering); //엘라스틱 서치 추가
             memberRepository.save(member);
 
             kafkaNotificationUtil.notifyHostMember(user.getId(), "새로운 소모임이 생성되었습니다.");
