@@ -13,7 +13,7 @@ import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringWithCountResponseDto;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
-import nbc_final.gathering.domain.gathering.repository.GatheringElasticSearchRepository;
+import nbc_final.gathering.common.elasticsearch.GatheringElasticSearchRepository;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
