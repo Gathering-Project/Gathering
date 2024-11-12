@@ -3,6 +3,8 @@ package nbc_final.gathering.domain.location.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import nbc_final.gathering.common.exception.ResponseCode;
+import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.location.dto.request.RecommandRequestDto;
 import nbc_final.gathering.domain.location.dto.response.CoordinatesDto;
 import nbc_final.gathering.domain.location.dto.response.PlaceDto;
@@ -84,6 +86,7 @@ public class LocationService {
     String url = String.format("%s?location=%f,%f&radius=%d&type=%s&key=%s",
         PLACES_URL, latitude, longitude, requestRadius, requestType, API_KEY);
 
+    // Place Api 결과 가져오기
     String response = restTemplate.getForObject(url, String.class);
     List<PlaceDto> places = new ArrayList<>();
 
@@ -98,13 +101,24 @@ public class LocationService {
           double placeLatitude = placeNode.path("geometry").path("location").path("lat").asDouble(0.0);
           double placeLongitude = placeNode.path("geometry").path("location").path("lng").asDouble(0.0);
           String placeId = placeNode.path("place_id").asText("");
-          String type = placeNode.path("types").get(0).asText("");
+          JsonNode types = placeNode.path("types");
+          String actualType = (types.isArray() && types.size() > 0) ? types.get(0).asText() : "";  // 첫 번째 타입만 사용
 
-          if (!name.isEmpty() && placeLatitude != 0.0 && placeLongitude != 0.0) {
-            PlaceDto place = new PlaceDto(name, address, placeLatitude, placeLongitude, placeId, requestType);
+          if (actualType.equals(requestType) && !name.isEmpty() && placeLatitude != 0.0 && placeLongitude != 0.0) {
+            PlaceDto place = new PlaceDto(name, address, placeLatitude, placeLongitude, placeId, actualType);
             places.add(place);
           }
         }
+
+        // 장소가 없을 경우 예외처리
+        if (places.isEmpty()) {
+          throw new ResponseCodeException(ResponseCode.NOT_FOUND_LOCATION);
+        }
+        // 최대 5개로 표시제한
+        if (places.size() >= 5) {
+          places = places.subList(0, 5);
+        }
+
       }
     } catch (Exception e) {
       throw new RuntimeException("Places API 호출 실패: " + e.getMessage());
