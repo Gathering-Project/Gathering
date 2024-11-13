@@ -1,0 +1,66 @@
+<html>
+<meta charset="UTF-8" />
+<body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<div>
+    <h2>카카오페이</h2>
+    <form id="payInfo">
+        <div>
+            <label for="event_id">이벤트 ID</label>
+            <input id="event_id" type="text" name="event_id">
+        </div>
+        <div>
+            <label for="coupon_id">쿠폰 ID</label>
+            <input id="coupon_id" type="text" name="coupon_id">
+        </div>
+        <div>
+            <label for="point_amount">사용할 포인트</label>
+            <input id="point_amount" type="text" name="point_amount">
+        </div>
+        <div>
+            <button id="btn-pay-ready" type="button">결제</button>
+            <button id="btn-cancel" type="button">취소하기</button>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        $("#btn-pay-ready").click(function(e) {
+            let eventId = $("#event_id").val();
+            let couponId = $("#coupon_id").val();
+            let pointAmount = $("#point_amount").val();
+
+            let data = {
+                eventId: eventId,
+                couponId: couponId,
+                pointAmount: pointAmount
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/api/v1/payments/ready",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                success: function(result) {
+                    console.log("결제 성공");
+                    window.open(result.data.response.next_redirect_pc_url, "kakaopay_pop", "width=500, height=500, top=100, left=200, location=no");
+                },
+                error: function (error) {
+                    console.log("결제 실패");
+                    console.log(error);
+                },
+                complete: function (xhr, status) {
+                    console.log("Request completed with status: " + status);
+                }
+            });
+        });
+
+        // Redirect to cancel page
+        $("#btn-cancel").click(function() {
+            window.location.href = "http://localhost:8080/cancel.html";
+        });
+    });
+</script>
+</body>
+</html>

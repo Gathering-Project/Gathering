@@ -104,6 +104,8 @@
         <label for="durationDays">광고 노출 기간 (일):</label>
         <input type="number" id="durationDays" name="durationDays" placeholder="예: 7일" min="1" required/>
 
+        <input type="hidden" id="orderId" th:value="${orderId}" />
+
         <p class="total-amount">총 결제 금액: <span id="amount" th:text="${amount}">0</span>원</p>
 
         <div id="payment-method"></div>
@@ -117,27 +119,27 @@
         const tossPayments = TossPayments(clientKey);
         const DAILY_COST = 500;
 
+        const jwtToken = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJ0ZXN0MUBuYXZlci5jb20iLCJ1c2VyUm9sZSI6IlJPTEVfVVNFUiIsIm5pY2tOYW1lIjoi67CY7Ked7J2064qUIOudvOudvO2VkSAxMzUwIiwiZXhwIjoxNzMxMzk0MjQ3LCJpYXQiOjE3MzEzOTA2NDd9.gO-s16sRMTwIAvULFAZSYqhWt5bmtEvIL7tkzmOhmrs";
+
         const durationDaysInput = document.getElementById('durationDays');
         const amountDisplay = document.getElementById('amount');
         const gatheringIdInput = document.getElementById('gatheringId');
         const orderNameInput = document.getElementById('orderName');
+        const orderId = document.getElementById('orderId').value;
         let totalAmount = 0;
         let widgets = null;
 
-        // durationDays가 변경될 때마다 금액 업데이트
+        // 광고 노출 기간 입력 시 금액 업데이트
         durationDaysInput.addEventListener('input', async function () {
             const durationDays = parseInt(durationDaysInput.value) || 0;
             totalAmount = DAILY_COST * durationDays;
-            amountDisplay.textContent = totalAmount; // 실시간 금액 반영
+            amountDisplay.textContent = totalAmount;
 
-            // totalAmount가 숫자인지 확인
             if (isNaN(totalAmount)) {
                 totalAmount = 0;
             }
 
-            // widgets가 초기화된 경우에만 금액 업데이트
             if (widgets) {
-                console.log('금액 업데이트:', totalAmount);
                 await widgets.setAmount({ value: totalAmount, currency: 'KRW' });
             }
         });
@@ -146,62 +148,70 @@
         document.getElementById("payment-button").addEventListener("click", async function () {
             const orderName = orderNameInput.value.trim();
             const gatheringId = gatheringIdInput.value.trim();
+            const durationDays = durationDaysInput.value.trim();
 
-            if (!orderName) {
-                alert("소모임 이름을 입력해 주세요.");
+            if (!orderName || !gatheringId || totalAmount <= 0) {
+                alert("모든 필드를 입력하고 결제 금액을 확인해 주세요.");
                 return;
-            }
-
-            if (!gatheringId) {
-                alert("소모임 ID를 입력해 주세요.");
-                return;
-            }
-
-            if (totalAmount <= 0) {
-                alert("결제 금액을 확인해 주세요.");
-                return;
-            }
-
-            const customerKey = "customer_" + gatheringId;
-            const orderId = `ad-${Date.now()}`;
-
-            // TossPayments 위젯 설정 (한 번만 초기화)
-            if (!widgets) {
-                widgets = tossPayments.widgets({
-                    customerKey: customerKey,
-                    locale: 'ko' // 필요에 따라 로케일 설정
-                });
-
-                // 결제 금액 설정
-                console.log('초기 금액 설정:', totalAmount);
-                await widgets.setAmount({ value: totalAmount, currency: 'KRW' });
-
-                await widgets.renderPaymentMethods({
-                    selector: "#payment-method",
-                    variantKey: "DEFAULT"
-                });
             }
 
             try {
-                // 결제 금액 업데이트 (필요한 경우)
-                console.log('최종 금액 설정:', totalAmount);
-                await widgets.setAmount({ value: totalAmount, currency: 'KRW' });
+                // 주문 ID가 없는 경우 동적으로 생성
+                let orderId = document.getElementById('orderId').value;
+                if (!orderId) {
+                    orderId = `ad_${gatheringId}_${Date.now()}`;
+                    document.getElementById('orderId').value = orderId;
+                    console.log("orderId:", orderId);
+                }
 
+                const paymentData = {
+                    gatheringId: gatheringId,
+                    orderName: orderName,
+                    durationDays: durationDays
+                };
+
+                // 서버로 결제 요청을 보냄
+                const response = await fetch('/api/v2/payments/ad', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': jwtToken // JWT 토큰 추가
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+
+                if (!response.ok) throw new Error("결제 요청 중 오류가 발생했습니다.");
+                const paymentResponse = await response.json();
+                console.log("결제 요청 성공:", paymentResponse);
+
+                // TossPayments 결제 위젯을 초기화하고 결제 금액 설정
+                if (!widgets) {
+                    widgets = tossPayments.widgets({
+                        customerKey: "customer_" + gatheringId,
+                        locale: 'ko'
+                    });
+
+                    await widgets.setAmount({ value: totalAmount, currency: 'KRW' });
+                    await widgets.renderPaymentMethods({
+                        selector: "#payment-method",
+                        variantKey: "DEFAULT"
+                    });
+                }
+
+                // Toss 결제 처리
                 await widgets.requestPayment({
                     orderId: orderId,
-                    orderName: `${orderName} - ${durationDaysInput.value}일 광고`,
-                    successUrl: `${window.location.origin}/payment-success`,
+                    orderName: `${orderName} - ${durationDays}일 광고`,
+                    successUrl: `${window.location.origin}/payment-success?orderId=${orderId}&amount=${totalAmount}`,
                     failUrl: `${window.location.origin}/payment-fail`,
                     customerEmail: "customer123@gmail.com",
                     customerName: `소모임 ID: ${gatheringId}`,
                     customerMobilePhone: "01012341234"
                 });
+
             } catch (error) {
-                if (error.code === 'USER_CANCEL') {
-                    alert('결제가 취소되었습니다.');
-                } else {
-                    alert('결제 중 오류가 발생했습니다: ' + error.message);
-                }
+                console.error("결제 요청 중 오류 발생:", error);
+                alert("결제 요청에 실패했습니다: " + error.message);
             }
         });
     }
