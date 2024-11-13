@@ -27,9 +27,44 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 #    url: jdbc:mysql://mysql_container:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
-    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE}?serverTimezone=Asia/Seoul
-    username: ${MYSQL_NAME}
-    password: ${MYSQL_ROOT_PASSWORD}
+    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
+    username: root
+    password: 1234
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb # h2 url ex_): jdbc:h2:tcp://localhost/~/test
+    username: sa # h2 id
+    password: # h2 password
+  h2:
+    console:
+      enabled: true
+  data:
+    mongodb:
+      uri: mongodb://root:1234@localhost:27017/message_history?authSource=admin&authMechanism=SCRAM-SHA-1
+      username: root
+      password: 1234
+
+# RabbitMQ 설정
+  rabbitmq:
+    host: "localhost"
+    port: 5672
+    virtual-host: "/"
+    username: "guest"
+    password: "guest"
+  relay:
+    port: 61613
+    system-login: guest
+    system-passcode: guest
+    client-login: guest
+    client-passcode: guest
+  chat:
+    queue:
+      name: "chat.queue"
+    exchange:
+      name: "chat.exchange"
+    routing:
+      key: "*.room."
 
   kafka:
     bootstrap-servers: "localhost:19092,localhost:19093,localhost:19094"

@@ -19,5 +19,10 @@ public class AppConfig {
                 .setReadTimeout(Duration.ofSeconds(5)) // 5초
                 .build();
     }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
 }
 

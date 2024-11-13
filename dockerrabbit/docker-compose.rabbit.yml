@@ -2,16 +2,14 @@ version: '3.8'
 
 services:
   mongodb:
-    image: mongo:6.0
-    container_name: mongodb_container
+    image: mongo:latest
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 1234
+      MONGO_INITDB_DATABASE: message_history
     ports:
       - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: gathering
-      MONGO_INITDB_ROOT_USERNAME: ${mongodb_username}
-      MONGO_INITDB_ROOT_PASSWORD: ${mongodb_password}
-    volumes:
-      - mongodb_data:/data/db
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -25,22 +23,22 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
-#  app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    container_name: chat_app_container
-#    environment:
-#      SPRING_DATA_MONGODB_URI: mongodb://${mongodb_username}:${mongodb_password}@mongodb:27017/gathering?authSource=admin
-#      SPRING_RABBITMQ_HOST: rabbitmq
-#      SPRING_RABBITMQ_PORT: 5672
-#    depends_on:
-#      - mongodb
-#      - rabbitmq
-#    ports:
-#      - "9090:8080"
-#    volumes:
-#      - ./logs:/app/logs # 로그 파일 저장
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chat_app_container
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://${mongodb_username}:${mongodb_password}@mongodb:27017/gathering?authSource=admin
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+    depends_on:
+      - mongodb
+      - rabbitmq
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./logs:/app/logs # 로그 파일 저장
 
 volumes:
   mongodb_data:
