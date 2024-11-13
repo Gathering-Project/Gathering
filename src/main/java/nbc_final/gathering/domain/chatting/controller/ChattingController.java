@@ -1,13 +1,15 @@
-package nbc_final.gathering.domain.chatsession.controller;
+package nbc_final.gathering.domain.chatting.controller;
 
 import lombok.RequiredArgsConstructor;
+import nbc_final.gathering.domain.chatting.dto.request.ChatMessageRequestDto;
+import nbc_final.gathering.domain.chatting.dto.response.ChatSessionResponseDto;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class ChatController {
+public class ChattingController {
 
     private final RabbitTemplate rabbitTemplate;
 
