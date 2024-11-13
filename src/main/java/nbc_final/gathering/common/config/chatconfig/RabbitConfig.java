@@ -1,4 +1,4 @@
-package nbc_final.gathering.config;
+package nbc_final.gathering.common.config.chatconfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -22,22 +22,22 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class RabbitConfig {
 
-    @Value("${rabbitmq.chat.queue.name}")
+    @Value("${rabbitmq_chat_queue_name}")
     private String chatQueueName;
-    @Value("${rabbitmq.chat.exchange.name}")
+    @Value("${rabbitmq_chat_exchange_name}")
     private String chatExchangeName;
-    @Value("${rabbitmq.chat.routing.key}")
+    @Value("${rabbitmq_chat_routing_key}")
     private String routingKey;
 
-    @Value("${rabbitmq.host}")
+    @Value("${rabbitmq_host}")
     private String host;
-    @Value("${rabbitmq.port}")
+    @Value("${rabbitmq_port}")
     private int port;
-    @Value("${rabbitmq.virtual-host}")
+    @Value("${rabbitmq_virtual-host}")
     private String virtualHost;
-    @Value("${rabbitmq.username}")
+    @Value("${rabbitmq_username}")
     private String username;
-    @Value("${rabbitmq.password}")
+    @Value("${rabbitmq_password}")
     private String password;
 
     // Queue 등록
@@ -82,6 +82,11 @@ public class RabbitConfig {
         return factory;
     }
 
+    @Bean
+    public JavaTimeModule dateTimeModule() {
+        return new JavaTimeModule();
+    }
+
     // 메시지를 JSON형식으로 직렬화하고 역직렬화하는데 사용되는 변환기
     // RabbitMQ 메시지를 JSON형식으로 보내고 받을 수 있음
     @Bean
@@ -91,11 +96,7 @@ public class RabbitConfig {
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true);
         objectMapper.registerModule(dateTimeModule());
 
-        return new dateTimeModule;
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
 
-    @Bean
-    public Module dateTimeModule() {
-        return new JavaTimeModule();
-    }
 }

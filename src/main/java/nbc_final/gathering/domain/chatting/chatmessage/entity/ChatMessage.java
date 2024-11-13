@@ -1,4 +1,4 @@
-package nbc_final.gathering.domain.chatmessage.entity;
+package nbc_final.gathering.domain.chatting.chatmessage.entity;
 
 import jakarta.persistence.Column;
 import lombok.*;

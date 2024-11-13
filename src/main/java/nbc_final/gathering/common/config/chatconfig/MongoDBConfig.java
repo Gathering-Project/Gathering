@@ -1,4 +1,4 @@
-package nbc_final.gathering.config;
+package nbc_final.gathering.common.config.chatconfig;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +14,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @Configuration
 @RequiredArgsConstructor
-@EnableMongoRepositories("com.rabbitmqprac.chatmessage")
+@EnableMongoRepositories("nbc_final.gathering.domain.chatting.chatmessage.repository")
 @EnableMongoAuditing
 public class MongoDBConfig {
 

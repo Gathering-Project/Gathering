@@ -1,8 +1,7 @@
-package nbc_final.gathering.domain.chatroom.entity;
+package nbc_final.gathering.domain.chatting.chatroom.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import nbc_final.gathering.domain.user.entity.Member;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -30,13 +29,13 @@ public class ChatRoom {
     @JoinTable(name = "Chat_Room_Members",
             joinColumns = @JoinColumn(name = "chatRoomId"),
             inverseJoinColumns = @JoinColumn(name = "memberId"))
-    private Set<Member> chatRoomMembers = new HashSet<>();
+    private Set<ChatRoom> chatRoomMembers = new HashSet<ChatRoom>();
 
     @Column(name = "createdAt", updatable = false)
     @CreatedDate
     private LocalDateTime createdAt;
 
-    public void addMembers(Member roomMaker, Member guest) {
+    public void addMembers(ChatRoom roomMaker, ChatRoom guest) {
         this.chatRoomMembers.add(roomMaker);
         this.chatRoomMembers.add(guest);
     }

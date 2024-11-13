@@ -1,14 +1,17 @@
-package nbc_final.gathering.domain.chatmessage.controller;
+package nbc_final.gathering.domain.chatting.chatmessage.controller;
 
 import lombok.RequiredArgsConstructor;
-import nbc_final.gathering.common.ChatDto;
-import nbc_final.gathering.common.ChatMessageRes;
-import nbc_final.gathering.domain.chatmessage.service.ChatMessageService;
+
+import nbc_final.gathering.common.config.chatconfig.ChatDto;
+import nbc_final.gathering.common.config.chatconfig.ChatMessageRes;
+import nbc_final.gathering.domain.chatting.chatmessage.service.ChatMessageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor

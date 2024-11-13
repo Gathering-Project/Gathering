@@ -1,8 +1,8 @@
-package nbc_final.gathering.common;
+package nbc_final.gathering.common.config.chatconfig;
 
 import lombok.Builder;
 import lombok.Getter;
-import nbc_final.gathering.domain.chatmessage.entity.ChatMessage;
+import nbc_final.gathering.domain.chatting.chatmessage.entity.ChatMessage;
 
 import java.time.LocalDateTime;
 

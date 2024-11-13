@@ -1,10 +1,11 @@
-package nbc_final.gathering.domain.chatroom.controller;
+package nbc_final.gathering.domain.chatting.chatroom.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.ChatDto;
-import nbc_final.gathering.domain.chatroom.repository.ChatRoomRepository;
-import nbc_final.gathering.domain.chatroom.service.ChatRoomService;
+
+import nbc_final.gathering.common.config.chatconfig.ChatDto;
+import nbc_final.gathering.domain.chatting.chatroom.repository.ChatRoomRepository;
+import nbc_final.gathering.domain.chatting.chatroom.service.ChatRoomService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

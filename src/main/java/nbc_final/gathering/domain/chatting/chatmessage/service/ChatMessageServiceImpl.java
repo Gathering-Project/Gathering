@@ -1,15 +1,15 @@
-package nbc_final.gathering.domain.chatmessage.service;
+package nbc_final.gathering.domain.chatting.chatmessage.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.ChatDto;
-import nbc_final.gathering.common.ChatMessageRes;
-import nbc_final.gathering.domain.chatmessage.entity.ChatMessage;
-import nbc_final.gathering.domain.chatmessage.repository.ChatMessageRepository;
-import nbc_final.gathering.domain.chatroom.entity.ChatRoom;
-import nbc_final.gathering.domain.chatroom.repository.ChatRoomRepository;
-import nbc_final.gathering.domain.user.entity.Member;
-import nbc_final.gathering.domain.user.repository.MemberRepository;
+import nbc_final.gathering.common.config.chatconfig.ChatDto;
+import nbc_final.gathering.common.config.chatconfig.ChatMessageRes;
+import nbc_final.gathering.domain.chatting.chatmessage.entity.ChatMessage;
+import nbc_final.gathering.domain.chatting.chatmessage.repository.ChatMessageRepository;
+import nbc_final.gathering.domain.chatting.chatroom.entity.ChatRoom;
+import nbc_final.gathering.domain.chatting.chatroom.repository.ChatRoomRepository;
+import nbc_final.gathering.domain.chatting.user.entity.ChatMember;
+import nbc_final.gathering.domain.chatting.user.repository.ChatMemberRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +21,7 @@ import java.util.List;
 public class ChatMessageServiceImpl implements ChatMessageService {
 
     private final ChatRoomRepository chatRoomRepository;
-    private final MemberRepository memberRepository;
+    private final ChatMemberRepository memberRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final RabbitTemplate rabbitTemplate;
 
@@ -30,7 +30,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         ChatRoom chatRoom = chatRoomRepository.findById(chatMessageReq.getChatRoomId())
                 .orElseThrow(() -> new RuntimeException("Chat room not found"));
 
-        Member member = memberRepository.findById(chatMessageReq.getMemberId())
+        ChatMember member = memberRepository.findById(chatMessageReq.getMemberId())
                 .orElseThrow(() -> new RuntimeException("Member not found"));
 
         ChatMessage chatMessage = chatMessageReq.toEntity(chatRoom.getId(), member.getId());

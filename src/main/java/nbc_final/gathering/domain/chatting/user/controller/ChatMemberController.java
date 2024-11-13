@@ -1,20 +1,24 @@
-package nbc_final.gathering.domain.user.controller;
+package nbc_final.gathering.domain.chatting.user.controller;
 
 import lombok.RequiredArgsConstructor;
-import nbc_final.gathering.domain.user.repository.MemberRepository;
+
+import nbc_final.gathering.domain.chatting.user.entity.ChatMember;
+
+
+import nbc_final.gathering.domain.chatting.user.repository.ChatMemberRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/members")
-public class MemberController {
+public class ChatMemberController {
 
-    private final MemberRepository memberRepository;
+    private final ChatMemberRepository memberRepository;
 
     @PostMapping
     public ResponseEntity createMember(@RequestParam String username) {
-        return ResponseEntity.ok(memberRepository.save(new Member(username)));
+        return ResponseEntity.ok(memberRepository.save(new ChatMember(username)));
     }
 
     @GetMapping("/{memberId}")

@@ -1,4 +1,4 @@
-package nbc_final.gathering.common.config;
+package nbc_final.gathering.common.config.redis;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

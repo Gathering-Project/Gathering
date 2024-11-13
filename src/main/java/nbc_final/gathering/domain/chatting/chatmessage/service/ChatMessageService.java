@@ -1,7 +1,8 @@
-package nbc_final.gathering.domain.chatmessage.service;
+package nbc_final.gathering.domain.chatting.chatmessage.service;
 
-import nbc_final.gathering.common.ChatDto;
-import nbc_final.gathering.common.ChatMessageRes;
+
+import nbc_final.gathering.common.config.chatconfig.ChatDto;
+import nbc_final.gathering.common.config.chatconfig.ChatMessageRes;
 
 import java.util.List;
 

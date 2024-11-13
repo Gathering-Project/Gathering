@@ -14,18 +14,18 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${rabbitmq.host}")
+    @Value("${rabbitmq_host}")
     private String host;
-    @Value("${rabbitmq.relay.port}")
+    @Value("${rabbitmq_relay_port}")
     private int port;
-    @Value("${rabbitmq.relay.system-login}")
+    @Value("${rabbitmq_relay_system-login}")
 
     private String systemLogin;
-    @Value("${rabbitmq.relay.client-passcode}")
+    @Value("${rabbitmq_relay_client-passcode}")
     private String systemPasscode;
-    @Value("${rabbitmq.relay.client-login}")
+    @Value("${rabbitmq_relay_client-login}")
     private String clientLogin;
-    @Value("${rabbitmq.relay.client-passcode}")
+    @Value("${rabbitmq_relay_client-passcode}")
     private String clientPasscode;
 
     @Override

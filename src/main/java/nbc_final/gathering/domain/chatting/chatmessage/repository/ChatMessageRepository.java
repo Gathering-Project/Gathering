@@ -1,6 +1,6 @@
-package nbc_final.gathering.domain.chatmessage.repository;
+package nbc_final.gathering.domain.chatting.chatmessage.repository;
 
-import nbc_final.gathering.domain.chatmessage.entity.ChatMessage;
+import nbc_final.gathering.domain.chatting.chatmessage.entity.ChatMessage;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

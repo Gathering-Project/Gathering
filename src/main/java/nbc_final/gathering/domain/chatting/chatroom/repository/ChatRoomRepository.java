@@ -1,6 +1,7 @@
-package nbc_final.gathering.domain.chatroom.repository;
+package nbc_final.gathering.domain.chatting.chatroom.repository;
 
-import nbc_final.gathering.domain.chatroom.entity.ChatRoom;
+
+import nbc_final.gathering.domain.chatting.chatroom.entity.ChatRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
