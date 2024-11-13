@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # 기본 메시징 포트
+      - "15672:15672"  # RabbitMQ 관리 UI 포트
+    environment:
+      RABBITMQ_DEFAULT_USER: guest   # 기본 사용자 이름
+      RABBITMQ_DEFAULT_PASS: guest  # 기본 사용자 비밀번호
+    networks:
+      - rabbitmq-network

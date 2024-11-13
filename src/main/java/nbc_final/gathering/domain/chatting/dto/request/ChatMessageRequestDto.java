@@ -1,7 +1,10 @@
-package nbc_final.gathering.domain.chatmessage.dto.request;
+package nbc_final.gathering.domain.chatting.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
+import nbc_final.gathering.domain.matching.dto.response.MatchingResponseDto;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
 @Getter
 @AllArgsConstructor
