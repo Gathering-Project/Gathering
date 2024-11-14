@@ -6,16 +6,18 @@ import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.location.dto.request.RecommandRequestDto;
-import nbc_final.gathering.domain.location.dto.response.CoordinatesDto;
+import nbc_final.gathering.domain.location.dto.response.CoordinateDto;
 import nbc_final.gathering.domain.location.dto.response.PlaceDto;
 import nbc_final.gathering.domain.location.dto.response.RecommandResponseDto;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -33,11 +35,12 @@ public class LocationService {
 
   private final RestTemplate restTemplate;
   private final ObjectMapper objectMapper;
+  private final StringRedisTemplate redisTemplate;
 
   // 주변 장소 추천 로직
   public RecommandResponseDto getNearbyPlacesFromAddress(RecommandRequestDto recommandRequestDto) {
     String address = recommandRequestDto.getAddress();
-    CoordinatesDto coordinates = getCoordinatesFromAddress(address);
+    CoordinateDto coordinates = getCoordinateDto(address);
 
     int radius = recommandRequestDto.getRadius();
     String type = recommandRequestDto.getType();
@@ -47,11 +50,27 @@ public class LocationService {
   }
 
   // 주소를 바탕으로 위도, 경도 추출 메서드
-  private CoordinatesDto getCoordinatesFromAddress(String address) {
-    try {
-      String encodedAddress = address.replace(" ", "%20");
-      String url = String.format("%s?address=%s&key=%s", GEOCODE_URL, encodedAddress, API_KEY);
+  private CoordinateDto getCoordinateDto(String address) {
+    // ex) 서울특별시%20강남구%20서초동
+    String encodedAddress = address.replace(" ", "%20");
+    // GeoCoding Api 호출 Url
+    String url = String.format("%s?address=%s&key=%s", GEOCODE_URL, encodedAddress, API_KEY);
 
+    // 캐시있는지 불러오기
+    String cachedData = redisTemplate.opsForValue().get(encodedAddress);
+    // 캐시된 데이터가 있다면
+    if (cachedData != null) {
+      // 역직렬화
+      try {
+        return objectMapper.readValue(cachedData, CoordinateDto.class);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+    // 캐시된 데이터가 없으면
+
+    // 외부 api 호출
+    try {
       String response = restTemplate.getForObject(url, String.class);
       JsonNode jsonNode = objectMapper.readTree(response);
 
@@ -61,7 +80,7 @@ public class LocationService {
       if (!results.isArray() || results.size() == 0) {
         throw new RuntimeException("Geocoding API 호출 실패: 주소에 해당하는 좌표를 찾을 수 없습니다.");
       }
-
+      // 위도, 경도 추출
       JsonNode location = results.get(0).path("geometry").path("location");
       double latitude = location.path("lat").asDouble(0.0);
       double longitude = location.path("lng").asDouble(0.0);
@@ -70,8 +89,13 @@ public class LocationService {
         throw new RuntimeException("좌표 정보를 가져올 수 없습니다.");
       }
 
-      return new CoordinatesDto(latitude, longitude);
+      CoordinateDto coordinateDto = new CoordinateDto(latitude, longitude);
 
+      // 직렬화 & 캐싱
+      String jsonData = objectMapper.writeValueAsString(coordinateDto);
+      redisTemplate.opsForValue().set(encodedAddress, jsonData, 365, TimeUnit.DAYS);
+
+      return coordinateDto;
     } catch (Exception e) {
       throw new RuntimeException("Geocoding API 호출 실패: " + e.getMessage());
     }
@@ -79,18 +103,38 @@ public class LocationService {
 
 
   // 위도, 경도를 바탕으로 주변 장소를 추천
-  private RecommandResponseDto getNearbyPlaces(CoordinatesDto coordinatesDto, int requestRadius, String requestType) {
-    double latitude = coordinatesDto.getLatitude();
-    double longitude = coordinatesDto.getLongitude();
-
+  private RecommandResponseDto getNearbyPlaces(CoordinateDto coordinateDto, int requestRadius, String requestType) {
+    double latitude = coordinateDto.getLatitude();
+    double longitude = coordinateDto.getLongitude();
+    // Place Api 호출 Url
     String url = String.format("%s?location=%f,%f&radius=%d&type=%s&key=%s",
         PLACES_URL, latitude, longitude, requestRadius, requestType, API_KEY);
 
-    // Place Api 결과 가져오기
-    String response = restTemplate.getForObject(url, String.class);
-    List<PlaceDto> places = new ArrayList<>();
-
+    // 좌표로 장소 캐시있는지 불러오기
+    // 직렬화
     try {
+      // 좌표와 타입, 반경을 기반으로 String 형태로 바꾸기
+      PlaceDto placeDto = new PlaceDto(latitude, longitude, requestType);
+      String jsonCoordinateData = objectMapper.writeValueAsString(placeDto);
+      String cachedData = redisTemplate.opsForValue().get(jsonCoordinateData);
+
+      // 캐시된 좌표가 있다면
+      if (cachedData != null) {
+        // 역직렬화
+        try {
+          return objectMapper.readValue(cachedData, RecommandResponseDto.class);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+
+      // 캐시된 데이터가 없으면
+
+      // 외부 api 호출
+      // Place Api 결과 가져오기
+      String response = restTemplate.getForObject(url, String.class);
+      List<PlaceDto> places = new ArrayList<>();
+
       JsonNode jsonNode = objectMapper.readTree(response);
       JsonNode results = jsonNode.path("results");
 
@@ -118,12 +162,20 @@ public class LocationService {
         if (places.size() >= 5) {
           places = places.subList(0, 5);
         }
-
       }
+
+      RecommandResponseDto recommandResponseDto = new RecommandResponseDto(places);
+
+      // 직렬화 & 캐싱
+      String jsonLocationsData = objectMapper.writeValueAsString(recommandResponseDto);
+      redisTemplate.opsForValue().set(jsonCoordinateData, jsonLocationsData, 7, TimeUnit.DAYS);
+
+      return recommandResponseDto;
+
     } catch (Exception e) {
       throw new RuntimeException("Places API 호출 실패: " + e.getMessage());
     }
-
-    return new RecommandResponseDto(places);
   }
+
+
 }
