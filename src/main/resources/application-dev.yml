@@ -39,10 +39,10 @@ spring:
         enabled: true
         host: ${rabbitmq_host:localhost}
         port: ${rabbitmq_relay_port:61613}
-        system-login: ${rabbitmq_relay_system-login}
-        system-passcode: ${rabbitmq_relay_client-passcode}
-        client-login: ${rabbitmq_relay_client-login}
-        client-passcode: ${rabbitmq_relay_client-passcode}
+        system-login: ${rabbitmq_relay_system-login:guest}
+        system-passcode: ${rabbitmq_relay_client-passcode:guest}
+        client-login: ${rabbitmq_relay_client-login:guest}
+        client-passcode: ${rabbitmq_relay_client-passcode:guset}
       broker:
         topic-destination-prefix: /topic
         queue-destination-prefix: /queue
@@ -141,6 +141,9 @@ admin:
 logging:
   level:
     org:
+      org.springframework.web.socket: TRACE
+      org.springframework.messaging.simp.stomp: TRACE
+      org.springframework.messaging.simp.broker: TRACE
       springframework:
         security: ERROR
       hibernate:

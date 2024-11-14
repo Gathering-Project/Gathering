@@ -19,7 +19,7 @@ import org.springframework.security.web.servletapi.SecurityContextHolderAwareReq
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
-    private final JwtSecurityFilter jwtSecurityFilter;
+    private final nbc_final.gathering.common.config.JwtSecurityFilter jwtSecurityFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -44,7 +44,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/kakao-url",
                                 "/api/v1/users/kakao/callback",
                                 "/api/v1/auth/naver-url",
-                                "/api/v1/users/naver/callback"
+                                "/api/v1/users/naver/callback",
+                                "/chat/inbox"
 //                                "/api/v1/gatherings/{gatheringId}",
 //                                "/api/v1/gatherings"
                                 ).permitAll()
