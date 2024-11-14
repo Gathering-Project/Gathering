@@ -8,4 +8,5 @@ import lombok.RequiredArgsConstructor;
 public class LoginResponseDto {
 
     private final String bearerToken;
+    private final String websocketUrl;
 }
