@@ -110,7 +110,6 @@ public class UserService {
 
         kafkaNotificationUtil.notifyUser(user.getId(), "로그인에 성공했습니다.");
 
-
         return new LoginResponseDto(bearerToken);
     }
 

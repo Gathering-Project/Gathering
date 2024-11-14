@@ -4,15 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,12 +41,45 @@ public class RabbitConfig {
     // Queue 등록
     @Bean
     public Queue queue() {
-        return new Queue(chatQueueName, true);
+        return new Queue("chat.queue", true);
+    }
+
+    @Bean
+    public Queue matchingSuccessQueue() {
+        return new Queue("matching.success", true); // durable을 원하면 true로 설정
+    }
+
+    @Bean
+    public Queue matchingFailedQueue() {
+        return new Queue("matching.failed", true); // durable을 true로 설정하려면 true로 변경하세요
+    }
+
+    // Matching Exchange 등록
+    @Bean
+    public DirectExchange matchingExchange() {
+        return new DirectExchange("matching.exchange");
+    }
+
+    // Matching Exchange와 각 Queue 바인딩
+    @Bean
+    public Binding matchingSuccessBinding() {
+        return BindingBuilder
+                .bind(matchingSuccessQueue())
+                .to(matchingExchange())
+                .with("matching.success");
+    }
+
+    @Bean
+    public Binding matchingFailedBinding() {
+        return BindingBuilder
+                .bind(matchingFailedQueue())
+                .to(matchingExchange())
+                .with("matching.failed");
     }
 
     // Exchange 등록
     @Bean
-    public TopicExchange exchange() {
+    public TopicExchange exchange()  {
         return new TopicExchange(chatExchangeName);
     }
 
@@ -61,13 +92,24 @@ public class RabbitConfig {
                 .with(routingKey);
     }
 
+    @Bean
+    public DirectExchange directExchange() {
+        return new DirectExchange("matching.exchange");
+    }
+
     // RabbitMQ와의 메시지 통신을 담당하는 클래스
     @Bean
-    public RabbitTemplate rabbitTemplate() {
-        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory());
-
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
+                                         MessageConverter messageConverter) {
+        var rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setMessageConverter(messageConverter);
         rabbitTemplate.setExchange(chatExchangeName);
         return rabbitTemplate;
+    }
+
+    @Bean
+    public MessageConverter messageConverter(ObjectMapper objectMapper) {
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
 
     // RabbitMQ와의 연결을 관리하는 클래스

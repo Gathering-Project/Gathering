@@ -27,25 +27,31 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 #    url: jdbc:mysql://mysql_container:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
-    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
-    username: root
-    password: 1234
-
-
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:gathering}?serverTimezone=Asia/Seoul
+    username: ${MYSQL_NAME:root}
+    password: ${MYSQL_PASSWORD:1234}
 
   #RabbitMQ 설정
   rabbitmq:
-    host: ${rabbitmq_host}
-    port: ${rabbitmq_port}
-    virtual-host: ${rabbitmq_virtual-host}
-    username: ${rabbitmq_username}
-    password: ${rabbitmq_password}
-  relay:
-    port: ${rabbitmq_relay_port}
-    system-login: ${rabbitmq_relay_system-login}
-    system-passcode: ${rabbitmq_relay_client-passcode}
-    client-login: ${rabbitmq_relay_client-login}
-    client-passcode: ${rabbitmq_relay_client-passcode}
+    host: ${rabbitmq_host:localhost}
+    port: ${rabbitmq_port:5672}
+    virtual-host: ${rabbitmq_virtual-host:/}
+    username: ${rabbitmq_username:admin}
+    password: ${rabbitmq_password:1234}
+
+  messaging:
+    stomp:
+      relay:
+        enabled: true
+        host: ${rabbitmq_host:localhost}
+        port: ${rabbitmq_relay_port:61613}
+        system-login: ${rabbitmq_relay_system-login}
+        system-passcode: ${rabbitmq_relay_client-passcode}
+        client-login: ${rabbitmq_relay_client-login}
+        client-passcode: ${rabbitmq_relay_client-passcode}
+      broker:
+        topic-destination-prefix: /topic
+        queue-destination-prefix: /queue
   chat:
     queue:
       name: ${rabbitmq_chat_queue_name}
