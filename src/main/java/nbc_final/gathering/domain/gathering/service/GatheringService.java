@@ -9,6 +9,7 @@ import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
+import nbc_final.gathering.domain.gathering.dto.GatheringElasticDto;
 import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringWithCountResponseDto;
@@ -32,6 +33,8 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static co.elastic.clients.util.MapBuilder.of;
 
 @Service
 @RequiredArgsConstructor
@@ -77,7 +80,7 @@ public class GatheringService {
     @Transactional(readOnly = true)
     public List<Gathering> searchGatheringsByTitleAndLocation(String title, String location) {
         long startTime = System.currentTimeMillis();
-        List<Gathering> results = gatheringRepository.searchGatheringsByTitleAndLocation(title, location);
+        List<Gathering> results = gatheringElasticSearchRepository.findByTitleAndLocation(title, location);
         long endTime = System.currentTimeMillis();
         System.out.println("이름 및 지역 검색 소요 시간: " + (endTime - startTime) + "ms");
         return results;
@@ -100,9 +103,12 @@ public class GatheringService {
             Member member = new Member(user, savedGathering, MemberRole.HOST, MemberStatus.APPROVED);
             savedGathering.getMembers().add(member);
 
+            //엘라스틱 서치
+            GatheringElasticDto gatheringElasticDto = GatheringElasticDto.of(savedGathering);
+
             // 그룹 저장
             gatheringRepository.save(savedGathering);
-            gatheringElasticSearchRepository.save(savedGathering); //엘라스틱 서치 추가
+            gatheringElasticSearchRepository.save(gatheringElasticDto); //엘라스틱 서치 추가
             memberRepository.save(member);
 
             kafkaNotificationUtil.notifyHostMember(user.getId(), "새로운 소모임이 생성되었습니다.");

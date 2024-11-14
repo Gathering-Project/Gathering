@@ -2,13 +2,14 @@ package nbc_final.gathering.domain.member.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.config.JwtUtil;
 import nbc_final.gathering.common.dto.AuthUser;
+import nbc_final.gathering.common.elasticsearch.MemberElasticSearchRepository;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
+import nbc_final.gathering.domain.member.dto.MemberElasticDto;
 import nbc_final.gathering.domain.member.dto.response.MemberResponseDto;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
@@ -34,6 +35,7 @@ public class MemberService {
     private final GatheringRepository gatheringRepository;
     private final UserRepository userRepository;
     private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final MemberElasticSearchRepository memberElasticSearchRepository;
 
     @Transactional
     public MemberResponseDto requestToJoin(AuthUser authUser, Long gatheringId) {
@@ -68,6 +70,10 @@ public class MemberService {
         // 새로운 가입 요청 처리 (PENDING 상태로 저장)
         Member newMember = new Member(user, savedGathering, MemberRole.GUEST, MemberStatus.PENDING);
         memberRepository.save(newMember);
+
+        //엘라스틱 서치 추가
+        MemberElasticDto memberElasticDto = MemberElasticDto.of(newMember);
+        memberElasticSearchRepository.save(memberElasticDto);
 
         kafkaNotificationUtil.notifyGuestMember(newMember.getId(), "게스트 님, 가입 신청이 완료되었습니다.");
 

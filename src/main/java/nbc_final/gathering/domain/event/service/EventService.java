@@ -2,11 +2,14 @@ package nbc_final.gathering.domain.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nbc_final.gathering.common.elasticsearch.EventElasticSearchRepository;
+import nbc_final.gathering.common.elasticsearch.GatheringElasticSearchRepository;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
 import nbc_final.gathering.domain.comment.repository.CommentRepository;
+import nbc_final.gathering.domain.event.dto.EventElasticDto;
 import nbc_final.gathering.domain.event.dto.ParticipantResponseDto;
 import nbc_final.gathering.domain.event.dto.request.EventCreateRequestDto;
 import nbc_final.gathering.domain.event.dto.request.EventUpdateRequestDto;
@@ -18,6 +21,7 @@ import nbc_final.gathering.domain.event.entity.Participant;
 import nbc_final.gathering.domain.event.repository.EventRepository;
 import nbc_final.gathering.domain.event.repository.EventRepositoryCustom;
 import nbc_final.gathering.domain.event.repository.ParticipantRepository;
+import nbc_final.gathering.domain.gathering.dto.GatheringElasticDto;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
@@ -53,6 +57,7 @@ public class EventService {
     private final KafkaNotificationUtil kafkaNotificationUtil;
     private final MemberRepository memberRepository;
     private final RedissonClient redissonClient;
+    private final EventElasticSearchRepository eventElasticSearchRepository;
 
     // 이벤트 생성 (권한: 소모임 멤버 또는 어드민)
     @Transactional(rollbackFor = {ResponseCodeException.class, CannotAcquireLockException.class, InterruptedException.class})
@@ -66,6 +71,10 @@ public class EventService {
 
         Event event = createEventInstance(requestDto, gathering, user);
         eventRepository.save(event);
+
+        //엘라스틱 서치
+        EventElasticDto eventElasticDto = EventElasticDto.of(event);
+        eventElasticSearchRepository.save(eventElasticDto); //엘라스틱 서치 추가
 
         resetParticipantCount(event); // Redis에 참가자 초기 카운트를 설정
 

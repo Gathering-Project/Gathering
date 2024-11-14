@@ -7,7 +7,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.config.JwtUtil;
+import nbc_final.gathering.common.elasticsearch.GatheringElasticSearchRepository;
+import nbc_final.gathering.common.elasticsearch.UserElasticSearchRepository;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
+import nbc_final.gathering.domain.gathering.dto.GatheringElasticDto;
+import nbc_final.gathering.domain.user.dto.UserElasticDto;
 import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
@@ -37,6 +41,8 @@ public class UserService {
     private final KakaoService kakaoService;
     private final NaverService naverService;
     private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final UserElasticSearchRepository userElasticSearchRepository;
+
 
     @Value("${ADMIN_TOKEN}")
     private String ADMIN_TOKEN; // 관리자가 맞는지 확인 토큰
@@ -88,6 +94,10 @@ public class UserService {
 
         User savedUser = userRepository.save(newUser); //회원 저장
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserRole(), savedUser.getNickname());
+
+        //엘라스틱 서치
+        UserElasticDto userElasticDto = UserElasticDto.of(savedUser);
+        userElasticSearchRepository.save(userElasticDto); //엘라스틱 서치 추가
 
         return new SignUpResponseDto(bearerToken); // 토큰 반환
     }

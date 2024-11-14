@@ -16,7 +16,7 @@ public class EventListResponseDto {
 
     private List<EventResponseDto> events;
 
-    @JsonCreator  // Jackson에서 역직렬화 가능하도록 생성자 추가
+    @JsonCreator  // Jackson에서 역직렬화  생성자 추가
     public EventListResponseDto(
             @JsonProperty("events"
             ) List<EventResponseDto> events) {
