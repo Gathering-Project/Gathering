@@ -2,28 +2,31 @@ version: '3.8'
 
 services:
   mongodb:
-    image: mongo:6.0
-    container_name: mongodb_container
-    ports:
-      - "27017:27017"
+    image: mongo:latest
+    container_name: mongodb
     environment:
-      MONGO_INITDB_DATABASE: gathering
       MONGO_INITDB_ROOT_USERNAME: ${mongodb_username}
       MONGO_INITDB_ROOT_PASSWORD: ${mongodb_password}
-    volumes:
-      - mongodb_data:/data/db
+      MONGO_INITDB_DATABASE: message_history
+    ports:
+      - "27017:27017"
 
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq_container
     environment:
-      RABBITMQ_DEFAULT_USER: ${rabbitmq_username}
-      RABBITMQ_DEFAULT_PASS: ${rabbitmq_password}
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: 1234
     ports:
       - "5672:5672"
       - "15672:15672" # RabbitMQ 관리 콘솔
+      - "61613:61613"    # STOMP 포트 추가
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    command: >
+      sh -c "rabbitmq-plugins enable --offline rabbitmq_management &&
+             rabbitmq-plugins enable --offline rabbitmq_stomp &&
+             rabbitmq-server"
 
 #  app:
 #    build:
@@ -38,7 +41,7 @@ services:
 #      - mongodb
 #      - rabbitmq
 #    ports:
-#      - "9090:8080"
+#      - "8081:8080"
 #    volumes:
 #      - ./logs:/app/logs # 로그 파일 저장
 

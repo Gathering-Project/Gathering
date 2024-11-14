@@ -27,9 +27,32 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 #    url: jdbc:mysql://mysql_container:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
-    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE}?serverTimezone=Asia/Seoul
-    username: ${MYSQL_NAME}
-    password: ${MYSQL_ROOT_PASSWORD}
+    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
+    username: root
+    password: 1234
+
+
+
+  #RabbitMQ 설정
+  rabbitmq:
+    host: ${rabbitmq_host}
+    port: ${rabbitmq_port}
+    virtual-host: ${rabbitmq_virtual-host}
+    username: ${rabbitmq_username}
+    password: ${rabbitmq_password}
+  relay:
+    port: ${rabbitmq_relay_port}
+    system-login: ${rabbitmq_relay_system-login}
+    system-passcode: ${rabbitmq_relay_client-passcode}
+    client-login: ${rabbitmq_relay_client-login}
+    client-passcode: ${rabbitmq_relay_client-passcode}
+  chat:
+    queue:
+      name: ${rabbitmq_chat_queue_name}
+    exchange:
+      name: ${rabbitmq_chat_exchange_name}
+    routing:
+      key: ${rabbitmq_chat_routing_key}
 
   kafka:
     bootstrap-servers: "localhost:19092,localhost:19093,localhost:19094"
@@ -62,6 +85,11 @@ spring:
           - localhost:26380
           - localhost:26381
       timeout: 10000
+
+    mongodb:
+      uri: mongodb://root:1234@localhost:27017/message_history?authSource=admin&authMechanism=SCRAM-SHA-1
+      username: root
+      password: 1234
 
   servlet:
     multipart:
@@ -118,3 +146,143 @@ logging:
         orm:
           jdbc:
             bind: info
+#server:
+#  port: 8080
+#
+#spring:
+#  cloud:
+#    aws:
+#      s3:
+#        bucket: ${CLOUD_AWS_S3_BUCKET}
+#      credentials:
+#        accessKey: ${CLOUD_AWS_S3_ACCESS_KEY}
+#        secretKey: ${CLOUD_AWS_S3_SECRET_KEY}
+#      region:
+#        static: ${CLOUD_AWS_S3_REGION_STATIC}
+#      stack:
+#        auto: false
+#
+#  config:
+#    import: optional:file:.env[.properties]
+#
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/gathering?serverTimezone=Asia/Seoul
+#    username: root
+#    password: 1234
+#
+#  h2:
+#    console:
+#      enabled: true
+#
+## RabbitMQ 설정
+#  rabbitmq:
+#    host: ${rabbitmq_host}
+#    port: ${rabbitmq_port}
+#    virtual-host: ${rabbitmq_virtual-host}
+#    username: ${rabbitmq_username}
+#    password: ${rabbitmq_password}
+#  relay:
+#    port: 61613
+#    system-login: guest
+#    system-passcode: guest
+#    client-login: guest
+#    client-passcode: guest
+#  chat:
+#    queue:
+#      name: ${rabbitmq_chat_queue_name}
+#    exchange:
+#      name: ${rabbitmq_chat_exchange_name}
+#    routing:
+#      key: "*.room."
+#
+#  kafka:
+#    bootstrap-servers: "localhost:19092,localhost:19093,localhost:19094"
+#
+#    consumer:
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#      show-sql: true
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.MySQLDialect
+#
+#  date:
+#    redis:
+#      sentinel:
+#        master:
+#          host: localhost
+#          port: 6379
+#        nodes:
+#          - localhost:26379
+#          - localhost:26380
+#          - localhost:26381
+#      timeout: 10000
+#
+#    mongodb:
+#      uri: mongodb://root:1234@localhost:27017/message_history?authSource=admin&authMechanism=SCRAM-SHA-1
+#      username: root
+#      password: 1234
+#
+#  servlet:
+#    multipart:
+#      max-file-size: 5MB
+#      max-request-size: 5MB
+#      enabled: true
+#
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          kakao:
+#            client-id: ${KAKAO_CLIENT_ID}
+#            client-secret: ${KAKAO_CLIENT_SECRET}
+#            redirect-uri: ${KAKAO_REDIRECT_URL}
+#            authorization-grant-type: authorization_code
+#            scope:
+#              - profile
+#              - account_email
+#          naver:
+#            client-id: ${NAVER_CLIENT_ID}
+#            client-secret: ${NAVER_CLIENT_SECRET}
+#            scope:
+#              - email
+#              - nickname
+#            client-name: Naver
+#            redirect-uri: ${NAVER_REDIRECT_URL}
+#            authorization-grant-type: authorization_code
+#        provider:
+#          kakao:
+#            authorization-uri: https://kauth.kakao.com/oauth/authorize
+#            token-uri: https://kauth.kakao.com/oauth/token
+#            user-info-uri: https://kapi.kakao.com/v2/user/me
+#            user-name-attribute: id
+#          naver:
+#            authorization-uri: https://nid.naver.com/oauth2.0/authorize
+#            token-uri: https://nid.naver.com/oauth2.0/token
+#            user-info-uri: https://openapi.naver.com/v1/nid/me
+#            user-name-attribute: response
+#
+#jwt:
+#  secret:
+#    key: ${JWT_SECRET_KEY}
+#
+#admin:
+#  token: ${ADMIN_TOKEN}
+#
+#logging:
+#  level:
+#    org:
+#      springframework:
+#        security: ERROR
+#      hibernate:
+#        orm:
+#          jdbc:
+#            bind: info
