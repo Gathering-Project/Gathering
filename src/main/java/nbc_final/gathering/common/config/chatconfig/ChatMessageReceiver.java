@@ -1,10 +1,12 @@
-package nbc_final.gathering.config;
+package nbc_final.gathering.common.config.chatconfig;
 
+import lombok.AllArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class ChatMessageReceiver {
 
     private SimpMessagingTemplate messagingTemplate;

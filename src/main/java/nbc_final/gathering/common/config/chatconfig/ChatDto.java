@@ -34,10 +34,13 @@ public class ChatDto {
     /**
      * 채팅방 개설 요청 dto
      */
+    @Setter
     @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class ChatRoomCreateReq {
-        private Long roomMakerId;
-        private Long guestId;
+        private Long userId1;
+        private Long userId2;
 
         public ChatRoom createChatRoom() {
             return ChatRoom.emptyChatRoom();
@@ -49,17 +52,28 @@ public class ChatDto {
      */
     @Getter
     @Builder
+    @AllArgsConstructor
     public static class ChatRoomCreateRes {
         private Long chatRoomId;
-        private Long roomMakerId;
-        private Long guestId;
+        private Long userId1;
+        private Long userId2;
 
-        public static ChatRoomCreateRes createRes(Long chatRoomId, Long roomMakerId, Long guestId) {
+        public static ChatRoomCreateRes createRes(Long chatRoomId, Long userId1, Long userId2) {
             return ChatRoomCreateRes.builder()
                     .chatRoomId(chatRoomId)
-                    .roomMakerId(roomMakerId)
-                    .guestId(guestId)
+                    .userId1(userId1)
+                    .userId2(userId2)
                     .build();
         }
+    }
+
+    /**
+     * 채팅방 조회 DTO
+     */
+    @Data
+    @AllArgsConstructor
+    public static class ChatRoomDto {
+        private Long chatRoomId;
+        private LocalDateTime createdAt;
     }
 }

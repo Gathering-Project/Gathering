@@ -21,9 +21,5 @@ public class AppConfig {
                 .build();
     }
 
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
 }
 
