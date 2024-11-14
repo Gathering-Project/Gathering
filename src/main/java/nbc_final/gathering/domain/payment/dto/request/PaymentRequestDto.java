@@ -1,33 +1,41 @@
 package nbc_final.gathering.domain.payment.dto.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Getter
+@Setter
+@NoArgsConstructor
 public class PaymentRequestDto {
 
+    @NotNull(message = "소모임 ID는 필수 입력 항목입니다.")
     private Long gatheringId;
-    private Long adId;
+
+    @NotNull(message = "결제 금액은 필수 입력 항목입니다.")
     private Long amount;
+
+    @NotNull(message = "주문 이름은 필수 입력 항목입니다.")
     private String orderName;
-    private String orderId;
-    private LocalDateTime startDate;  // 광고 시작 날짜 필드 추가
-    private LocalDateTime endDate;    // 광고 종료 날짜 필드 추가
 
+    @NotNull(message = "시작일은 필수 입력 항목입니다.")
+    private LocalDate startDate;  // 광고 시작 날짜 필드
 
+    @NotNull(message = "종료일은 필수 입력 항목입니다.")
+    private LocalDate endDate;    // 광고 종료 날짜 필드
 
-    public PaymentRequestDto(Long gatheringId, Long adId, Long amount, String orderName, String orderId, LocalDateTime startDate, LocalDateTime endDate) {
+    public PaymentRequestDto(Long gatheringId, Long amount, String orderName, LocalDate startDate, LocalDate endDate) {
         this.gatheringId = gatheringId;
-        this.adId = adId;
         this.amount = amount;
         this.orderName = orderName;
-        this.orderId = orderId;
         this.startDate = startDate;
         this.endDate = endDate;
     }
 
-    public static PaymentRequestDto of(Long gatheringId, Long adId, Long amount, String orderName, String orderId, LocalDateTime startDate, LocalDateTime endDate) {
-        return new PaymentRequestDto(gatheringId, adId, amount, orderName, orderId, startDate, endDate);
+    public static PaymentRequestDto of(Long gatheringId, Long amount, String orderName, LocalDate startDate, LocalDate endDate) {
+        return new PaymentRequestDto(gatheringId, amount, orderName, startDate, endDate);
     }
 }
