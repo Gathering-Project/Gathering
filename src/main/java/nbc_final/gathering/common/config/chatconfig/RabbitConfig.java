@@ -104,6 +104,7 @@ public class RabbitConfig {
         var rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(messageConverter);
         rabbitTemplate.setExchange(chatExchangeName);
+        rabbitTemplate.setMessageConverter(jsonMessageConverter());
         return rabbitTemplate;
     }
 
@@ -111,6 +112,19 @@ public class RabbitConfig {
     public MessageConverter messageConverter(ObjectMapper objectMapper) {
         return new Jackson2JsonMessageConverter(objectMapper);
     }
+
+    @Bean
+    public Jackson2JsonMessageConverter jsonMessageConverter() {
+        //LocalDateTime serializable을 위해
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true);
+//        objectMapper.registerModule(dateTimeModule());
+
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
+
+        return converter;
+    }
+
 
     // RabbitMQ와의 연결을 관리하는 클래스
     @Bean

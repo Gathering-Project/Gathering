@@ -8,6 +8,7 @@ import nbc_final.gathering.domain.chatting.chatroom.entity.ChatRoom;
 import java.time.LocalDateTime;
 
 public class ChatDto {
+
     /**
      * 웹소켓 접속시 요청 Dto
      */
