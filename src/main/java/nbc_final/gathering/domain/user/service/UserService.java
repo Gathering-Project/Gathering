@@ -6,8 +6,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.config.JwtUtil;
 import nbc_final.gathering.common.config.common.WebSocketSessionManager;
+import nbc_final.gathering.common.config.jwt.JwtUtil;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.common.exception.ResponseCode;
@@ -120,7 +120,7 @@ public class UserService {
         webSocketSessionManager.addUserSession(user.getId(), websocketSessionId);
 
         // 클라이언트가 WebSocket 연결을 수행할 수 있는 URL 제공
-        String websocketUrl = "ws://localhost:8080/chat/inbox?token=" + bearerToken;
+        String websocketUrl = "ws://localhost:8080/gathering/inbox?token=" + bearerToken;
 
 
         return new LoginResponseDto(bearerToken, websocketUrl);

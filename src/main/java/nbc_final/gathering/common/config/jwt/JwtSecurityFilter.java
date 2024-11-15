@@ -1,4 +1,4 @@
-package nbc_final.gathering.common.config;
+package nbc_final.gathering.common.config.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -25,7 +25,9 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtSecurityFilter extends OncePerRequestFilter {
+
     private final JwtUtil jwtUtil;
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest httpRequest,

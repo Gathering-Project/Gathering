@@ -1,6 +1,7 @@
 package nbc_final.gathering.common.config;
 
 import lombok.RequiredArgsConstructor;
+import nbc_final.gathering.common.config.jwt.JwtSecurityFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -19,7 +20,7 @@ import org.springframework.security.web.servletapi.SecurityContextHolderAwareReq
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
-    private final nbc_final.gathering.common.config.JwtSecurityFilter jwtSecurityFilter;
+    private final JwtSecurityFilter jwtSecurityFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

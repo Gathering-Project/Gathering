@@ -8,18 +8,19 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
+// 웹소켓 연결 상태로 로그인 세션 관리
 public class WebSocketSessionManager {
 
     private final RedisTemplate<String, String> redisTemplate;
 
-    private static final String WEBSOCKET_SESSION_KEY_PREFIX = "websocket:session:";
+    private static final String WEBSOCKET_SESSION_KEY_PREFIX = "websocket:userId:";
 
-    // Redis에 세션 저장 (만료 시간 설정 가능)
+    // Redis에 로그인 이후 웹소결 연결 세션 저장 (만료 시간 설정 가능)
     public void addUserSession(Long userId, String sessionId) {
         redisTemplate.opsForValue().set(WEBSOCKET_SESSION_KEY_PREFIX + userId, sessionId, 60, TimeUnit.MINUTES);
     }
 
-    // Redis에서 세션 제거
+    // Redis에서 로그아웃 이웃 웹소켓 연결 세션 제거
     public void removeUserSession(Long userId) {
         redisTemplate.delete(WEBSOCKET_SESSION_KEY_PREFIX + userId);
     }

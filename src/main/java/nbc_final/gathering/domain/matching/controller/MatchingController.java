@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.matching.dto.request.MatchingRequestDto;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -20,8 +21,8 @@ import java.util.concurrent.ExecutionException;
 @RequestMapping("/api/v1/matching")
 public class MatchingController {
 
-    //    private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final RabbitTemplate rabbitTemplate;
+//    private final KafkaTemplate<String, Object> kafkaTemplate; // 카프카 사용 version
+    private final RabbitTemplate rabbitTemplate; // RabbitMQ 사용 version
 
     /**
      * 매칭 대기열 참가 요청
@@ -30,12 +31,10 @@ public class MatchingController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> requestMatching(@RequestBody MatchingRequestDto requestDto) {
-        log.info("유저 ID {} 매칭 시작 시간: {}", requestDto.getUserId(), LocalDateTime.now());
 //        kafkaTemplate.send("matching",requestDto);
         rabbitTemplate.convertAndSend("matching.exchange", "matching.request", requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
-
 
     /**
      * 매칭 대기열 취소 요청

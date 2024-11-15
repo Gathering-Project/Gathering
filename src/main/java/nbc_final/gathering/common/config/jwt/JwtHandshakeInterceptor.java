@@ -1,8 +1,9 @@
 package nbc_final.gathering.common.config.jwt;
 
 import io.jsonwebtoken.Claims;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.config.JwtUtil;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -13,13 +14,11 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import java.util.Map;
 
 @Slf4j
+@RequiredArgsConstructor
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
     private final JwtUtil jwtUtil;
-
-    public JwtHandshakeInterceptor(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
+    private final StringRedisTemplate redisTemplate;
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
@@ -35,6 +34,9 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
             if (jwtUtil.validateToken(token)) {
                 Claims claims = jwtUtil.getUserInfoFromToken(token);
                 attributes.put("userId", claims.getSubject());
+
+                redisTemplate.opsForValue().set("connectedUser:" + claims.getSubject(), "connected");
+                log.info("유저 ID {}가 연결되었습니다.", claims.getSubject());
                 log.info("토큰이 성공적으로 검증되었습니다. 유저 ID: {}", claims.getSubject());
                 return true;
             } else {

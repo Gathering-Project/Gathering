@@ -37,6 +37,7 @@ services:
       - kafka-exporter
     restart: always
 
+
   # Grafana
   grafana:
     image: grafana/grafana:latest
@@ -48,3 +49,4 @@ services:
     depends_on:
       - prometheus
     restart: always
+

@@ -1,15 +1,22 @@
 package nbc_final.gathering.common.config.chatconfig;
 
 import lombok.RequiredArgsConstructor;
-import nbc_final.gathering.common.config.JwtUtil;
+import nbc_final.gathering.common.config.jwt.JwtUtil;
 import nbc_final.gathering.common.config.jwt.JwtHandshakeInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+
+import java.security.Principal;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -17,6 +24,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtUtil jwtUtil;
+    private final StringRedisTemplate redisTemplate;
+
     @Value("${rabbitmq_host}")
     private String host;
     @Value("${rabbitmq_relay_port}")
@@ -35,8 +44,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // socketJs 클라이언트가 WebSocket 핸드셰이크를 하기 위해 연결할 endpoint를 지정할 수 있다.
         registry.addEndpoint("/gathering/inbox")
                 .setAllowedOriginPatterns("*") // cors 허용을 위해 꼭 설정해주어야 함. setCredential() 설정시에 AllowedOrigin 과 같이 사용될 경우 오류가 날 수 있으므로 OriginPatterns 설정으로 사용하였음
-                .addInterceptors(new JwtHandshakeInterceptor(jwtUtil));
+                .addInterceptors(new JwtHandshakeInterceptor(jwtUtil, redisTemplate));
     }
+
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -54,6 +64,5 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // 클라이언트로부터 메시지를 받을 api의 prefix를 설정함
         // publish
         registry.setApplicationDestinationPrefixes("/pub");
-
     }
 }
