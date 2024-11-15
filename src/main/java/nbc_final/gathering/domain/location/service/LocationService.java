@@ -114,7 +114,7 @@ public class LocationService {
     // 직렬화
     try {
       // 좌표와 타입, 반경을 기반으로 String 형태로 바꾸기
-      PlaceDto placeDto = new PlaceDto(latitude, longitude, requestType);
+      PlaceDto placeDto = new PlaceDto(latitude, longitude, requestRadius ,requestType);
       String jsonCoordinateData = objectMapper.writeValueAsString(placeDto);
       String cachedData = redisTemplate.opsForValue().get(jsonCoordinateData);
 

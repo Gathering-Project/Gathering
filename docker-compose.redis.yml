@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  redis-master:
+    image: redis:latest
+    container_name: redis-master
+    ports:
+      - "6379:6379"
+
+  redis-sentinel1:
+    image: redis:latest
+    container_name: sentinel1
+    command: ["redis-server", "--port", "26379", "--sentinel"]
+    ports:
+      - "26379:26379"
+
+  redis-sentinel2:
+    image: redis:latest
+    container_name: sentinel2
+    command: ["redis-server", "--port", "26380", "--sentinel"]
+    ports:
+      - "26380:26380"
+
+  redis-sentinel3:
+    image: redis:latest
+    container_name: sentinel3
+    command: ["redis-server", "--port", "26381", "--sentinel"]
+    ports:
+      - "26381:26381"
