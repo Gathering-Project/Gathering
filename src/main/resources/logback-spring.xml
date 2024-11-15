@@ -1,0 +1,38 @@
+<configuration>
+
+    <!-- Console appender for outputting logs to the console -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File appender for outputting all logs to myinput.csv -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>C:/Users/ehdgn/Desktop/sparta/Gathering/docker-elk/logstash/input/myinput.csv</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- API 응답 시간 기록을 위한 파일 appender -->
+    <appender name="RESPONSE_TIME_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>C:/Users/ehdgn/Desktop/sparta/Gathering/docker-elk/logstash/input/response-time.csv</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - API: %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Set the log level for root and specific packages -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate.orm.jdbc.bind" level="WARN"/>
+    <logger name="org.springframework.security" level="ERROR"/>
+
+    <!-- Root logger configuration: output both to console and to file -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="RESPONSE_TIME_FILE"/> <!-- 응답 시간 로그 기록 -->
+    </root>
+
+</configuration>

@@ -20,7 +20,7 @@ spring:
     import: optional:file:.env[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:gathering}?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:gathering_db}?serverTimezone=Asia/Seoul
     username: ${MYSQL_NAME:root}
     password: ${MYSQL_PASSWORD:1234}
 
