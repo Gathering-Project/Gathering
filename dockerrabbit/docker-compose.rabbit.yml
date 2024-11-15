@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${mongodb_username}
+      MONGO_INITDB_ROOT_PASSWORD: ${mongodb_password}
+      MONGO_INITDB_DATABASE: message_history
+    ports:
+      - "27017:27017"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_container
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: 1234
+    ports:
+      - "5672:5672"
+      - "15672:15672" # RabbitMQ 관리 콘솔
+      - "61613:61613"    # STOMP 포트 추가
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    command: >
+      sh -c "rabbitmq-plugins enable --offline rabbitmq_management &&
+             rabbitmq-plugins enable --offline rabbitmq_stomp &&
+             rabbitmq-server"
+
+#  app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: chat_app_container
+#    environment:
+#      SPRING_DATA_MONGODB_URI: mongodb://${mongodb_username}:${mongodb_password}@mongodb:27017/gathering?authSource=admin
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      SPRING_RABBITMQ_PORT: 5672
+#    depends_on:
+#      - mongodb
+#      - rabbitmq
+#    ports:
+#      - "8081:8080"
+#    volumes:
+#      - ./logs:/app/logs # 로그 파일 저장
+
+volumes:
+  mongodb_data:
+  rabbitmq_data:

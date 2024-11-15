@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
-    id 'jacoco'
 }
 
 group = 'nbc_final'
@@ -84,6 +83,19 @@ dependencies {
 
     //Redisson
     implementation 'org.redisson:redisson-spring-boot-starter:3.21.1'
+
+    // MongoDB
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
+    // 객체-JSON에 대해 직렬화/역직렬화
+    implementation 'com.fasterxml.jackson.core:jackson-core:latest.release'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:latest.release'
+
+    // 채팅 구현
+    implementation 'org.springframework.boot:spring-boot-starter-websocket' // ws
+    implementation 'org.springframework.boot:spring-boot-starter-amqp' // rabbitmq와 같은 외부 메시지 브로커 사용
+    implementation 'org.springframework:spring-messaging' // @MessageMapping 기능처럼 메시지 처리 기능
+    implementation 'org.springframework.boot:spring-boot-starter-reactor-netty:3.0.0' // 서버 <-> rabbitmq의 비동기 네트워크 처리
 
 
     implementation 'org.springframework.kafka:spring-kafka:3.2.4'

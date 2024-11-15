@@ -62,7 +62,6 @@ public class KafkaAlarmConsumer {
             kafkaNotificationUtil.notifyUser(response, "거주 지역과 관심사가 일치하는 유저가 존재하지 않아 매칭에 실패하였습니다.");
             log.info("ID {}번 유저에게 매칭 실패 알림 전송 완료", response);
         }
-
     }
 
     private void sendNotificationToUser(String message) {

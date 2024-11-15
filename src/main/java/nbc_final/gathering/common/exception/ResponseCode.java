@@ -78,7 +78,12 @@ public enum ResponseCode {
     // 락 관련 예외
     LOCK_TIMEOUT(HttpStatus.REQUEST_TIMEOUT, "락을 획득하는 데 실패했습니다."),
     TRANSACTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "요청 처리 중 오류가 발생했습니다. 다시 시도해 주세요."),
-    LOCK_ACQUISITION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "현재 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+    LOCK_ACQUISITION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "현재 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요."),
+
+    // 채팅 관련 예외
+    CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND,"채팅방을 찾을 수 없습니다."),
+    CHATMEMBER_NOT_FOUND(HttpStatus.NOT_FOUND,"채팅방에 속해있는 유저를 찾을 수 없습니다.");
+
 
     private final HttpStatus httpStatus;
     private final String message;
