@@ -18,12 +18,15 @@ import nbc_final.gathering.domain.payment.repository.PaymentRepository;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
@@ -39,6 +42,7 @@ public class PaymentService {
     private final RestTemplate restTemplate;
     private final AdService adService;
     private final RedissonClient redissonClient;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${payment.toss.url}")
     private String tossUrl;
@@ -46,8 +50,8 @@ public class PaymentService {
     @Value("${payment.toss.secret.key}")
     private String tossSecretKey;
 
-    @Value("${payment.toss.client.key}")
-    private String tossClientKey;
+//    @Value("${payment.toss.client.key}")
+//    private String tossClientKey;
 
     public PaymentSuccessResponseDto requestPayment(Long userId, PaymentRequestDto requestDto) {
         Member member = memberRepository.findByUserIdAndGatheringIdAndRole(userId, requestDto.getGatheringId(), MemberRole.HOST)
@@ -77,20 +81,24 @@ public class PaymentService {
 
 
     public void approvePaymentWithLock(String paymentKey, String orderId, Long amount) {
-        if (isPaymentAlreadyApproved(orderId)) {
-            log.info("이미 승인된 결제입니다: " + orderId);
-            return;
-        }
-
         String lockKey = "payment_lock:" + orderId;
+        String idempotencyKey = "idempotency:" + orderId + ":" + paymentKey;
+
         RLock lock = redissonClient.getLock(lockKey);
+
         try {
             if (lock.tryLock(10, TimeUnit.SECONDS)) {
-                if (!isPaymentAlreadyApproved(orderId)) {
-                    approvePayment(paymentKey, orderId, amount);
-                } else {
-                    log.info("동시에 승인된 결제 요청입니다: " + orderId);
+                // 멱등성 검증
+                if (redisTemplate.hasKey(idempotencyKey)) {
+                    log.info("이미 처리된 요청입니다. Idempotency Key: {}", idempotencyKey);
+                    return;
                 }
+
+                // 결제 승인 처리
+                approvePayment(paymentKey, orderId, amount);
+
+                // 멱등성 키 저장 (요청이 성공적으로 처리되었음을 기록)
+                redisTemplate.opsForValue().set(idempotencyKey, "processed", 1, TimeUnit.HOURS);
             } else {
                 throw new ResponseCodeException(ResponseCode.CONFLICT, "동시에 처리 중인 요청입니다.");
             }
@@ -104,10 +112,8 @@ public class PaymentService {
 
     @Transactional
     public void approvePayment(String paymentKey, String orderId, Long amount) {
-        log.info("approvePayment : -----------------------------");
-
         if (isPaymentAlreadyApproved(orderId)) {
-            log.info("이미 승인된 결제입니다: " + orderId);
+            log.info("이미 승인된 결제입니다: {}", orderId);
             return;
         }
 
@@ -115,18 +121,12 @@ public class PaymentService {
             Payment payment = paymentRepository.findByOrderId(orderId)
                     .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT, "주문 ID에 대한 결제 내역이 없습니다."));
             payment.completePayment(paymentKey, amount.intValue());
-
-            if (payment.getAd() == null) {
-                throw new ResponseCodeException(ResponseCode.INVALID_REQUEST, "광고가 설정되지 않았습니다.");
-            }
-
-            payment.getAd().activateAd();
             paymentRepository.save(payment);
         } else {
-            handlePaymentFailure(orderId, "결제 승인 실패");
             throw new ResponseCodeException(ResponseCode.TRANSACTION_FAILED, "결제 승인 실패");
         }
     }
+
 
     private boolean isPaymentAlreadyApproved(String orderId) {
         return paymentRepository.existsByOrderIdAndStatus(orderId, PayStatus.PAID);
@@ -142,7 +142,7 @@ public class PaymentService {
 
         try {
             // tossUrl은 이미 전체 URL이므로 추가 경로 불필요
-            log.info("Using Toss Client Key (ck): {}", tossClientKey);
+//            log.info("Using Toss Client Key (ck): {}", tossClientKey);
             log.info("Toss API 요청 데이터: {}", body);
 
             ResponseEntity<Map> response = restTemplate.postForEntity(
@@ -153,6 +153,9 @@ public class PaymentService {
 
             log.info("Toss API 응답 데이터: {}", response.getBody());
             return response.getStatusCode() == HttpStatus.OK;
+        } catch (HttpClientErrorException e) {
+            log.error("Toss API 요청 오류: 상태 코드={}, 응답 바디={}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new ResponseCodeException(ResponseCode.TRANSACTION_FAILED, "결제 승인 중 오류 발생: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             log.error("결제 승인 중 오류 발생: {}", e.getMessage());
             throw new ResponseCodeException(ResponseCode.TRANSACTION_FAILED, "결제 승인 중 오류 발생");
@@ -164,7 +167,7 @@ public class PaymentService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT, "주문 ID에 대한 결제 내역이 없습니다."));
         payment.failPayment(failReason);
         paymentRepository.save(payment);
-        log.info("결제 실패가 기록되었습니다: orderId = {}, failReason = {}", orderId, failReason);
+        log.info("결제 실패 처리 완료: orderId={}, failReason={}", orderId, failReason);
     }
 
     public void cancelPayment(String paymentKey, PaymentCancelRequestDto cancelRequestDto) {
@@ -193,6 +196,33 @@ public class PaymentService {
         log.info("secretkey : tossSecretKey = {}, encodeAuth : encodeAuth = {}", tossSecretKey,encodedAuth);
         log.info("Authorization Header: {}", "Basic " + encodedAuth);
         return headers;
+    }
+
+    @Transactional
+    public boolean processPaymentIfNotProcessed(String idempotencyKey, PaymentSuccessResponseDto paymentData) {
+        RLock lock = redissonClient.getLock("lock:" + idempotencyKey);
+
+        try {
+            if (lock.tryLock(10, TimeUnit.SECONDS)) {
+                Boolean isNew = redisTemplate.opsForValue().setIfAbsent(idempotencyKey, "processed", Duration.ofMinutes(10));
+
+                if (Boolean.FALSE.equals(isNew)) {
+                    log.info("멱등 키: {}", idempotencyKey);
+                    return false; // 이미 처리된 요청
+                }
+
+                // 결제 승인 처리
+                approvePayment(paymentData.getPaymentKey(), paymentData.getOrderId(), paymentData.getAmount());
+                return true;
+            } else {
+                throw new ResponseCodeException(ResponseCode.CONFLICT, "동시에 처리 중인 요청입니다.");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ResponseCodeException(ResponseCode.TRANSACTION_FAILED, "결제 승인 중 인터럽트 오류 발생");
+        } finally {
+            lock.unlock();
+        }
     }
 
     private boolean sendCancelRequestToToss(String paymentKey, PaymentCancelRequestDto cancelRequestDto) {

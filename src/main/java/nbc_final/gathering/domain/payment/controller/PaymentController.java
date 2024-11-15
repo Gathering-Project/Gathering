@@ -42,12 +42,19 @@ public class PaymentController {
                 paymentData.getOrderId(),
                 paymentData.getAmount());
 
-        paymentService.approvePayment(
-                paymentData.getPaymentKey(),
-                paymentData.getOrderId(),
-                paymentData.getAmount()
+        String idempotencyKey = "payment:" + paymentData.getOrderId();
+        // 서비스 계층에 멱등성 처리 요청
+        boolean isProcessed = paymentService.processPaymentIfNotProcessed(
+                idempotencyKey,
+                paymentData
         );
-        return ResponseEntity.ok(ApiResponse.createSuccess("결제 승인 완료"));
+
+        if (isProcessed) {
+            return ResponseEntity.ok(ApiResponse.createSuccess("결제가 성공적으로 처리되었습니다."));
+        } else {
+            return ResponseEntity.status(409)
+                    .body(ApiResponse.createError(409, "중복된 결제 요청입니다."));
+        }
     }
 
     @PostMapping("/v2/payments/fail")
@@ -55,11 +62,14 @@ public class PaymentController {
             @RequestParam String code,
             @RequestParam String message,
             @RequestParam String orderId) {
-        log.info("paymentFail : -zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+        log.info("paymentFail 호출: code={}, message={}, orderId={}", code, message, orderId);
+
         paymentService.handlePaymentFailure(orderId, message);
+
         return ResponseEntity.status(400)
                 .body(ApiResponse.createError(400, message));
     }
+
 
     @PostMapping("/v2/payments/{paymentKey}/cancel")
     public ResponseEntity<ApiResponse<?>> cancelPayment(
