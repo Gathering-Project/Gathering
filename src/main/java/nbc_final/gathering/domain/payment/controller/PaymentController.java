@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -23,54 +26,56 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
+    /**
+     * 광고 결제 요청
+     */
+    @Transactional
     @PostMapping("/v2/payments/ad")
     public ResponseEntity<ApiResponse<?>> requestAdPayment(
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody PaymentRequestDto requestDto) {
-        log.info("requestAd : -----------------------------------------------");
         PaymentSuccessResponseDto paymentResDto = paymentService.requestPayment(authUser.getUserId(), requestDto);
-
-        log.info("API 응답 데이터: {}", paymentResDto); // 로그 추가
         return ResponseEntity.ok(ApiResponse.createSuccess(paymentResDto));
     }
 
+    /**
+     * 결제 성공 처리
+     */
+    @Transactional
     @PostMapping("/v2/payments/success")
     public ResponseEntity<ApiResponse<?>> paymentSuccess(
             @RequestBody PaymentSuccessResponseDto paymentData) {
-        log.info("paymentSuccess 호출: paymentKey={}, orderId={}, amount={}",
-                paymentData.getPaymentKey(),
-                paymentData.getOrderId(),
-                paymentData.getAmount());
+        // 결제 승인 처리
+        paymentService.approvePayment(paymentData.getPaymentKey(), paymentData.getOrderId(), paymentData.getAmount());
 
-        String idempotencyKey = "payment:" + paymentData.getOrderId();
-        // 서비스 계층에 멱등성 처리 요청
-        boolean isProcessed = paymentService.processPaymentIfNotProcessed(
-                idempotencyKey,
-                paymentData
+        // 반환할 결제 세부 정보 구성
+        Map<String, Object> paymentDetails = Map.of(
+                "amount", paymentData.getAmount(),
+                "orderId", paymentData.getOrderId(),
+                "paymentKey", paymentData.getPaymentKey()
         );
 
-        if (isProcessed) {
-            return ResponseEntity.ok(ApiResponse.createSuccess("결제가 성공적으로 처리되었습니다."));
-        } else {
-            return ResponseEntity.status(409)
-                    .body(ApiResponse.createError(409, "중복된 결제 요청입니다."));
-        }
+        // 결제 정보를 응답 데이터에 포함
+        return ResponseEntity.ok(ApiResponse.createSuccess(paymentDetails));
     }
 
+    /**
+     * 결제 실패 처리
+     */
+    @Transactional
     @PostMapping("/v2/payments/fail")
     public ResponseEntity<ApiResponse<?>> paymentFail(
             @RequestParam String code,
             @RequestParam String message,
             @RequestParam String orderId) {
-        log.info("paymentFail 호출: code={}, message={}, orderId={}", code, message, orderId);
-
         paymentService.handlePaymentFailure(orderId, message);
-
-        return ResponseEntity.status(400)
-                .body(ApiResponse.createError(400, message));
+        return ResponseEntity.status(400).body(ApiResponse.createError(400, message));
     }
 
-
+    /**
+     * 결제 취소 처리
+     */
+    @Transactional
     @PostMapping("/v2/payments/{paymentKey}/cancel")
     public ResponseEntity<ApiResponse<?>> cancelPayment(
             @PathVariable String paymentKey,
