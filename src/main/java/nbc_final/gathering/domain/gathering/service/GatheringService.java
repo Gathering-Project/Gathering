@@ -8,7 +8,7 @@ import nbc_final.gathering.common.config.redis.RedisLimiter;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
-import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
+import nbc_final.gathering.common.rabbitmq.util.RabbitMQNotificationUtil;
 import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringWithCountResponseDto;
@@ -42,7 +42,7 @@ public class GatheringService {
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final RabbitMQNotificationUtil rabbitMQNotificationUtil;
 
 
     private static final String TODAY_RANKING_KEY = "todayGatheringRanking";
@@ -102,7 +102,7 @@ public class GatheringService {
             gatheringRepository.save(savedGathering);
             memberRepository.save(member);
 
-            kafkaNotificationUtil.notifyHostMember(user.getId(), "새로운 소모임이 생성되었습니다.");
+            rabbitMQNotificationUtil.notifyHostMember(user.getId(), "새로운 소모임이 생성되었습니다.");
 
             return GatheringResponseDto.of(savedGathering);
         }
@@ -201,7 +201,7 @@ public class GatheringService {
             // 소모임 저장
             gatheringRepository.save(gathering);
 
-            kafkaNotificationUtil.notifyAllMembers(gatheringId, "소모임이 수정되었습니다.");
+            rabbitMQNotificationUtil.notifyAllMembers(gatheringId, "소모임이 수정되었습니다.");
 
             // 승인된 멤버들에게 알림 전송
             List<Member> approvedMembers = memberRepository.findAllByGatheringId(gatheringId).stream()
@@ -209,7 +209,7 @@ public class GatheringService {
                     .collect(Collectors.toList());
 
             approvedMembers.forEach(member -> {
-                kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(), gathering.getTitle() + " 소모임이 수정되었습니다.");
+                rabbitMQNotificationUtil.notifyGuestMember(member.getUser().getId(), gathering.getTitle() + " 소모임이 수정되었습니다.");
             });
 
 
@@ -230,7 +230,7 @@ public class GatheringService {
 
             // 승인된 멤버들에게 알림 전송
             approvedMembers.forEach(member -> {
-                kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(),
+                rabbitMQNotificationUtil.notifyGuestMember(member.getUser().getId(),
                         gathering.getTitle() + " 소모임이 삭제되었습니다.");
             });
 
@@ -242,7 +242,7 @@ public class GatheringService {
 
             // 호스트에게 알림 전송
             hostMembers.forEach(host -> {
-                kafkaNotificationUtil.notifyHostMember(host.getUser().getId(),
+                rabbitMQNotificationUtil.notifyHostMember(host.getUser().getId(),
                         gathering.getTitle() + " 소모임이 삭제되었습니다.");
             });
 
