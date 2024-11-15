@@ -46,33 +46,23 @@ public class PaymentService {
     @Value("${payment.toss.secret.key}")
     private String tossSecretKey;
 
+    @Value("${payment.toss.client.key}")
+    private String tossClientKey;
+
     public PaymentSuccessResponseDto requestPayment(Long userId, PaymentRequestDto requestDto) {
         Member member = memberRepository.findByUserIdAndGatheringIdAndRole(userId, requestDto.getGatheringId(), MemberRole.HOST)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.FORBIDDEN));
 
         Gathering gathering = member.getGathering();
 
-        if (userId == null) {
-            throw new IllegalArgumentException("User ID는 null이 될 수 없습니다.");
-        }
-
-        if (requestDto.getGatheringId() == null) {
-            throw new ResponseCodeException(ResponseCode.INVALID_REQUEST, "소모임 ID는 필수 입력 항목입니다.");
-        }
-
-        String orderId = "Ad_" + UUID.randomUUID().toString();
-
+        String orderId = "Ad_" + UUID.randomUUID();
         if (paymentRepository.existsByOrderId(orderId)) {
             throw new ResponseCodeException(ResponseCode.CONFLICT, "이미 존재하는 주문 ID입니다.");
         }
 
-        // 광고 신청 가능 날짜 범위 검증
         adService.validateAdDateRange(requestDto.getGatheringId(), requestDto.getStartDate(), requestDto.getEndDate());
 
-        // 결제 객체 생성 및 저장 (Ad는 나중에 결제 승인 시 생성)
-        Payment payment = Payment.create(
-                member.getUser(), requestDto.getAmount(), requestDto.getOrderName(), gathering
-        );
+        Payment payment = Payment.create(member.getUser(), requestDto.getAmount(), requestDto.getOrderName(), gathering);
 
         if (!payment.startProcessing()) {
             throw new ResponseCodeException(ResponseCode.CONFLICT, "이미 처리 중인 결제 요청입니다.");
@@ -81,8 +71,10 @@ public class PaymentService {
         payment.setOrderId(orderId);
         paymentRepository.save(payment);
 
+        log.info("생성된 orderId: {}", orderId); // 디버깅을 위해 추가
         return PaymentSuccessResponseDto.from(payment);
     }
+
 
     public void approvePaymentWithLock(String paymentKey, String orderId, Long amount) {
         if (isPaymentAlreadyApproved(orderId)) {
@@ -120,11 +112,8 @@ public class PaymentService {
         }
 
         if (sendApprovalRequestToToss(paymentKey, orderId, amount)) {
-            saveApprovedPayment(paymentKey, orderId, amount);
-
             Payment payment = paymentRepository.findByOrderId(orderId)
                     .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT, "주문 ID에 대한 결제 내역이 없습니다."));
-
             payment.completePayment(paymentKey, amount.intValue());
 
             if (payment.getAd() == null) {
@@ -144,7 +133,6 @@ public class PaymentService {
     }
 
     private boolean sendApprovalRequestToToss(String paymentKey, String orderId, Long amount) {
-        log.info("sendApprovalRequestToToss : -----------------------------------------");
         HttpHeaders headers = createHeaders(tossSecretKey);
         Map<String, Object> body = Map.of(
                 "paymentKey", paymentKey,
@@ -153,16 +141,20 @@ public class PaymentService {
         );
 
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(tossUrl, new HttpEntity<>(body, headers), Map.class);
-            if (response.getStatusCode() == HttpStatus.OK) {
-                return true;
-            } else {
-                log.error("결제 승인 실패: {}", response.getBody());
-                return false;
-            }
+            // tossUrl은 이미 전체 URL이므로 추가 경로 불필요
+            log.info("Using Toss Client Key (ck): {}", tossClientKey);
+            log.info("Toss API 요청 데이터: {}", body);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    tossUrl, // 그대로 사용
+                    new HttpEntity<>(body, headers),
+                    Map.class
+            );
+
+            log.info("Toss API 응답 데이터: {}", response.getBody());
+            return response.getStatusCode() == HttpStatus.OK;
         } catch (Exception e) {
             log.error("결제 승인 중 오류 발생: {}", e.getMessage());
-            handlePaymentFailure(orderId, e.getMessage());
             throw new ResponseCodeException(ResponseCode.TRANSACTION_FAILED, "결제 승인 중 오류 발생");
         }
     }
@@ -192,20 +184,14 @@ public class PaymentService {
         }
     }
 
-    private void saveApprovedPayment(String paymentKey, String orderId, Long amount) {
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT, "주문 ID에 대한 결제 내역이 없습니다."));
-        payment.completePayment(paymentKey, amount.intValue());
-        paymentRepository.save(payment);
-        log.info("결제가 성공적으로 저장되었습니다: paymentId = {}", payment.getPaymentId());
-    }
-
     private HttpHeaders createHeaders(String tossSecretKey) {
-        String auth = tossSecretKey + ":";
-        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+        String auth = tossSecretKey + ":"; // 시크릿 키 뒤에 콜론 추가
+        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8)); // Base64 인코딩
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", "Basic " + encodedAuth);
+        headers.setContentType(MediaType.APPLICATION_JSON); // JSON 포맷 설정
+        headers.set("Authorization", "Basic " + encodedAuth); // Basic 인증 형식
+        log.info("secretkey : tossSecretKey = {}, encodeAuth : encodeAuth = {}", tossSecretKey,encodedAuth);
+        log.info("Authorization Header: {}", "Basic " + encodedAuth);
         return headers;
     }
 
@@ -217,7 +203,7 @@ public class PaymentService {
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(
-                    tossUrl + "/v1/payments/" + paymentKey + "/cancel",
+                    tossUrl + "/v2/payments/" + paymentKey + "/cancel",
                     new HttpEntity<>(body, headers),
                     Map.class
             );

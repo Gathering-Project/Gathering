@@ -29,13 +29,19 @@ public class PaymentController {
             @Valid @RequestBody PaymentRequestDto requestDto) {
         log.info("requestAd : -----------------------------------------------");
         PaymentSuccessResponseDto paymentResDto = paymentService.requestPayment(authUser.getUserId(), requestDto);
+
+        log.info("API 응답 데이터: {}", paymentResDto); // 로그 추가
         return ResponseEntity.ok(ApiResponse.createSuccess(paymentResDto));
     }
 
     @PostMapping("/v2/payments/success")
     public ResponseEntity<ApiResponse<?>> paymentSuccess(
             @RequestBody PaymentSuccessResponseDto paymentData) {
-        log.info("paymentSuccess : zzzzfffffffffffffffffffffffffffffffffffff");
+        log.info("paymentSuccess 호출: paymentKey={}, orderId={}, amount={}",
+                paymentData.getPaymentKey(),
+                paymentData.getOrderId(),
+                paymentData.getAmount());
+
         paymentService.approvePayment(
                 paymentData.getPaymentKey(),
                 paymentData.getOrderId(),
