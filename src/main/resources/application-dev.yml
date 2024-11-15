@@ -66,13 +66,9 @@ spring:
     elasticsearch:
       client:
         reactive:
-          endpoints: localhost:9200
+         endpoints: http://localhost:9200
       repositories:
         enabled: true
-      ssl:
-        enabled: true
-        certificate: classpath:ca.crt
-
   servlet:
     multipart:
       max-file-size: 5MB

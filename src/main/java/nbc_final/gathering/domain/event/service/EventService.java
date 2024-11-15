@@ -3,7 +3,6 @@ package nbc_final.gathering.domain.event.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.elasticsearch.EventElasticSearchRepository;
-import nbc_final.gathering.common.elasticsearch.GatheringElasticSearchRepository;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
@@ -21,7 +20,6 @@ import nbc_final.gathering.domain.event.entity.Participant;
 import nbc_final.gathering.domain.event.repository.EventRepository;
 import nbc_final.gathering.domain.event.repository.EventRepositoryCustom;
 import nbc_final.gathering.domain.event.repository.ParticipantRepository;
-import nbc_final.gathering.domain.gathering.dto.GatheringElasticDto;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.entity.Member;
@@ -45,7 +43,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class EventService {
 
     private final ParticipantRepository participantRepository;
