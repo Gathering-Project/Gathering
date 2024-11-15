@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.config.JwtUtil;
 import nbc_final.gathering.common.config.common.WebSocketSessionManager;
-import nbc_final.gathering.common.rabbitmq.util.RabbitMQNotificationUtil;
+import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
@@ -38,7 +38,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final KakaoService kakaoService;
     private final NaverService naverService;
-    private final RabbitMQNotificationUtil rabbitMQNotificationUtil;
+    private final KafkaNotificationUtil kafkaNotificationUtil;
     private final SimpMessagingTemplate messagingTemplate;
     private final WebSocketSessionManager webSocketSessionManager;
 
@@ -113,7 +113,7 @@ public class UserService {
         String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole(), user.getNickname());
         jwtUtil.addJwtToCookie(bearerToken, response);
 
-        rabbitMQNotificationUtil.notifyUser(user.getId(), "로그인에 성공했습니다.");
+        kafkaNotificationUtil.notifyUser(user.getId(), "로그인에 성공했습니다.");
 
         // WebSocket 세션 ID 생성 및 Redis 저장
         String websocketSessionId = generateWebSocketSessionId(user.getId());
@@ -181,7 +181,7 @@ public class UserService {
         user.changePassword(passwordEncoder.encode(requestDto.getNewPassword()));
 
         // 비밀번호 변경 알림 전송
-        rabbitMQNotificationUtil.notifyUser(userId, "비밀번호가 변경되었습니다.");
+        kafkaNotificationUtil.notifyUser(userId, "비밀번호가 변경되었습니다.");
     }
 
     // 내 정보 업데이트(수정)
@@ -190,7 +190,7 @@ public class UserService {
         User user = getUserById(userId);
         user.updateInfo(requestDto); // 유저 정보 갱신
 
-        rabbitMQNotificationUtil.notifyUser(userId, "내 정보가 수정되었습니다.");
+        kafkaNotificationUtil.notifyUser(userId, "내 정보가 수정되었습니다.");
 
         return UserGetResponseDto.of(user);
     }

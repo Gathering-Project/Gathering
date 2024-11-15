@@ -105,15 +105,6 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     testImplementation 'org.springframework.kafka:spring-kafka-test'
-
-    // Micrometer와 Prometheus 의존성 추가
-    implementation 'io.micrometer:micrometer-registry-prometheus'
-
-    // Spring Boot Actuator (Prometheus 메트릭을 노출하려면 필요)
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-aop'
-
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
 }
 
 tasks.named('test') {

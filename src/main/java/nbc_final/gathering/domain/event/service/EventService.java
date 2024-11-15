@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
-import nbc_final.gathering.common.rabbitmq.util.RabbitMQNotificationUtil;
+import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
 import nbc_final.gathering.domain.comment.repository.CommentRepository;
 import nbc_final.gathering.domain.event.dto.ParticipantResponseDto;
@@ -50,7 +50,7 @@ public class EventService {
     private final EventRepositoryCustom eventRepositoryCustom;
     private final GatheringRepository gatheringRepository;
     private final CommentRepository commentRepository;
-    private final RabbitMQNotificationUtil rabbitMQNotificationUtil;
+    private final KafkaNotificationUtil kafkaNotificationUtil;
     private final MemberRepository memberRepository;
     private final RedissonClient redissonClient;
 
@@ -84,7 +84,7 @@ public class EventService {
 
         // 승인된 멤버에게 알림 전송
         approvedMembers.forEach(member -> {
-            rabbitMQNotificationUtil.notifyGuestMember(member.getUser().getId(), message);
+            kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(), message);
             log.info("Kafka 알림 전송: 멤버 ID={}, 메시지={}", member.getUser().getId(), message);
         });
 
@@ -122,7 +122,7 @@ public class EventService {
 
         // 각 참가자에게 이벤트 수정 알림 전송
         participants.forEach(participant -> {
-            rabbitMQNotificationUtil.notifyMember(participant.getUser().getId(), "이벤트가 수정되었습니다.");
+            kafkaNotificationUtil.notifyMember(participant.getUser().getId(), "이벤트가 수정되었습니다.");
         });
         return EventUpdateResponseDto.of(event, currentParticipantsCount);
     }
@@ -174,7 +174,7 @@ public class EventService {
 
         // 각 참가자에게 알림 전송
         participants.forEach(participant -> {
-            rabbitMQNotificationUtil.notifyMember(participant.getUser().getId(), "이벤트가 삭제되었습니다.");
+            kafkaNotificationUtil.notifyMember(participant.getUser().getId(), "이벤트가 삭제되었습니다.");
         });
 
         eventRepository.delete(event);
@@ -209,7 +209,7 @@ public class EventService {
             }
 
             // 참가자에게 알림 전송
-            rabbitMQNotificationUtil.notifyMember(userId, "이벤트 참가 신청이 완료되었습니다.");
+            kafkaNotificationUtil.notifyMember(userId, "이벤트 참가 신청이 완료되었습니다.");
         }
     }
 
@@ -239,7 +239,7 @@ public class EventService {
         }
 
         // 참가 취소 알림 전송
-        rabbitMQNotificationUtil.notifyMember(userId, "이벤트 참가가 취소되었습니다.");
+        kafkaNotificationUtil.notifyMember(userId, "이벤트 참가가 취소되었습니다.");
     }
 
     // 이벤트 참가자 조회 (권한: 소모임 멤버 또는 어드민)
