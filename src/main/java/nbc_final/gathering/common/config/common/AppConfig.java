@@ -20,6 +20,5 @@ public class AppConfig {
                 .setReadTimeout(Duration.ofSeconds(5)) // 5초
                 .build();
     }
-
 }
 
