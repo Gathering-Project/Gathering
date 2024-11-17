@@ -19,6 +19,10 @@ import nbc_final.gathering.domain.payment.entity.PayStatus;
 import nbc_final.gathering.domain.payment.entity.Payment;
 import nbc_final.gathering.domain.payment.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -248,19 +252,12 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public List<PaymentHistoryResponseDto> getPaymentHistory(Long userId) {
-        List<Payment> payments = paymentRepository.findAllByGathering_UserId(userId);
+    public Page<PaymentHistoryResponseDto> getPaymentHistory(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        if (payments.isEmpty()) {
-            log.info("결제 내역이 존재하지 않습니다: userId = {}", userId);
-            return Collections.emptyList();
-        }
+        Page<Payment> payments = paymentRepository.findAllByGathering_UserId(userId, pageable);
 
-        log.info("결제 내역 조회 성공: userId = {}, 결제 건수 = {}", userId, payments.size());
-
-        return payments.stream()
-                .map(PaymentHistoryResponseDto::from) // PaymentHistoryResponseDto로 매핑
-                .collect(Collectors.toList());
+        return payments.map(PaymentHistoryResponseDto::from);
     }
 
 

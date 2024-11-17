@@ -10,6 +10,7 @@ import nbc_final.gathering.domain.payment.dto.response.PaymentCancelRequestDto;
 import nbc_final.gathering.domain.payment.dto.response.PaymentHistoryResponseDto;
 import nbc_final.gathering.domain.payment.dto.response.PaymentSuccessResponseDto;
 import nbc_final.gathering.domain.payment.service.PaymentService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,11 +89,13 @@ public class PaymentController {
      */
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<?>> getAllPayments(
-            @AuthenticationPrincipal AuthUser authUser) {
-        log.info("모든 결제 내역 조회 요청: userId = {}", authUser.getUserId());
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(defaultValue = "0") int page, // 기본값: 0
+            @RequestParam(defaultValue = "10") int size // 기본값: 10
+    ) {
+        log.info("모든 결제 내역 조회 요청: userId = {}, page = {}, size = {}", authUser.getUserId(), page, size);
 
-        // PaymentHistoryResponseDto로 변경
-        List<PaymentHistoryResponseDto> payments = paymentService.getPaymentHistory(authUser.getUserId());
+        Page<PaymentHistoryResponseDto> payments = paymentService.getPaymentHistory(authUser.getUserId(), page, size);
 
         return ResponseEntity.ok(ApiResponse.createSuccess(payments));
     }

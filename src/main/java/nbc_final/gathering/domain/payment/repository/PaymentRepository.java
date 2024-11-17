@@ -2,6 +2,8 @@ package nbc_final.gathering.domain.payment.repository;
 
 import nbc_final.gathering.domain.payment.entity.PayStatus;
 import nbc_final.gathering.domain.payment.entity.Payment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -17,6 +19,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     Optional<Payment> findByAd_AdId(Long adId);
 
-    List<Payment> findAllByGathering_UserId(Long userId);
+    Page<Payment> findAllByGathering_UserId(Long userId, Pageable pageable);
+
 
 }
