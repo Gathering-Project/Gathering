@@ -57,7 +57,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
-
   data:
     redis:
       sentinel:
@@ -113,6 +112,8 @@ spring:
 payment:
   toss:
     url: ${TOSS_PAYMENTS_URL}
+    cancel:
+      url: ${TOSS_PAYMENTS_CANCEL_URL}
     secret:
       key: ${TOSS_PAYMENTS_SECRET_KEY}
     client:
@@ -136,3 +137,5 @@ logging:
         orm:
           jdbc:
             bind: info
+frontend:
+  url: ${FRONTEND_URL}

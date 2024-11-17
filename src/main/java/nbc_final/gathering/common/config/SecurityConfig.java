@@ -3,6 +3,7 @@ package nbc_final.gathering.common.config;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.user.enums.UserRole;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -29,6 +30,9 @@ public class SecurityConfig {
         this.jwtSecurityFilter = jwtSecurityFilter;
     }
 
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -53,10 +57,6 @@ public class SecurityConfig {
                                 "/api/v1/auth/**",
                                 "/api/v2/payments/success",
                                 "/api/v2/payments/fail",
-                                "/login.html",
-                                "/css/**",
-                                "/js/**",
-                                "/images/**",
                                 "/api/v1/auth/kakao-url",
                                 "/api/v1/users/kakao/callback",
                                 "/api/v1/auth/naver-url",
@@ -75,7 +75,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("http://localhost:3000");
+        configuration.addAllowedOriginPattern(frontendUrl);
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);

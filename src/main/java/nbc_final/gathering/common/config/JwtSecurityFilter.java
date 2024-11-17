@@ -26,14 +26,13 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtSecurityFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest httpRequest,
             @NonNull HttpServletResponse httpResponse,
             @NonNull FilterChain chain
     ) throws ServletException, IOException {
-
-
 
         String tokenValue = jwtUtil.getTokenFromRequest(httpRequest);
         if (StringUtils.hasText(tokenValue)) {
