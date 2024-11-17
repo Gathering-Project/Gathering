@@ -13,6 +13,7 @@ import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.payment.dto.request.PaymentRequestDto;
 import nbc_final.gathering.domain.payment.dto.response.PaymentCancelRequestDto;
+import nbc_final.gathering.domain.payment.dto.response.PaymentHistoryResponseDto;
 import nbc_final.gathering.domain.payment.dto.response.PaymentSuccessResponseDto;
 import nbc_final.gathering.domain.payment.entity.PayStatus;
 import nbc_final.gathering.domain.payment.entity.Payment;
@@ -26,10 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -46,6 +46,9 @@ public class PaymentService {
 
     @Value("${payment.toss.secret.key}")
     private String tossSecretKey;
+
+    @Value("${payment.toss.cancel.url}")
+    private String tossCancelUrl;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -214,8 +217,9 @@ public class PaymentService {
         Map<String, Object> body = Map.of("cancelReason", cancelRequestDto.getCancelReason());
 
         try {
+            String cancelUrl = tossCancelUrl + "/" + paymentKey + "/cancel"; // 올바른 URL 조합
             ResponseEntity<Map> response = restTemplate.postForEntity(
-                    tossUrl + "/v1/payments/" + paymentKey + "/cancel",
+                    cancelUrl,
                     new HttpEntity<>(body, headers),
                     Map.class
             );
@@ -242,6 +246,23 @@ public class PaymentService {
         log.info("결제 내역 조회 성공: Order ID = {}, Payment ID = {}", orderId, payment.getPaymentId());
         return PaymentSuccessResponseDto.from(payment);
     }
+
+    @Transactional(readOnly = true)
+    public List<PaymentHistoryResponseDto> getPaymentHistory(Long userId) {
+        List<Payment> payments = paymentRepository.findAllByGathering_UserId(userId);
+
+        if (payments.isEmpty()) {
+            log.info("결제 내역이 존재하지 않습니다: userId = {}", userId);
+            return Collections.emptyList();
+        }
+
+        log.info("결제 내역 조회 성공: userId = {}, 결제 건수 = {}", userId, payments.size());
+
+        return payments.stream()
+                .map(PaymentHistoryResponseDto::from) // PaymentHistoryResponseDto로 매핑
+                .collect(Collectors.toList());
+    }
+
 
     // 멱등키 확인 및 저장
     private boolean checkAndSaveIdempotencyKey(String idempotencyKey) {

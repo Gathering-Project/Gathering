@@ -1,10 +1,13 @@
 package nbc_final.gathering.domain.payment.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import nbc_final.gathering.domain.payment.entity.PayStatus;
 import nbc_final.gathering.domain.payment.entity.Payment;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
