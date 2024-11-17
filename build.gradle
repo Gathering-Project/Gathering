@@ -35,6 +35,12 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     runtimeOnly 'com.h2database:h2'
 
+    // prometheous
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // 헬스체크
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     // jackson 직렬화/역직렬화
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'com.fasterxml.jackson.core:jackson-databind'

@@ -1,6 +1,16 @@
-server:
-  port: 8080
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+server:
+  port: 7070
 spring:
   # AWS S3 설정
   cloud:
@@ -28,7 +38,7 @@ spring:
   rabbitmq:
     host: ${rabbitmq_host:localhost}
     port: ${rabbitmq_port:5672}
-    virtual-host: ${rabbitmq_virtual-host:/}
+    virtual-host: ${rabbitmq_virtual_host:/}
     username: ${rabbitmq_username:admin}
     password: ${rabbitmq_password:1234}
 
@@ -39,10 +49,10 @@ spring:
         enabled: true
         host: ${rabbitmq_host:localhost}
         port: ${rabbitmq_relay_port:61613}
-        system-login: ${rabbitmq_relay_system-login:guest}
-        system-passcode: ${rabbitmq_relay_client-passcode:guest}
-        client-login: ${rabbitmq_relay_client-login:guest}
-        client-passcode: ${rabbitmq_relay_client-passcode:guset}
+        system-login: ${rabbitmq_relay_system_login:guest}
+        system-passcode: ${rabbitmq_relay_client_passcode:guest}
+        client-login: ${rabbitmq_relay_client_login:guest}
+        client-passcode: ${rabbitmq_relay_client_passcode:guset}
       broker:
         topic-destination-prefix: /topic
         queue-destination-prefix: /queue
@@ -140,6 +150,7 @@ admin:
 
 logging:
   level:
+#    root: DEBUG
     org:
       org.springframework.web.socket: TRACE
       org.springframework.messaging.simp.stomp: TRACE

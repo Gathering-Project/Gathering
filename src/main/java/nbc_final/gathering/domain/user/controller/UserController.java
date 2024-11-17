@@ -3,7 +3,7 @@ package nbc_final.gathering.domain.user.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import nbc_final.gathering.common.config.JwtUtil;
+
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.user.dto.request.*;
@@ -26,7 +26,6 @@ public class UserController {
 
     private final UserService userService;
     private final KakaoService kakaoService;
-    private final JwtUtil jwtUtil;
     private final NaverService naverService;
 
     /**

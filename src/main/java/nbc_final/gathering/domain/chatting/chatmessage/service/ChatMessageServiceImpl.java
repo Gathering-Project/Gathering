@@ -16,6 +16,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 @Service
@@ -26,6 +29,9 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     private final UserRepository userRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    // 메시지를 관리할 큐 (크기는 100으로 제한)
+    private final BlockingQueue<ChatMessageRes> messageQueue = new LinkedBlockingQueue<>(100);
+
 
     // 채팅 send 메서드
     @Override
@@ -45,9 +51,26 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         // 전송 메시지 생성
         ChatMessageRes chatMessageRes = ChatMessageRes.createRes(chatMessage);
 
-        // STOMP 전송 대상 경로에 전송
-        messagingTemplate.convertAndSend("topic/room." + chatMessageReq.getChatRoomId(), chatMessageRes);
-        log.info("STOMP broker로 메세지를 보냄: {}", chatMessage);
+        // 메시지 큐에 추가
+        if (!messageQueue.offer(chatMessageRes)) {
+            log.warn("Message queue is full. Dropping message: {}", chatMessageRes);
+            return;
+        }
+
+        // 비동기로 메시지 처리
+        CompletableFuture.runAsync(() -> {
+            try {
+                // 메시지 큐에서 가져오기
+                ChatMessageRes messageToSend = messageQueue.take();
+
+                // STOMP 전송 대상 경로에 전송
+                messagingTemplate.convertAndSend("topic/room." + chatMessageReq.getChatRoomId(), messageToSend);
+                log.info("STOMP broker로 메세지를 보냄: {}", messageToSend);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Message sending interrupted", e);
+            }
+        });
     }
 
     // 채팅방에서 채팅내용 찾는 메서드

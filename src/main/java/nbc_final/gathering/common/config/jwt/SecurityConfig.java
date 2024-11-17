@@ -1,4 +1,4 @@
-package nbc_final.gathering.common.config;
+package nbc_final.gathering.common.config.jwt;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +19,7 @@ import org.springframework.security.web.servletapi.SecurityContextHolderAwareReq
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
-    private final nbc_final.gathering.common.config.JwtSecurityFilter jwtSecurityFilter;
+    private final JwtSecurityFilter jwtSecurityFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,7 +45,9 @@ public class SecurityConfig {
                                 "/api/v1/users/kakao/callback",
                                 "/api/v1/auth/naver-url",
                                 "/api/v1/users/naver/callback",
-                                "/gathering/inbox"
+                                "/gathering/inbox/**",
+                                "/actuator/prometheus",
+                                "/actuator/health"
 //                                "/api/v1/gatherings/{gatheringId}",
 //                                "/api/v1/gatherings"
                                 ).permitAll()
