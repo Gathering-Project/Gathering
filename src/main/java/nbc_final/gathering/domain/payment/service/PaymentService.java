@@ -258,7 +258,6 @@ public class PaymentService {
             ResponseEntity<Map> response = restTemplate.postForEntity(tossUrl, new HttpEntity<>(body, headers), Map.class);
             return response.getStatusCode() == HttpStatus.OK;
         } catch (Exception e) {
-            log.error("결제 승인 요청 실패: {}", e.getMessage());
             return false;
         }
     }
