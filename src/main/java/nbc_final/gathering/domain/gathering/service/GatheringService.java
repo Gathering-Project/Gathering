@@ -53,36 +53,45 @@ public class GatheringService {
     private static final String TODAY_RANKING_KEY = "todayGatheringRanking";
     private final RedisLimiter redisLimiter;
 
-    // 제목으로 모임을 검색하고 찾지 못한 경우 NOT_FOUND_GROUP 예외 처리
-    @Transactional(readOnly = true)
-    public Gathering getGatheringByTitle(String title) {
-        return gatheringRepository.findByTitle(title)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
-    }
+    // 제목으로 모임 검색
+    public List<GatheringElasticDto> searchGatheringsByTitle(String title) {
+        long startTime = System.currentTimeMillis(); // 시작 시간 기록
+        List<GatheringElasticDto> results = gatheringElasticSearchRepository.findByTitleContaining(title);
+        long endTime = System.currentTimeMillis(); // 종료 시간 기록
+        log.info("제목 검색 소요 시간: {} ms", (endTime - startTime)); // 소요 시간 로그 출력
 
-    // 제목을 기준으로 모임을 검색하여 결과를 반환
-    @Transactional(readOnly = true)
-    public List<Gathering> searchGatheringsByTitle(String title) {
-        return gatheringRepository.searchGatheringsByTitle(title);
-    }
+        if (results.isEmpty()) {
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP);
+        }
 
-    // 지역을 기준으로 모임을 검색하고 검색 소요 시간을 로그로 기록
-    @Transactional(readOnly = true)
-    public List<Gathering> searchGatheringsByLocation(String location) {
-        long startTime = System.currentTimeMillis();
-        List<Gathering> results = gatheringRepository.searchGatheringsByLocation(location);
-        long endTime = System.currentTimeMillis();
-        System.out.println("지역 검색 소요 시간: " + (endTime - startTime) + "ms");
         return results;
     }
 
-    // 제목과 지역을 기준으로 모임을 검색하고 검색 소요 시간을 로그로 기록
-    @Transactional(readOnly = true)
-    public List<Gathering> searchGatheringsByTitleAndLocation(String title, String location) {
-        long startTime = System.currentTimeMillis();
-        List<Gathering> results = gatheringElasticSearchRepository.findByTitleAndLocation(title, location);
-        long endTime = System.currentTimeMillis();
-        System.out.println("이름 및 지역 검색 소요 시간: " + (endTime - startTime) + "ms");
+    // 지역으로 모임 검색
+    public List<GatheringElasticDto> searchGatheringsByLocation(String location) {
+        long startTime = System.currentTimeMillis(); // 시작 시간 기록
+        List<GatheringElasticDto> results = gatheringElasticSearchRepository.findByLocationContaining(location);
+        long endTime = System.currentTimeMillis(); // 종료 시간 기록
+        log.info("지역 검색 소요 시간: {} ms", (endTime - startTime)); // 소요 시간 로그 출력
+
+        if (results.isEmpty()) {
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP);
+        }
+
+        return results;
+    }
+
+    // 제목과 지역으로 모임 검색
+    public List<GatheringElasticDto> searchGatheringsByTitleAndLocation(String title, String location) {
+        long startTime = System.currentTimeMillis(); // 시작 시간 기록
+        List<GatheringElasticDto> results = gatheringElasticSearchRepository.findByTitleContainingAndLocationContaining(title, location);
+        long endTime = System.currentTimeMillis(); // 종료 시간 기록
+        log.info("제목 및 지역 검색 소요 시간: {} ms", (endTime - startTime)); // 소요 시간 로그 출력
+
+        if (results.isEmpty()) {
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP);
+        }
+
         return results;
     }
 

@@ -1,9 +1,7 @@
 package nbc_final.gathering.common.elasticsearch;
 
 import nbc_final.gathering.domain.gathering.dto.GatheringElasticDto;
-import nbc_final.gathering.domain.gathering.entity.Gathering;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,5 +9,12 @@ import java.util.List;
 @Repository("gatheringElasticSearchRepo")
 public interface GatheringElasticSearchRepository extends ElasticsearchRepository <GatheringElasticDto, Long> {
 
-    List<Gathering> findByTitleAndLocation(String title, String location);
+    List<GatheringElasticDto> findByTitleContaining(String title);
+
+    List<GatheringElasticDto> findByLocationContaining(String location);
+    // 부분 검색
+    List<GatheringElasticDto> findByTitleContainingAndLocationContaining(String title, String location);
+
+    // 정확히 일치하는 검색 (기본적으로 사용 가능)
+    List<GatheringElasticDto> findByTitleAndLocation(String title, String location);
 }

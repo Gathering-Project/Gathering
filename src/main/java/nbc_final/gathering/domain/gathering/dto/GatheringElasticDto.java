@@ -14,77 +14,75 @@ import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.member.enums.MemberStatus;
 import nbc_final.gathering.domain.user.entity.User;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Setter
 @Getter
 @Document(indexName = "gatherings")
 @NoArgsConstructor
+@AllArgsConstructor
 public class GatheringElasticDto {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   private Long userId;
 
-  @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL)
-  private List<Member> members = new ArrayList<>();
+  @Field(type = FieldType.Keyword)
+  private List<Long> memberIds = new ArrayList<>();
 
-  @OneToMany(mappedBy = "gathering", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Attachment> Attachments = new ArrayList<>();
+  @Field(type = FieldType.Keyword)
+  private List<Long> attachmentIds = new ArrayList<>();
 
-  @Column(length = 30, nullable = false)
+  @Field(type = FieldType.Text, analyzer = "standard")
   private String title;
 
-  @Column(length = 100, nullable = false)
+  @Field(type = FieldType.Text, analyzer = "standard")
   private String description;
 
-  @Column(length = 2048)
+  @Field(type = FieldType.Text)
   private String gatheringImage;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Integer)
   private Integer gatheringCount;
 
-  @Column(nullable = false)
+  @Field(type = FieldType.Integer)
   private Integer gatheringMaxCount;
 
-  @Column(precision = 4, scale = 1, nullable = false)
+  @Field(type = FieldType.Double)
   private BigDecimal rating;
 
-  @Column(length = 30, nullable = false)
+  @Field(type = FieldType.Text, analyzer = "standard")
   private String location;
 
+  @Field(type = FieldType.Long)
   private long totalGatheringViewCount;
-
-  public GatheringElasticDto(Long userId,
-                             String title,
-                             String description,
-                             Integer gatheringCount,
-                             Integer gatheringMaxCount,
-                             BigDecimal rating,
-                             String location) {
-
-    this.userId = userId;
-    this.title = title;
-    this.description = description;
-    this.gatheringCount = gatheringCount;
-    this.gatheringMaxCount = gatheringMaxCount;
-    this.rating = rating;
-    this.location = location;
-  }
-
 
   public static GatheringElasticDto of(Gathering savedGathering) {
     GatheringElasticDto dto = new GatheringElasticDto();
+    dto.setId(savedGathering.getId());
+    dto.setUserId(savedGathering.getUserId());
     dto.setTitle(savedGathering.getTitle());
     dto.setDescription(savedGathering.getDescription());
+    dto.setGatheringImage(savedGathering.getGatheringImage());
     dto.setGatheringCount(savedGathering.getGatheringCount());
     dto.setGatheringMaxCount(savedGathering.getGatheringMaxCount());
     dto.setRating(savedGathering.getRating());
     dto.setLocation(savedGathering.getLocation());
+    dto.setTotalGatheringViewCount(savedGathering.getTotalGatheringViewCount());
+
+    // Member 및 Attachment ID 매핑
+    dto.setMemberIds(savedGathering.getMembers().stream()
+            .map(member -> member.getId())
+            .collect(Collectors.toList()));
+    dto.setAttachmentIds(savedGathering.getAttachments().stream()
+            .map(attachment -> attachment.getId())
+            .collect(Collectors.toList()));
 
     return dto;
   }

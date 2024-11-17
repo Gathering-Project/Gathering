@@ -6,6 +6,7 @@ import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
+import nbc_final.gathering.domain.gathering.dto.GatheringElasticDto;
 import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringWithCountResponseDto;
@@ -33,18 +34,23 @@ public class GatheringController {
      * @throws ResponseCodeException 'title' 또는 'location'이 모두 제공되지 않은 경우 발생.
      */
     @GetMapping("/search")
-    public List<Gathering> searchGatherings(
+    public ResponseEntity<ApiResponse<List<GatheringElasticDto>>> searchGatherings(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String location) {
+
+        List<GatheringElasticDto> gatherings;
+
         if (title != null && location != null) {
-            return gatheringService.searchGatheringsByTitleAndLocation(title, location);
+            gatherings = gatheringService.searchGatheringsByTitleAndLocation(title, location);
         } else if (title != null) {
-            return gatheringService.searchGatheringsByTitle(title);
+            gatherings = gatheringService.searchGatheringsByTitle(title);
         } else if (location != null) {
-            return gatheringService.searchGatheringsByLocation(location);
+            gatherings = gatheringService.searchGatheringsByLocation(location);
         } else {
             throw new ResponseCodeException(ResponseCode.INVALID_SEARCH);
         }
+
+        return ResponseEntity.ok(ApiResponse.createSuccess(gatherings));
     }
 
     /**
