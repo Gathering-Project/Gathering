@@ -9,6 +9,7 @@ import nbc_final.gathering.domain.ad.entity.Ad;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -42,9 +43,6 @@ public class Payment extends TimeStamped {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    /**
-     * 결제 생성
-     */
     public static Payment create(Long amount, String orderName, Gathering gathering, LocalDate startDate, LocalDate endDate) {
         Payment payment = new Payment();
         payment.amount = amount;
@@ -56,54 +54,49 @@ public class Payment extends TimeStamped {
         return payment;
     }
 
-    /**
-     * 결제 요청 업데이트
-     */
     public void updateRequest(Long amount, String orderName, String orderId) {
         this.amount = amount;
         this.orderName = orderName;
         this.orderId = orderId;
         this.status = PayStatus.READY;
+        updateManualTimestamp(); // 수동 타임스탬프 갱신
     }
 
-    /**
-     * 결제 완료 처리
-     */
     public void completePayment(String paymentKey) {
         this.paymentKey = paymentKey;
         this.status = PayStatus.PAID;
+        updateManualTimestamp();
     }
 
-    /**
-     * 결제 실패 처리
-     */
-    public void failPayment(String reason) {
+    public void failPayment(String failReason) {
         this.status = PayStatus.FAILED;
-        this.failReason = reason;
+        this.failReason = failReason;
+        updateManualTimestamp();
     }
 
-    /**
-     * 결제 취소 처리
-     */
     public void cancelPayment(String reason) {
         this.status = PayStatus.CANCELED;
         this.cancelReason = reason;
-    }
-
-    /**
-     * 주문 ID 설정
-     */
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
+        updateManualTimestamp();
     }
 
     public void setPaymentKey(String paymentKey) {
         this.paymentKey = paymentKey;
+        updateManualTimestamp();
     }
-    /**
-     * 광고 설정
-     */
+
     public void setAd(Ad ad) {
         this.ad = ad;
+        updateManualTimestamp();
+    }
+
+    private void updateManualTimestamp() {
+        try {
+            var field = TimeStamped.class.getDeclaredField("updatedAt");
+            field.setAccessible(true);
+            field.set(this, LocalDateTime.now());
+        } catch (Exception e) {
+            throw new RuntimeException("타임스탬프 갱신 중 오류 발생", e);
+        }
     }
 }

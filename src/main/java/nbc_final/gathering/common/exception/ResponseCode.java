@@ -79,19 +79,18 @@ public enum ResponseCode {
     LOCK_ACQUISITION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "현재 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요."),
 
     // 결제 및 광고 관련 예외
-    PAYMENT_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "결제 요청 중 오류가 발생했습니다."),
-    PAYMENT_APPROVAL_FAILED(HttpStatus.BAD_REQUEST, "결제 승인에 실패했습니다."),
-    UNAUTHORIZED_PAYMENT_ACTION(HttpStatus.FORBIDDEN, "결제에 대한 권한이 없습니다."),
-    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 결제 내역을 찾을 수 없습니다."),
-    PAYMENT_CANCEL_FORBIDDEN(HttpStatus.FORBIDDEN, "해당 결제를 취소할 권한이 없습니다."),
-    AD_ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, "광고가 이미 게시 중이므로 결제를 취소할 수 없습니다."),
-    CONFLICT(HttpStatus.CONFLICT, "이미 존재하는 요청입니다."),
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
-    NOT_FOUND_AD(HttpStatus.BAD_REQUEST,"광고를 찾을 수 없습니다."),
-    NOT_FOUND_PAYMENT(HttpStatus.BAD_REQUEST,"결제를 찾을 수 없습니다."),
-    // 광고 관련 예외 섹션 아래에 새로운 예외 코드 추가
-    INVALID_START_DATE(HttpStatus.BAD_REQUEST, "광고 시작 날짜는 최소 2일 이후여야 합니다.");
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "결제를 찾을 수 없습니다."),
+    PAYMENTS_CONFLICT(HttpStatus.CONFLICT, "이미 존재하는 요청입니다."),
+    PAYMENT_APPROVAL_FAILED(HttpStatus.BAD_REQUEST, "결제 승인에 실패했습니다."),
+    PAYMENT_TIMEOUT_SECONDS(HttpStatus.BAD_REQUEST, "시간이 만료되었습니다."),
+    PAYMENT_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "결제 요청 처리 중 오류가 발생했습니다."),
 
+    NOT_FOUND_AD(HttpStatus.BAD_REQUEST,"광고를 찾을 수 없습니다."),
+    INVALID_START_DATE(HttpStatus.BAD_REQUEST, "광고 시작 날짜는 최소 2일 이후여야 합니다."),
+    AD_INVALID_DURATION(HttpStatus.BAD_REQUEST, "광고 종료 날짜는 시작 날짜 이후여야 합니다."),
+    AD_ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, "광고가 게시 중이므로 결제를 취소할 수 없습니다."),
+    AD_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "광고를 취소할 수 있는 상태가 아닙니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

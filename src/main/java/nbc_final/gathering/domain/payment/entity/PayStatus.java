@@ -8,6 +8,6 @@ public enum PayStatus {
 
     @JsonValue
     public String toJson() {
-        return this.name(); // 직렬화 시 이름 반환
+        return this.name(); // 직렬화
     }
 }

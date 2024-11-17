@@ -1,39 +1,37 @@
-package nbc_final.gathering.common.config;
+package nbc_final.gathering.domain.ad.service;
 
-import nbc_final.gathering.domain.payment.service.PaymentService;
+import nbc_final.gathering.domain.ad.AdExpiryScheduler;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import static org.junit.jupiter.api.Assertions.assertTrue; // 추가
-import static org.junit.jupiter.api.Assertions.assertFalse; // 추가
-import static org.junit.jupiter.api.Assertions.assertEquals; // 추가
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-@SpringBootTest
-public class PaymentServiceTest {
+class AdExpirySchedulerTest {
 
-    @Autowired
-    private PaymentService paymentService;
+    @Mock
+    private AdService adService;
 
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    @InjectMocks
+    private AdExpiryScheduler adExpiryScheduler;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this); // Mock 객체 초기화
+    }
 
     @Test
-    public void testIdempotencyKeyWithPaymentId() {
-        Long paymentId = 12345L; // 가상 Payment ID
-        String idempotencyKey = "idempotency:" + paymentId;
+    void updateAdStatuses_shouldActivateAndExpireAds() {
+        // 스케줄러가 호출되었을 때 AdService의 메서드 호출을 검증
+        adExpiryScheduler.updateAdStatuses();
 
-        // 첫 저장
-        boolean firstSave = paymentService.checkAndSaveIdempotencyKey(idempotencyKey, paymentId);
-        assertTrue(firstSave);
+        // READY 상태 광고를 ACTIVE로 전환했는지 검증
+        verify(adService, times(1)).activatePendingAds();
 
-        // 중복 저장
-        boolean duplicateSave = paymentService.checkAndSaveIdempotencyKey(idempotencyKey, paymentId);
-        assertFalse(duplicateSave);
-
-        // Redis에서 값 확인
-        String storedValue = (String) redisTemplate.opsForValue().get(idempotencyKey);
-        assertEquals(paymentId.toString(), storedValue);
+        // ACTIVE 상태 광고를 EXPIRED로 전환했는지 검증
+        verify(adService, times(1)).expireActiveAds();
     }
 }

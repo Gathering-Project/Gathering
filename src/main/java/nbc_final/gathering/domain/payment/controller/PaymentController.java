@@ -13,57 +13,70 @@ import nbc_final.gathering.domain.payment.service.PaymentService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v2/payments")
+@RequestMapping("/api")
 public class PaymentController {
 
     private final PaymentService paymentService;
 
     /**
      * 결제 요청
+     *
+     * @param authUser  인증된 사용자 정보
+     * @param requestDto 결제 요청 데이터
+     * @return 결제 요청 결과
      */
-    @PostMapping("/ad")
+    @PostMapping("/v2/payments/ad")
     public ResponseEntity<ApiResponse<?>> requestAdPayment(
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody PaymentRequestDto requestDto) {
-        log.info("결제 요청 수신: userId={}, requestDto={}", authUser.getUserId(), requestDto);
         PaymentSuccessResponseDto responseDto = paymentService.requestPayment(authUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.createSuccess(responseDto));
     }
 
     /**
      * 결제 승인 처리
+     *
+     * @param paymentData 결제 승인 데이터
+     * @return 승인 처리 완료 메시지
      */
-    @PostMapping("/success")
+    @PostMapping("/v2/payments/success")
     public ResponseEntity<ApiResponse<?>> paymentSuccess(@RequestBody PaymentSuccessResponseDto paymentData) {
         paymentService.approvePayment(paymentData.getPaymentKey(), paymentData.getOrderId(), paymentData.getAmount());
-        log.info("결제 승인 처리 완료: Order ID = {}, Payment Key = {}", paymentData.getOrderId(), paymentData.getPaymentKey());
         return ResponseEntity.ok(ApiResponse.createSuccess("결제 성공 처리 완료"));
     }
 
     /**
      * 결제 실패 처리
+     *
+     * @param failData 실패 요청 데이터 (orderId, 이유)
+     * @return 실패 처리 완료 메시지
      */
-    @PostMapping("/fail")
+    @PostMapping("/v2/payments/fail")
     public ResponseEntity<ApiResponse<?>> paymentFail(
-            @RequestParam String orderId,
-            @RequestParam String reason) {
+            @RequestBody Map<String, String> failData) {
+        String orderId = failData.get("orderId");
+        String reason = failData.get("reason");
+
         paymentService.handlePaymentFailure(orderId, reason);
-        log.info("결제 실패 처리 완료: Order ID = {}, Reason = {}", orderId, reason);
-        return ResponseEntity.status(400).body(ApiResponse.createError(400, "결제 실패 처리 완료"));
+
+        return ResponseEntity.ok(ApiResponse.createSuccess("결제 실패 처리 완료"));
     }
 
     /**
      * 결제 취소 처리
+     *
+     * @param paymentKey 결제 키
+     * @param cancelRequestDto 결제 취소 요청 데이터
+     * @return 취소 처리 완료 메시지
      */
-    @PostMapping("/{paymentKey}/cancel")
+    @PostMapping("/v2/payments/{paymentKey}/cancel")
     public ResponseEntity<ApiResponse<?>> cancelPayment(
             @PathVariable String paymentKey,
             @RequestBody PaymentCancelRequestDto cancelRequestDto) {
@@ -74,8 +87,12 @@ public class PaymentController {
 
     /**
      * 결제 조회
+     *
+     * @param authUser 인증된 사용자 정보
+     * @param orderId  주문 ID
+     * @return 결제 상세 정보
      */
-    @GetMapping("/{orderId}")
+    @GetMapping("/v2/payments/{orderId}")
     public ResponseEntity<ApiResponse<?>> getPayment(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable String orderId) {
@@ -86,17 +103,19 @@ public class PaymentController {
 
     /**
      * 모든 결제 내역 조회
+     *
+     * @param authUser 인증된 사용자 정보
+     * @param page     페이지 번호
+     * @param size     페이지 크기
+     * @return 결제 내역 페이지
      */
-    @GetMapping("/history")
+    @GetMapping("/v2/payments/history")
     public ResponseEntity<ApiResponse<?>> getAllPayments(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestParam(defaultValue = "0") int page, // 기본값: 0
-            @RequestParam(defaultValue = "10") int size // 기본값: 10
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
     ) {
-        log.info("모든 결제 내역 조회 요청: userId = {}, page = {}, size = {}", authUser.getUserId(), page, size);
-
         Page<PaymentHistoryResponseDto> payments = paymentService.getPaymentHistory(authUser.getUserId(), page, size);
-
         return ResponseEntity.ok(ApiResponse.createSuccess(payments));
     }
 }
