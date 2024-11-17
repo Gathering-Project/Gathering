@@ -136,7 +136,7 @@ public class AdService {
     @Transactional
     public void activatePendingAds() {
         LocalDate today = LocalDate.now();
-        List<Ad> readyAds = adRepository.findAdsByStatusAndDateRange(AdStatus.READY, today, today);
+        List<Ad> readyAds = adRepository.findAdsByStatusAndDateRange(AdStatus.PAID, today, today);
 
         readyAds.forEach(ad -> {
             ad.updateStatus(AdStatus.ACTIVE);
@@ -170,7 +170,7 @@ public class AdService {
         Ad ad = adRepository.findById(adId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_AD, "결제와 연결된 광고를 찾을 수 없습니다."));
 
-        ad.updateStatus(AdStatus.READY);
+        ad.updateStatus(AdStatus.PAID);
         adRepository.save(ad);
 
         log.info("광고 상태 업데이트 완료: Ad ID = {}", ad.getAdId());
