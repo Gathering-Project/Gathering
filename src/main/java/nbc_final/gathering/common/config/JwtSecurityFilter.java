@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nbc_final.gathering.common.config.jwt.JwtAuthenticationToken;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,8 +26,7 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtSecurityFilter extends OncePerRequestFilter {
-    private final JwtUtil jwtUtil;
-
+    private final nbc_final.gathering.common.config.JwtUtil jwtUtil;
     @Override
     protected void doFilterInternal(
             HttpServletRequest httpRequest,
