@@ -11,7 +11,7 @@ import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.member.repository.MemberRepository;
 import nbc_final.gathering.domain.payment.dto.request.PaymentRequestDto;
-import nbc_final.gathering.domain.payment.dto.response.PaymentCancelRequestDto;
+import nbc_final.gathering.domain.payment.dto.request.PaymentCancelRequestDto;
 import nbc_final.gathering.domain.payment.dto.response.PaymentHistoryResponseDto;
 import nbc_final.gathering.domain.payment.dto.response.PaymentSuccessResponseDto;
 import nbc_final.gathering.domain.payment.entity.PayStatus;
@@ -84,7 +84,7 @@ public class PaymentService {
             String paymentKey = keys.get("paymentKey");
 
             // 멱등성 키 저장
-            if (!saveIdempotencyKey(payment.getPaymentId().toString(), "request", orderId)) {
+            if (!saveIdempotencyKey(payment.getPaymentId().toString(), "request", createIdempotencyKey())) {
                 throw new ResponseCodeException(ResponseCode.PAYMENTS_CONFLICT);
             }
 

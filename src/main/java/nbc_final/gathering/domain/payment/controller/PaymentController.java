@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.payment.dto.request.PaymentRequestDto;
-import nbc_final.gathering.domain.payment.dto.response.PaymentCancelRequestDto;
+import nbc_final.gathering.domain.payment.dto.request.PaymentCancelRequestDto;
 import nbc_final.gathering.domain.payment.dto.response.PaymentHistoryResponseDto;
 import nbc_final.gathering.domain.payment.dto.response.PaymentSuccessResponseDto;
 import nbc_final.gathering.domain.payment.service.PaymentService;
