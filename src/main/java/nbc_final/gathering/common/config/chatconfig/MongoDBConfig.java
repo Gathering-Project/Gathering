@@ -20,10 +20,16 @@ public class MongoDBConfig {
 
     @Bean
     public MappingMongoConverter mappingMongoConverter(MongoDatabaseFactory mongoDatabaseFactory, MongoMappingContext mongoMappingContext) {
+        // DbRefResolver를 생성하여 MongoDB의 DBRef 필드 해석을 처리
         DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDatabaseFactory);
+
+        // MongoDB에서 사용할 MappingMongoConverter를 생성
         MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mongoMappingContext);
-        converter.setTypeMapper(new DefaultMongoTypeMapper(null)); //  '_class' 필드를 제거
-        return converter;
+
+        // MongoDB document에 기본적으로 추가되는 '_class' 필드를 제거
+        converter.setTypeMapper(new DefaultMongoTypeMapper(null));
+
+        return converter; // 커스텀 설정이 적용된 MappingMongoConverter 반환
     }
 
 }

@@ -136,7 +136,7 @@ public class NaverService {
         }
 
         String jwtToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole(), user.getNickname());
-        jwtUtil.addJwtToCookie(jwtToken, response);
+//        jwtUtil.addJwtToCookie(jwtToken, response);
         log.info("JWT 토큰 생성 및 쿠키에 추가 완료: {}", jwtToken);
 
         // WebSocket 세션 ID 생성 및 Redis 저장
@@ -144,7 +144,7 @@ public class NaverService {
         webSocketSessionManager.addUserSession(user.getId(), websocketSessionId);
 
         // 클라이언트가 WebSocket 연결을 수행할 수 있는 URL 제공
-        String websocketUrl = "ws://localhost:8080/chat/inbox?token=" + jwtToken;
+        String websocketUrl = "ws://localhost:8080/gathering/inbox?token=" + jwtToken;
 
         return new LoginResponseDto(jwtToken, websocketUrl);
     }

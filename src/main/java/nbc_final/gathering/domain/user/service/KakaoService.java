@@ -24,7 +24,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.net.http.WebSocket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -68,7 +67,7 @@ public class KakaoService {
         webSocketSessionManager.addUserSession(userInfo.getId(), websocketSessionId);
 
         // 클라이언트가 WebSocket 연결을 수행할 수 있는 URL 제공
-        String websocketUrl = "ws://localhost:8080/chat/inbox?token=" + jwtToken;
+        String websocketUrl = "ws://localhost:8080/gathering/inbox?token=" + jwtToken;
 
         return new LoginResponseDto(jwtToken, websocketUrl);
     }

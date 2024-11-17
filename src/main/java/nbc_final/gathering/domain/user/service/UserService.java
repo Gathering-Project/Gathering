@@ -34,13 +34,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final KakaoService kakaoService;
     private final NaverService naverService;
     private final KafkaNotificationUtil kafkaNotificationUtil;
     private final SimpMessagingTemplate messagingTemplate;
     private final WebSocketSessionManager webSocketSessionManager;
+    private final JwtUtil jwtUtil;
 
     @Value("${ADMIN_TOKEN}")
     private String ADMIN_TOKEN; // 관리자가 맞는지 확인 토큰
@@ -120,7 +120,7 @@ public class UserService {
         webSocketSessionManager.addUserSession(user.getId(), websocketSessionId);
 
         // 클라이언트가 WebSocket 연결을 수행할 수 있는 URL 제공
-        String websocketUrl = "ws://localhost:8080/chat/inbox?token=" + bearerToken;
+        String websocketUrl = "ws://localhost:9090/gathering/inbox?token=" + bearerToken;
 
 
         return new LoginResponseDto(bearerToken, websocketUrl);

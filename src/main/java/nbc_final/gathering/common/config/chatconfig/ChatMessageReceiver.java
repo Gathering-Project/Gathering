@@ -18,4 +18,5 @@ public class ChatMessageReceiver {
 
         messagingTemplate.convertAndSend("/topic/messages", message);
     }
+
 }

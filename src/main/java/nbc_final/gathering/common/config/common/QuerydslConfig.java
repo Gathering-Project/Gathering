@@ -1,4 +1,4 @@
-package nbc_final.gathering.common.config;
+package nbc_final.gathering.common.config.common;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
