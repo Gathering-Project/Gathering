@@ -1,7 +1,9 @@
 package nbc_final.gathering.domain.ad.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.payment.entity.Payment;
 
@@ -9,46 +11,46 @@ import java.time.LocalDate;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@Table(name = "ads")
 public class Ad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long adId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_id", nullable = false)
-    private Payment payment;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gathering_id", nullable = false)
     private Gathering gathering;
 
     @Enumerated(EnumType.STRING)
-    private AdStatus status = AdStatus.PENDING;
+    private AdStatus status;
 
     private LocalDate startDate;
     private LocalDate endDate;
-    private boolean active;
 
-    // 광고 객체 생성 메서드
-    public static Ad create(Payment payment, Gathering gathering, LocalDate startDate, LocalDate endDate) {
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ad_id")
+    private Payment Id;
+
+    private String orderName;
+
+    public static Ad create(Gathering gathering, LocalDate startDate, LocalDate endDate) {
         Ad ad = new Ad();
-        ad.setPayment(payment);
-        ad.setGathering(gathering);
-        ad.setStartDate(startDate);
-        ad.setEndDate(endDate);
-        ad.setActive(false); // 초기 상태는 비활성화
+        ad.gathering = gathering;
+        ad.startDate = startDate;
+        ad.endDate = endDate;
+        ad.status = AdStatus.PENDING;
+        ad.orderName = generateOrderName(startDate, endDate);  // 광고 형태 생성
         return ad;
     }
 
-    public void activateAd() {
-        this.status = AdStatus.ACTIVE;
+    public void updateStatus(AdStatus status) {
+        this.status = status;
     }
-
-    public void expireAd() {
-        this.status = AdStatus.EXPIRED;
+    // 광고 형태 생성 (startDate ~ endDate)
+    private static String generateOrderName(LocalDate startDate, LocalDate endDate) {
+        long days = startDate.until(endDate).getDays() + 1;  // 날짜 계산
+        return days + "일 광고";  // 예: "3일 광고"
     }
 }

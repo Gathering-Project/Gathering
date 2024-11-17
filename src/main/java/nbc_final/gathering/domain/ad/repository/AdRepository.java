@@ -3,29 +3,19 @@ package nbc_final.gathering.domain.ad.repository;
 import nbc_final.gathering.domain.ad.entity.Ad;
 import nbc_final.gathering.domain.ad.entity.AdStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
-public interface AdRepository extends JpaRepository<Ad, Long> {
+@Repository
+public interface AdRepository extends JpaRepository<Ad, Long>, AdQueryRepository {
 
-    @Query("SELECT COUNT(a) FROM Ad a WHERE a.gathering.id = :gatheringId AND FUNCTION('DATE', a.startDate) = :startDate")
-    long countByGatheringAndDate(@Param("gatheringId") Long gatheringId, @Param("startDate") LocalDate startDate);
+    // 광고 상태와 날짜 범위에 맞는 광고 조회
+    List<Ad> findAdsByStatusAndDateRange(AdStatus status, LocalDate startDate, LocalDate endDate);
 
-    @Query("SELECT COUNT(a) FROM Ad a WHERE a.gathering.id = :gatheringId AND a.startDate >= :startDate AND a.endDate <= :endDate")
-    long countAdsInDateRange(@Param("gatheringId") Long gatheringId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
-
-
-    List<Ad> findByStatusAndEndDateBefore(AdStatus status, LocalDate endDate);
-
-    @Query("SELECT a FROM Ad a WHERE a.gathering.id = :gatheringId AND :date BETWEEN a.startDate AND a.endDate")
-    List<Ad> findAdsByGatheringIdAndDate(@Param("gatheringId") Long gatheringId, @Param("date") LocalDate date);
-
-    @Query("SELECT a FROM Ad a WHERE a.adId = :adId AND a.gathering.id = :gatheringId")
-    Optional<Ad> findByIdAndGatheringId(@Param("adId") Long adId, @Param("gatheringId") Long gatheringId);
+    // 소모임 ID와 상태별 날짜 범위 내 광고 개수 카운트
+    long countByGatheringIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
+            Long gatheringId, LocalDate endDate, LocalDate startDate, List<AdStatus> statuses);
 
 }

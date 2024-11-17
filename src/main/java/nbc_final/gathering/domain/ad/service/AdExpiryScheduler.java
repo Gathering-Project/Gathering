@@ -10,8 +10,12 @@ public class AdExpiryScheduler {
 
     private final AdService adService;
 
-    @Scheduled(cron = "0 0 0 * * ?")
-    public void checkExpiredAds() {
-        adService.checkAdExpiry();  // 매일 자정에 만료 상태 확인 및 업데이트
+    /**
+     * 매일 자정에 READY 상태 광고를 ACTIVE로 전환 및 ACTIVE 상태 광고를 EXPIRED로 전환
+     */
+    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
+    public void updateAdStatuses() {
+        adService.activatePendingAds(); // READY 상태 광고를 ACTIVE로 전환
+        adService.expireActiveAds(); // ACTIVE 상태 광고를 EXPIRED로 전환
     }
 }
