@@ -19,10 +19,6 @@ public class AdCreateRequestDto {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate endDate;
 
-    private AdCreateRequestDto(LocalDate startDate, LocalDate endDate) {
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
 
     public static AdCreateRequestDto of(LocalDate startDate, LocalDate endDate) {
         AdCreateRequestDto dto = new AdCreateRequestDto();

@@ -31,7 +31,7 @@ public class AdController {
      * @param endDate     광고 종료일
      * @return 검증 결과
      */
-    @PostMapping("/v1/gatherings/{gatheringId}/ads/validate")
+    @PostMapping("/v2/gatherings/{gatheringId}/ads/validate")
     public ResponseEntity<ApiResponse<Void>> validateAdDates(
             @PathVariable Long gatheringId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -49,7 +49,7 @@ public class AdController {
      * @param requestDto  광고 생성 요청 데이터
      * @return 생성된 광고 정보
      */
-    @PostMapping("/v1/gatherings/{gatheringId}/ads/request-payment")
+    @PostMapping("/v2/gatherings/{gatheringId}/ads/request-payment")
     public ResponseEntity<ApiResponse<AdCreateResponseDto>> requestAdPayment(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId,
@@ -65,7 +65,7 @@ public class AdController {
      * @param adId 광고 ID
      * @return 상태 업데이트 결과
      */
-    @PostMapping("/v1/gatherings/{gatheringId}/ads/update-status")
+    @PostMapping("/v2/gatherings/{gatheringId}/ads/update-status")
     public ResponseEntity<ApiResponse<Void>> updateAdStatusAfterPayment(
             @RequestParam Long adId) {
 
@@ -80,7 +80,7 @@ public class AdController {
      * @param adId        광고 ID
      * @return 광고 상세 정보
      */
-    @GetMapping("/v1/gatherings/{gatheringId}/ads/{adId}")
+    @GetMapping("/v2/gatherings/{gatheringId}/ads/{adId}")
     public ResponseEntity<ApiResponse<AdDetailsDto>> getAdDetails(
             @PathVariable Long gatheringId,
             @PathVariable Long adId) {
@@ -96,7 +96,7 @@ public class AdController {
      * @param endDate   광고 종료 기간
      * @return 조회된 광고 리스트
      */
-    @GetMapping("/v1/ads")
+    @GetMapping("/v2/ads")
     public ResponseEntity<ApiResponse<AdListResponseDto>> getAdsWithinPeriod(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {

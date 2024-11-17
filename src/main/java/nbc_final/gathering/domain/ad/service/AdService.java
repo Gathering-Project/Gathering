@@ -15,6 +15,7 @@ import nbc_final.gathering.domain.ad.repository.AdRepository;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.payment.entity.Payment;
+import nbc_final.gathering.domain.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,37 +30,48 @@ public class AdService {
 
     private final AdRepository adRepository;
     private final GatheringRepository gatheringRepository;
+    private final PaymentRepository paymentRepository;
 
     @Transactional
     public AdCreateResponseDto requestAd(Long userId, Long gatheringId, AdCreateRequestDto requestDto) {
-        // 1. 소모임 존재 확인
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING, "소모임을 찾을 수 없습니다."));
 
-        // 2. 소모임 소유자 확인
         if (!gathering.getUserId().equals(userId)) {
             throw new ResponseCodeException(ResponseCode.FORBIDDEN, "소모임 소유자만 광고를 생성할 수 있습니다.");
         }
 
-        // 3. 광고 시작 날짜 검증: 현재 날짜로부터 최소 2일 뒤부터 가능
         validateStartDate(requestDto.getStartDate());
-
-        // 4. 광고 기간 검증: 종료일은 시작일보다 같거나 늦어야 하며, 최소 1일 이상이어야 함
         validateAdDuration(requestDto.getStartDate(), requestDto.getEndDate());
-
-        // 5. 중복 광고 검증
         validateAdDateRange(gatheringId, requestDto.getStartDate(), requestDto.getEndDate());
 
-        // 6. 광고 생성 및 저장
-        int totalAmount = calculateAdAmount(requestDto.getStartDate(), requestDto.getEndDate());
-        long adDuration = ChronoUnit.DAYS.between(requestDto.getStartDate(), requestDto.getEndDate()) + 1; // 시작일 포함
+        // 광고 금액 계산
+        long adDuration = ChronoUnit.DAYS.between(requestDto.getStartDate(), requestDto.getEndDate()) + 1;
+        long totalAmount = adDuration * 10000L;
 
-        Ad ad = Ad.create(gathering, requestDto.getStartDate(), requestDto.getEndDate());
-        ad.updateStatus(AdStatus.PENDING);
+        // 광고 생성
+        Ad ad = Ad.create(gathering, requestDto.getStartDate(), requestDto.getEndDate(), totalAmount);
+
+        // 결제 주문서 생성
+        Payment payment = Payment.create(totalAmount, "광고 결제", gathering, requestDto.getStartDate(), requestDto.getEndDate());
+        payment.setAd(ad); // 광고와 결제 연결
+        ad.setPayment(payment);
+
+        // 저장
         adRepository.save(ad);
 
-        return AdCreateResponseDto.of(ad.getAdId(), requestDto.getStartDate(), requestDto.getEndDate(), totalAmount, ad.getOrderName(), adDuration);
+        log.info("광고 생성 완료: Ad ID = {}, Payment ID = {}", ad.getAdId(), payment.getPaymentId());
+
+        return AdCreateResponseDto.of(
+                ad.getAdId(),
+                requestDto.getStartDate(),
+                requestDto.getEndDate(),
+                totalAmount,
+                ad.getOrderName(),
+                adDuration
+        );
     }
+
 
 
     private void validateStartDate(LocalDate startDate) {

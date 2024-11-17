@@ -29,28 +29,36 @@ public class Ad {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ad_id")
-    private Payment Id;
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "payment_id", unique = true)
+    private Payment payment;
+
+    private long totalAmount;
+
 
     private String orderName;
 
-    public static Ad create(Gathering gathering, LocalDate startDate, LocalDate endDate) {
+    public static Ad create(Gathering gathering, LocalDate startDate, LocalDate endDate, Long amount)  {
         Ad ad = new Ad();
         ad.gathering = gathering;
         ad.startDate = startDate;
         ad.endDate = endDate;
         ad.status = AdStatus.PENDING;
-        ad.orderName = generateOrderName(startDate, endDate);  // 광고 형태 생성
+        ad.orderName = generateOrderName(startDate, endDate);
+        ad.totalAmount = amount;
         return ad;
     }
 
     public void updateStatus(AdStatus status) {
         this.status = status;
     }
-    // 광고 형태 생성 (startDate ~ endDate)
+
+    public void setPayment(Payment payment) {
+        this.payment = payment;
+    }
+
     private static String generateOrderName(LocalDate startDate, LocalDate endDate) {
-        long days = startDate.until(endDate).getDays() + 1;  // 날짜 계산
-        return days + "일 광고";  // 예: "3일 광고"
+        long days = startDate.until(endDate).getDays() + 1;
+        return days + "일 광고";
     }
 }
