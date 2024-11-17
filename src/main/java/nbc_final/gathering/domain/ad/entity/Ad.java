@@ -37,9 +37,6 @@ public class Ad {
 
     private String orderName;
 
-    /**
-     * 광고 생성
-     */
     public static Ad create(Gathering gathering, LocalDate startDate, LocalDate endDate, Long amount) {
         Ad ad = new Ad();
         ad.gathering = gathering;
@@ -51,24 +48,15 @@ public class Ad {
         return ad;
     }
 
-    /**
-     * 상태 업데이트
-     */
     public void updateStatus(AdStatus status) {
         this.status = status;
     }
 
-    /**
-     * 결제 연동
-     */
     public void setPayment(Payment payment) {
         this.payment = payment;
-        payment.setAd(this); // 양방향 연관 관계 설정
+        payment.setAd(this);
     }
 
-    /**
-     * 주문 이름 생성
-     */
     private static String generateOrderName(LocalDate startDate, LocalDate endDate) {
         long days = startDate.until(endDate).getDays() + 1;
         return days + "일 광고";

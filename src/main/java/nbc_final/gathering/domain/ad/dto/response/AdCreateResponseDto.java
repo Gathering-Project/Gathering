@@ -9,9 +9,9 @@ public class AdCreateResponseDto {
     private final Long adId;
     private final LocalDate startDate;
     private final LocalDate endDate;
-    private final long totalAmount; // 총 금액
-    private final String orderName; // 광고 형태 추가
-    private final long adDuration; // 광고 기간
+    private final long totalAmount;
+    private final String orderName;
+    private final long adDuration;
 
     public AdCreateResponseDto(Long adId, LocalDate startDate, LocalDate endDate, long totalAmount, String orderName, long adDuration) {
         this.adId = adId;

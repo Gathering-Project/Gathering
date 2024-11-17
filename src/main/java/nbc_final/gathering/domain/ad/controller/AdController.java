@@ -60,7 +60,7 @@ public class AdController {
     }
 
     /**
-     * 광고 상태 업데이트 (READY로 변경)
+     * 광고 상태 업데이트
      *
      * @param adId 광고 ID
      * @return 상태 업데이트 결과
