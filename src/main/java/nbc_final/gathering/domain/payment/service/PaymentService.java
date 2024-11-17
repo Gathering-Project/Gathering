@@ -60,42 +60,29 @@ public class PaymentService {
             log.info("결제 요청: userId = {}, adId = {}, amount = {}, orderName = {}",
                     userId, requestDto.getAdId(), requestDto.getAmount(), requestDto.getOrderName());
 
-            // 사용자 및 광고 검증
             Member member = memberRepository.findByUserIdAndGatheringIdAndRole(userId, requestDto.getGatheringId(), MemberRole.HOST)
                     .orElseThrow(() -> new ResponseCodeException(ResponseCode.FORBIDDEN));
 
-            if (requestDto.getAdId() == null) {
-                throw new ResponseCodeException(ResponseCode.INVALID_REQUEST, "광고 ID는 null일 수 없습니다.");
-            }
-
             Ad ad = adRepository.findById(requestDto.getAdId())
-                    .orElseThrow(() -> {
-                        log.error("Ad ID = {}에 해당하는 광고가 존재하지 않습니다.", requestDto.getAdId());
-                        return new ResponseCodeException(ResponseCode.NOT_FOUND_AD, "광고를 찾을 수 없습니다.");
-                    });
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_AD, "광고를 찾을 수 없습니다."));
 
             Payment payment = paymentRepository.findByAd_AdId(ad.getAdId())
-                    .orElseThrow(() -> {
-                        log.error("Ad ID = {}에 해당하는 결제 데이터가 존재하지 않습니다.", ad.getAdId());
-                        return new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT, "결제 데이터를 찾을 수 없습니다.");
-                    });
+                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT, "결제 데이터를 찾을 수 없습니다."));
 
-            // 멱등키, 주문 ID, 페이먼츠키 생성
             Map<String, String> keys = generateOrderAndPaymentKey();
             String orderId = keys.get("orderId");
             String paymentKey = keys.get("paymentKey");
 
-            if (!checkAndSaveIdempotencyKey(orderId)) {
+            if (!saveIdempotencyKey(payment.getPaymentId().toString(), "request", orderId)) {
                 throw new ResponseCodeException(ResponseCode.CONFLICT, "중복된 결제 요청입니다.");
             }
 
-            // 결제 데이터 업데이트
             payment.updateRequest(
                     requestDto.getAmount(),
                     requestDto.getOrderName(),
                     orderId
             );
-            payment.setPaymentKey(paymentKey); // 페이먼츠키 설정
+            payment.setPaymentKey(paymentKey);
             paymentRepository.save(payment);
 
             log.info("결제 요청 성공: Payment ID = {}, Order ID = {}, Payment Key = {}", payment.getPaymentId(), orderId, paymentKey);
@@ -104,19 +91,15 @@ public class PaymentService {
         } catch (ResponseCodeException ex) {
             log.error("결제 요청 중 오류: {}", ex.getMessage());
             throw ex;
-        } catch (Exception ex) {
-            log.error("결제 요청 중 알 수 없는 오류: {}", ex.getMessage());
-            throw new ResponseCodeException(ResponseCode.PAYMENT_REQUEST_FAILED, "결제 요청 중 오류가 발생했습니다.");
         }
     }
+
     private Map<String, String> generateOrderAndPaymentKey() {
         String orderId = "Order_" + UUID.randomUUID();
         String paymentKey = "Payment_" + UUID.randomUUID();
-        return Map.of(
-                "orderId", orderId,
-                "paymentKey", paymentKey
-        );
+        return Map.of("orderId", orderId, "paymentKey", paymentKey);
     }
+
 
 
     /**
@@ -187,20 +170,25 @@ public class PaymentService {
         Payment payment = paymentRepository.findByPaymentKey(paymentKey)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT, "PaymentKey에 대한 결제 내역이 없습니다."));
 
-        if (sendCancelRequestToToss(paymentKey, cancelRequestDto)) {
+        String idempotencyKey = generateIdempotencyKey();
+        if (!saveIdempotencyKey(payment.getPaymentId().toString(), "cancel", idempotencyKey)) {
+            throw new ResponseCodeException(ResponseCode.CONFLICT, "중복된 결제 취소 요청입니다.");
+        }
+
+        if (sendCancelRequestToToss(paymentKey, cancelRequestDto, idempotencyKey)) {
             payment.cancelPayment(cancelRequestDto.getCancelReason());
             paymentRepository.save(payment);
 
-            // 광고 상태 업데이트
             Ad ad = payment.getAd();
             ad.updateStatus(AdStatus.CANCELED);
             adRepository.save(ad);
 
-            log.info("결제 취소 완료: paymentKey = {}, cancelReason = {}", paymentKey, cancelRequestDto.getCancelReason());
+            log.info("결제 취소 완료: Payment Key = {}, Cancel Reason = {}", paymentKey, cancelRequestDto.getCancelReason());
         } else {
             throw new ResponseCodeException(ResponseCode.TRANSACTION_FAILED, "결제 취소 실패");
         }
     }
+
 
     // Toss Payments 결제 승인 요청
     private boolean sendApprovalRequestToToss(String paymentKey, String orderId, Long amount) {
@@ -221,11 +209,9 @@ public class PaymentService {
     }
 
     // Toss Payments 결제 취소 요청
-    private boolean sendCancelRequestToToss(String paymentKey, PaymentCancelRequestDto cancelRequestDto) {
-        HttpHeaders headers = createHeaders(paymentKey);
-        Map<String, Object> body = Map.of(
-                "cancelReason", cancelRequestDto.getCancelReason()
-        );
+    private boolean sendCancelRequestToToss(String paymentKey, PaymentCancelRequestDto cancelRequestDto, String idempotencyKey) {
+        HttpHeaders headers = createHeaders(idempotencyKey);
+        Map<String, Object> body = Map.of("cancelReason", cancelRequestDto.getCancelReason());
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(
@@ -233,11 +219,11 @@ public class PaymentService {
                     new HttpEntity<>(body, headers),
                     Map.class
             );
-
+            log.info("Toss Payments 결제 취소 성공: {}", response.getBody());
             return response.getStatusCode() == HttpStatus.OK;
         } catch (Exception e) {
-            log.error("결제 취소 중 오류 발생: {}", e.getMessage());
-            throw new ResponseCodeException(ResponseCode.TRANSACTION_FAILED, "결제 취소 중 오류 발생");
+            log.error("Toss Payments 결제 취소 중 오류 발생: {}", e.getMessage());
+            return false;
         }
     }
 
@@ -279,6 +265,21 @@ public class PaymentService {
         return false;
     }
 
+    private boolean saveIdempotencyKey(String paymentId, String requestType, String idempotencyKey) {
+        String redisKey = "payments:" + paymentId + ":" + requestType;
+
+        Boolean isNew = redisTemplate.opsForValue()
+                .setIfAbsent(redisKey, idempotencyKey, IDEMPOTENCY_KEY_TTL_SECONDS, TimeUnit.SECONDS);
+
+        if (Boolean.TRUE.equals(isNew)) {
+            log.info("멱등키 저장 성공: Redis Key = {}, Idempotency Key = {}", redisKey, idempotencyKey);
+            return true;
+        }
+
+        log.warn("중복된 멱등키 요청: Redis Key = {}", redisKey);
+        return false;
+    }
+
     // Toss API 요청 헤더 생성
     private HttpHeaders createHeaders(String idempotencyKey) {
         String auth = tossSecretKey + ":";
@@ -308,5 +309,9 @@ public class PaymentService {
         if (requestDto.getGatheringId() == null) {
             throw new ResponseCodeException(ResponseCode.INVALID_REQUEST, "소모임 ID는 필수 입력 항목입니다.");
         }
+    }
+
+    private String generateIdempotencyKey() {
+        return "Idempotency_" + UUID.randomUUID();
     }
 }
