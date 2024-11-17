@@ -7,11 +7,11 @@ import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.ad.entity.Ad;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
-import nbc_final.gathering.domain.user.entity.User;
 
-@Getter
+import java.time.LocalDate;
+
 @Entity
-@Table(name = "payments")
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment extends TimeStamped {
 
@@ -26,72 +26,84 @@ public class Payment extends TimeStamped {
     private String orderId;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20)
     private PayStatus status;
 
     private String paymentKey;
-    private String failReason;
-    private String cancelReason;
-
-    private boolean isProcessing = false;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Gathering gathering;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ad_id", referencedColumnName = "adId")
-    private Ad ad;  // Ad와의 연관관계 추가
+    @JoinColumn(name = "ad_id")
+    private Ad ad;
 
-    // setAd 메서드 추가
-    public void setAd(Ad ad) {
-        this.ad = ad;
+    private String failReason;
+    private String cancelReason;
+    private LocalDate startDate;
+    private LocalDate endDate;
+
+    /**
+     * 결제 생성
+     */
+    public static Payment create(Long amount, String orderName, Gathering gathering, LocalDate startDate, LocalDate endDate) {
+        Payment payment = new Payment();
+        payment.amount = amount;
+        payment.orderName = orderName;
+        payment.gathering = gathering;
+        payment.startDate = startDate;
+        payment.endDate = endDate;
+        payment.status = PayStatus.PENDING; // 기본 상태
+        return payment;
     }
 
-    // startProcessing 메서드 추가
-    public boolean startProcessing() {
-        if (isProcessing) {
-            return false; // 이미 처리 중이면 false 반환
-        }
-        isProcessing = true;
-        return true; // 처리 시작
+    /**
+     * 결제 요청 업데이트
+     */
+    public void updateRequest(Long amount, String orderName, String orderId) {
+        this.amount = amount;
+        this.orderName = orderName;
+        this.orderId = orderId;
+        this.status = PayStatus.READY;
     }
 
-    // setOrderId 메서드 추가
+    /**
+     * 결제 완료 처리
+     */
+    public void completePayment(String paymentKey) {
+        this.paymentKey = paymentKey;
+        this.status = PayStatus.PAID;
+    }
+
+    /**
+     * 결제 실패 처리
+     */
+    public void failPayment(String reason) {
+        this.status = PayStatus.FAILED;
+        this.failReason = reason;
+    }
+
+    /**
+     * 결제 취소 처리
+     */
+    public void cancelPayment(String reason) {
+        this.status = PayStatus.CANCELED;
+        this.cancelReason = reason;
+    }
+
+    /**
+     * 주문 ID 설정
+     */
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
-    public static Payment create(User user, Long amount, String orderName, Gathering gathering) {
-        Payment payment = new Payment();
-        payment.user = user;
-        payment.amount = amount;
-        payment.orderName = orderName;
-        payment.gathering = gathering;
-        payment.status = PayStatus.READY; // READY 상태로 초기화
-        return payment;
-    }
-
-    public void failPayment(String failReason) {
-        this.status = PayStatus.FAILED;
-        this.failReason = failReason;
-    }
-
-    public void completePayment(String paymentKey, int amount) {
+    public void setPaymentKey(String paymentKey) {
         this.paymentKey = paymentKey;
-        this.amount = (long) amount;
-        this.status = PayStatus.PAID;
     }
-
-    public void cancelPayment(String cancelReason) {
-        this.status = PayStatus.CANCELED;
-        this.cancelReason = cancelReason;
-    }
-
-    public boolean isPaySuccess() {
-        return this.status == PayStatus.PAID;
+    /**
+     * 광고 설정
+     */
+    public void setAd(Ad ad) {
+        this.ad = ad;
     }
 }

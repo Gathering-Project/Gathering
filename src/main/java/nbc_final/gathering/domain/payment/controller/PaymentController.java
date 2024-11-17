@@ -11,76 +11,73 @@ import nbc_final.gathering.domain.payment.dto.response.PaymentSuccessResponseDto
 import nbc_final.gathering.domain.payment.service.PaymentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@Validated
 @RequiredArgsConstructor
-@RequestMapping("/api/")
+@RequestMapping("/api/v2/payments")
 public class PaymentController {
 
     private final PaymentService paymentService;
 
     /**
-     * 광고 결제 요청
+     * 결제 요청
      */
-    @Transactional
-    @PostMapping("/v2/payments/ad")
+    @PostMapping("/ad")
     public ResponseEntity<ApiResponse<?>> requestAdPayment(
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody PaymentRequestDto requestDto) {
-        PaymentSuccessResponseDto paymentResDto = paymentService.requestPayment(authUser.getUserId(), requestDto);
-        return ResponseEntity.ok(ApiResponse.createSuccess(paymentResDto));
+        log.info("결제 요청 수신: userId={}, requestDto={}", authUser.getUserId(), requestDto);
+        PaymentSuccessResponseDto responseDto = paymentService.requestPayment(authUser.getUserId(), requestDto);
+        return ResponseEntity.ok(ApiResponse.createSuccess(responseDto));
     }
 
     /**
-     * 결제 성공 처리
+     * 결제 승인 처리
      */
-    @Transactional
-    @PostMapping("/v2/payments/success")
-    public ResponseEntity<ApiResponse<?>> paymentSuccess(
-            @RequestBody PaymentSuccessResponseDto paymentData) {
-        // 결제 승인 처리
+    @PostMapping("/success")
+    public ResponseEntity<ApiResponse<?>> paymentSuccess(@RequestBody PaymentSuccessResponseDto paymentData) {
         paymentService.approvePayment(paymentData.getPaymentKey(), paymentData.getOrderId(), paymentData.getAmount());
-
-        // 반환할 결제 세부 정보 구성
-        Map<String, Object> paymentDetails = Map.of(
-                "amount", paymentData.getAmount(),
-                "orderId", paymentData.getOrderId(),
-                "paymentKey", paymentData.getPaymentKey()
-        );
-
-        // 결제 정보를 응답 데이터에 포함
-        return ResponseEntity.ok(ApiResponse.createSuccess(paymentDetails));
+        log.info("결제 승인 처리 완료: Order ID = {}, Payment Key = {}", paymentData.getOrderId(), paymentData.getPaymentKey());
+        return ResponseEntity.ok(ApiResponse.createSuccess("결제 성공 처리 완료"));
     }
 
     /**
      * 결제 실패 처리
      */
-    @Transactional
-    @PostMapping("/v2/payments/fail")
+    @PostMapping("/fail")
     public ResponseEntity<ApiResponse<?>> paymentFail(
-            @RequestParam String code,
-            @RequestParam String message,
-            @RequestParam String orderId) {
-        paymentService.handlePaymentFailure(orderId, message);
-        return ResponseEntity.status(400).body(ApiResponse.createError(400, message));
+            @RequestParam String orderId,
+            @RequestParam String reason) {
+        paymentService.handlePaymentFailure(orderId, reason);
+        log.info("결제 실패 처리 완료: Order ID = {}, Reason = {}", orderId, reason);
+        return ResponseEntity.status(400).body(ApiResponse.createError(400, "결제 실패 처리 완료"));
     }
 
     /**
      * 결제 취소 처리
      */
-    @Transactional
-    @PostMapping("/v2/payments/{paymentKey}/cancel")
+    @PostMapping("/{paymentKey}/cancel")
     public ResponseEntity<ApiResponse<?>> cancelPayment(
             @PathVariable String paymentKey,
             @RequestBody PaymentCancelRequestDto cancelRequestDto) {
         paymentService.cancelPayment(paymentKey, cancelRequestDto);
-        return ResponseEntity.ok(ApiResponse.createSuccess("결제 취소 완료"));
+        log.info("결제 취소 처리 완료: Payment Key = {}, Reason = {}", paymentKey, cancelRequestDto.getCancelReason());
+        return ResponseEntity.ok(ApiResponse.createSuccess("결제 취소 처리 완료"));
     }
+
+    /**
+     * 결제 조회
+     */
+    @GetMapping("/{orderId}")
+    public ResponseEntity<ApiResponse<?>> getPayment(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable String orderId) {
+        log.info("결제 조회 요청: userId = {}, Order ID = {}", authUser.getUserId(), orderId);
+        PaymentSuccessResponseDto payment = paymentService.getPaymentDetails(orderId, authUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.createSuccess(payment));
+    }
+
 }

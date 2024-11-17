@@ -14,7 +14,6 @@ public class PaymentHistoryResponseDto {
     private Long paymentHistoryId;
     private Long amount;
     private String orderName;
-    private boolean isPaySuccess;
     private LocalDateTime createdAt;
 
     public static PaymentHistoryResponseDto from(Payment payment) {
@@ -22,7 +21,6 @@ public class PaymentHistoryResponseDto {
                 payment.getPaymentId(),
                 payment.getAmount(),
                 payment.getOrderName(),
-                payment.isPaySuccess(),
                 payment.getCreatedAt()
         );
     }
