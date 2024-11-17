@@ -1,3 +1,14 @@
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
 server:
   port: 8080
 
@@ -5,6 +16,7 @@ spring:
   thymeleaf:
     cache: false
 
+  # AWS S3 설정
   cloud:
     aws:
       s3:
@@ -17,27 +29,48 @@ spring:
       stack:
         auto: false
 
-#  config:
-#    import: optional:file:.env[.properties]
-#    datasource:
-#      url: jdbc:mysql://wemeetnowdb.chmy408yifq6.ap-northeast-2.rds.amazonaws.com:3306/minjudb?useSSL=false&serverTimezone=Asia/Seoul
-#      username: minjooig
-#      password:
-#      driver-class-name: com.mysql.cj.jdbc.Driver
-
+  #MySQL 설정
   config:
     import: optional:file:.env[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: jdbc:mysql://mysql_container:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
-    url: jdbc:mysql://localhost:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
-    username: ${MYSQL_NAME}
-    password: ${MYSQL_PASSWORD}
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:gathering}?serverTimezone=Asia/Seoul
+    username: ${MYSQL_NAME:root}
+    password: ${MYSQL_PASSWORD:1234}
 
+  #RabbitMQ 설정
+  rabbitmq:
+    host: ${rabbitmq_host:localhost}
+    port: ${rabbitmq_port:5672}
+    virtual-host: ${rabbitmq_virtual_host:/}
+    username: ${rabbitmq_username:admin}
+    password: ${rabbitmq_password:1234}
+
+  #STOMP 설정
+  messaging:
+    stomp:
+      relay:
+        enabled: true
+        host: ${rabbitmq_host:localhost}
+        port: ${rabbitmq_relay_port:61613}
+        system-login: ${rabbitmq_relay_system_login:guest}
+        system-passcode: ${rabbitmq_relay_client_passcode:guest}
+        client-login: ${rabbitmq_relay_client_login:guest}
+        client-passcode: ${rabbitmq_relay_client_passcode:guset}
+      broker:
+        topic-destination-prefix: /topic
+        queue-destination-prefix: /queue
+  chat:
+    queue:
+      name: ${rabbitmq_chat_queue_name}
+    exchange:
+      name: ${rabbitmq_chat_exchange_name}
+    routing:
+      key: ${rabbitmq_chat_routing_key}
+
+  # Kafka 설정
   kafka:
     bootstrap-servers: "localhost:19092,localhost:19093,localhost:19094"
-#  kafka:
-#    bootstrap-servers: "kafka1:9092,kafka2:9093,kafka3:9094"
 
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -45,9 +78,6 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    properties:
-      offsets.topic.replication.factor: 3
-
 
   jpa:
     hibernate:
@@ -57,6 +87,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+  # Redis 설정
   data:
     redis:
       sentinel:
@@ -68,6 +99,12 @@ spring:
           - localhost:26380
           - localhost:26381
       timeout: 10000
+
+    #MongoDB 설정
+    mongodb:
+      uri: mongodb://${mongodb_username:root}:${mongodb_password:1234}@${mongodb_host:localhost}:${port:27017}/${database_name:gatherignmongo}?authSource=admin&authMechanism=SCRAM-SHA-1
+      username: ${mongodb_username:root}
+      password: ${mongodb_password:1234}
 
   servlet:
     multipart:
@@ -128,9 +165,13 @@ admin:
 
 logging:
   level:
+#    root: DEBUG
     root: INFO
     nbc_final.gathering.domain.payment.service: INFO
     org:
+      org.springframework.web.socket: TRACE
+      org.springframework.messaging.simp.stomp: TRACE
+      org.springframework.messaging.simp.broker: TRACE
       springframework:
         security: ERROR
       hibernate:

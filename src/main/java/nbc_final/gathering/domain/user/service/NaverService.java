@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.config.JwtUtil;
+import nbc_final.gathering.common.config.common.WebSocketSessionManager;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.user.dto.NaverUserInfoDto;
@@ -38,6 +39,7 @@ public class NaverService {
     private final RestTemplate restTemplate;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final WebSocketSessionManager webSocketSessionManager;
 
     @Value("${NAVER_CLIENT_ID}")
     private String clientId;
@@ -134,10 +136,17 @@ public class NaverService {
         }
 
         String jwtToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole(), user.getNickname());
-        jwtUtil.addJwtToCookie(jwtToken, response);
+//        jwtUtil.addJwtToCookie(jwtToken, response);
         log.info("JWT 토큰 생성 및 쿠키에 추가 완료: {}", jwtToken);
 
-        return new LoginResponseDto(jwtToken);
+        // WebSocket 세션 ID 생성 및 Redis 저장
+        String websocketSessionId = generateWebSocketSessionId(user.getId());
+        webSocketSessionManager.addUserSession(user.getId(), websocketSessionId);
+
+        // 클라이언트가 WebSocket 연결을 수행할 수 있는 URL 제공
+        String websocketUrl = "ws://localhost:8080/gathering/inbox?token=" + jwtToken;
+
+        return new LoginResponseDto(jwtToken, websocketUrl);
     }
 
     // 네이버 연동 해제 메서드
@@ -162,5 +171,9 @@ public class NaverService {
             log.error("네이버 연동 해제 실패: {}", e.getMessage());
             throw new ResponseCodeException(ResponseCode.INVALID_TOKEN);
         }
+    }
+
+    private String generateWebSocketSessionId(Long userId) {
+        return "ws-session-" + userId;
     }
 }

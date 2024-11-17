@@ -1,4 +1,4 @@
-package nbc_final.gathering.common.config;
+package nbc_final.gathering.common.config.jwt;
 
 import nbc_final.gathering.common.dto.AuthUser;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

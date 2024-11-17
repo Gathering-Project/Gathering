@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.config.JwtUtil;
+import nbc_final.gathering.common.config.common.WebSocketSessionManager;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.common.exception.ResponseCode;
@@ -21,6 +22,7 @@ import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import nbc_final.gathering.domain.user.utils.GenerateRandomNickname;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,17 +34,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final KakaoService kakaoService;
     private final NaverService naverService;
     private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final WebSocketSessionManager webSocketSessionManager;
+    private final JwtUtil jwtUtil;
 
     @Value("${ADMIN_TOKEN}")
     private String ADMIN_TOKEN; // 관리자가 맞는지 확인 토큰
 
     @PersistenceContext // EntityManager 주입
     private EntityManager entityManager;
+
 
     // 유저 회원가입
     @Transactional
@@ -110,8 +115,15 @@ public class UserService {
 
         kafkaNotificationUtil.notifyUser(user.getId(), "로그인에 성공했습니다.");
 
+        // WebSocket 세션 ID 생성 및 Redis 저장
+        String websocketSessionId = generateWebSocketSessionId(user.getId());
+        webSocketSessionManager.addUserSession(user.getId(), websocketSessionId);
 
-        return new LoginResponseDto(bearerToken);
+        // 클라이언트가 WebSocket 연결을 수행할 수 있는 URL 제공
+        String websocketUrl = "ws://localhost:9090/gathering/inbox?token=" + bearerToken;
+
+
+        return new LoginResponseDto(bearerToken, websocketUrl);
     }
 
     // 유저 회원 탈퇴
@@ -241,6 +253,11 @@ public class UserService {
     private String getAccessTokenForUser(User user) {
         return "access-token"; // 실제 액세스 토큰 반환으로 변경 필요
     }
+
+    private String generateWebSocketSessionId(Long userId) {
+        return "ws-session-" + userId;
+    }
+
 }
 
 

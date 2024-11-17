@@ -1,4 +1,4 @@
-package nbc_final.gathering.common.config;
+package nbc_final.gathering.common.config.jwt;
 
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.domain.member.enums.MemberRole;
@@ -60,7 +60,13 @@ public class SecurityConfig {
                                 "/api/v1/auth/kakao-url",
                                 "/api/v1/users/kakao/callback",
                                 "/api/v1/auth/naver-url",
-                                "/api/v1/users/naver/callback"
+                                "/api/v1/users/naver/callback",
+                                "/gathering/inbox/**",
+                                "/actuator/prometheus",
+                                "/actuator/health",
+                                "/api/v1/places/recommend",
+                                "/api/v1/users/naver/callback",
+                                "/gathering/inbox"
 //                                "/api/v1/gatherings/{gatheringId}",
 //                                "/api/v1/gatherings"
                                 ).permitAll()

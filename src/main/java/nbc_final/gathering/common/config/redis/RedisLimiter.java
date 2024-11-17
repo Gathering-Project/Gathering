@@ -1,4 +1,4 @@
-package nbc_final.gathering.common.config;
+package nbc_final.gathering.common.config.redis;
 
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
