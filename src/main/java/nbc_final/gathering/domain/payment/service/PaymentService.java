@@ -174,27 +174,47 @@ public class PaymentService {
      */
     @Transactional
     public void cancelPayment(String paymentKey, PaymentCancelRequestDto cancelRequestDto) {
+        log.info("결제 취소 요청: Payment Key = {}, Cancel Reason = {}", paymentKey, cancelRequestDto.getCancelReason());
+
+        // 결제 정보 조회
         Payment payment = paymentRepository.findByPaymentKey(paymentKey)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT, "PaymentKey에 대한 결제 내역이 없습니다."));
 
+        // 광고 상태 검증
+        Ad ad = payment.getAd();
+        log.info("현재 광고 상태: {}", ad.getStatus());
+        if (ad.getStatus() != AdStatus.PENDING && ad.getStatus() != AdStatus.PAID) {
+            log.error("광고 상태가 취소 가능 상태가 아님: {}", ad.getStatus());
+            throw new ResponseCodeException(ResponseCode.INVALID_REQUEST, "광고를 취소할 수 있는 상태가 아닙니다.");
+        }
+
+        // 멱등키 생성 및 저장
         String idempotencyKey = generateIdempotencyKey();
+        log.info("멱등키 생성: {}", idempotencyKey);
         if (!saveIdempotencyKey(payment.getPaymentId().toString(), "cancel", idempotencyKey)) {
+            log.error("멱등키 중복 요청: Payment ID = {}, Request Type = cancel", payment.getPaymentId());
             throw new ResponseCodeException(ResponseCode.CONFLICT, "중복된 결제 취소 요청입니다.");
         }
 
+        // Toss Payments 결제 취소 요청
         if (sendCancelRequestToToss(paymentKey, cancelRequestDto, idempotencyKey)) {
+            log.info("Toss Payments 결제 취소 성공: Payment Key = {}, Cancel Reason = {}", paymentKey, cancelRequestDto.getCancelReason());
+
+            // 결제 취소 처리
             payment.cancelPayment(cancelRequestDto.getCancelReason());
             paymentRepository.save(payment);
 
-            Ad ad = payment.getAd();
+            // 광고 상태를 CANCELED로 업데이트
             ad.updateStatus(AdStatus.CANCELED);
             adRepository.save(ad);
 
-            log.info("결제 취소 완료: Payment Key = {}, Cancel Reason = {}", paymentKey, cancelRequestDto.getCancelReason());
+            log.info("결제 취소 및 광고 상태 업데이트 완료: Payment Key = {}, Ad ID = {}", paymentKey, ad.getAdId());
         } else {
+            log.error("Toss Payments 결제 취소 실패: Payment Key = {}", paymentKey);
             throw new ResponseCodeException(ResponseCode.TRANSACTION_FAILED, "결제 취소 실패");
         }
     }
+
 
 
     // Toss Payments 결제 승인 요청
@@ -217,17 +237,20 @@ public class PaymentService {
 
     // Toss Payments 결제 취소 요청
     private boolean sendCancelRequestToToss(String paymentKey, PaymentCancelRequestDto cancelRequestDto, String idempotencyKey) {
+        String cancelUrl = tossCancelUrl + "/" + paymentKey + "/cancel"; // 올바른 URL 조합
         HttpHeaders headers = createHeaders(idempotencyKey);
         Map<String, Object> body = Map.of("cancelReason", cancelRequestDto.getCancelReason());
 
+        log.info("Toss Payments 결제 취소 요청: URL = {}, Headers = {}, Body = {}", cancelUrl, headers, body);
+
         try {
-            String cancelUrl = tossCancelUrl + "/" + paymentKey + "/cancel"; // 올바른 URL 조합
             ResponseEntity<Map> response = restTemplate.postForEntity(
                     cancelUrl,
                     new HttpEntity<>(body, headers),
                     Map.class
             );
-            log.info("Toss Payments 결제 취소 성공: {}", response.getBody());
+
+            log.info("Toss Payments 응답: Status Code = {}, Body = {}", response.getStatusCode(), response.getBody());
             return response.getStatusCode() == HttpStatus.OK;
         } catch (Exception e) {
             log.error("Toss Payments 결제 취소 중 오류 발생: {}", e.getMessage());
