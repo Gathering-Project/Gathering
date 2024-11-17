@@ -384,5 +384,13 @@ public class GatheringService {
         }
     }
 
+    public List<GatheringResponseDto> findGatheringsByOwner(Long userId) {
+        List<Gathering> gatherings = gatheringRepository.findByUserId(userId);
+
+        return gatherings.stream()
+                .map(GatheringResponseDto::of)
+                .collect(Collectors.toList());
+    }
+
 }
 

@@ -10,7 +10,6 @@ public class GatheringRepositoryImpl implements GatheringRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 
-    
     public GatheringRepositoryImpl(JPAQueryFactory queryFactory) {
         this.queryFactory = queryFactory;
     }
