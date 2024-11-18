@@ -55,7 +55,7 @@
                 },
                 {
                     "name": "JWT_SECRET_KEY",
-                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:JWT_SECRET_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE::JWT_SECRET_KEY"
                 },
                 {
                     "name": "KAFKA_BROKER",
