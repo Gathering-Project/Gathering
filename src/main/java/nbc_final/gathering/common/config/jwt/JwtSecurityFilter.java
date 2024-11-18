@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.config.JwtUtil;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import org.springframework.security.core.context.SecurityContextHolder;

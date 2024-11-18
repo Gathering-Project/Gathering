@@ -28,16 +28,16 @@ name: Deploy to Amazon ECS
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "feature/chatting" ]
 
 env:
   AWS_REGION: ap-northeast-2                  # set this to your preferred AWS region, e.g. us-west-1
   ECR_REPOSITORY: wemeetnow_ecr           # set this to your Amazon ECR repository name
   ECS_SERVICE: we_meet_now_cluster_service                # set this to your Amazon ECS service name
   ECS_CLUSTER: we_meet_now_ecs_cluster                # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: we_meet_now_task # set this to the path to your Amazon ECS task definition
+  ECS_TASK_DEFINITION: we_meet_now_task.json # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: MY_CONTAINER_NAME           # set this to the name of the container in the
+  CONTAINER_NAME: we_are_meet_now_container           # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
 
 permissions:
@@ -52,13 +52,27 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Clean previous builds
+      run: ./gradlew clean
+
+    - name: Build project with Gradle
+      run: ./gradlew clean bootJar
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ CLOUD_AWS_S3_ACCESS_KEY }}
-        aws-secret-access-key: ${{ CLOUD_AWS_S3_SECRET_KEY }}
-        aws-region: ${{ CLOUD_AWS_S3_REGION_STATIC }}
+        aws-access-key-id: ${{ secrets.CLOUD_AWS_S3_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.CLOUD_AWS_S3_SECRET_KEY }}
+        aws-region: ap-northeast-2
 
     - name: Login to Amazon ECR
       id: login-ecr

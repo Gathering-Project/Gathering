@@ -115,6 +115,10 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     testImplementation 'org.springframework.kafka:spring-kafka-test'
+
+    implementation 'org.json:json:20210307'
+
+    implementation 'org.springframework:spring-context'
 }
 
 tasks.named('test') {

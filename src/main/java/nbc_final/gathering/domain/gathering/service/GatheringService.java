@@ -42,7 +42,7 @@ public class GatheringService {
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final KafkaNotificationUtil kafkaNotificationUtil;
+//    private final KafkaNotificationUtil kafkaNotificationUtil;
 
 
     private static final String TODAY_RANKING_KEY = "todayGatheringRanking";
@@ -102,7 +102,7 @@ public class GatheringService {
             gatheringRepository.save(savedGathering);
             memberRepository.save(member);
 
-            kafkaNotificationUtil.notifyHostMember(user.getId(), "새로운 소모임이 생성되었습니다.");
+//            kafkaNotificationUtil.notifyHostMember(user.getId(), "새로운 소모임이 생성되었습니다.");
 
             return GatheringResponseDto.of(savedGathering);
         }
@@ -201,16 +201,16 @@ public class GatheringService {
             // 소모임 저장
             gatheringRepository.save(gathering);
 
-            kafkaNotificationUtil.notifyAllMembers(gatheringId, "소모임이 수정되었습니다.");
+//            kafkaNotificationUtil.notifyAllMembers(gatheringId, "소모임이 수정되었습니다.");
 
-            // 승인된 멤버들에게 알림 전송
-            List<Member> approvedMembers = memberRepository.findAllByGatheringId(gatheringId).stream()
-                    .filter(member -> member.getStatus() == MemberStatus.APPROVED)
-                    .collect(Collectors.toList());
-
-            approvedMembers.forEach(member -> {
-                kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(), gathering.getTitle() + " 소모임이 수정되었습니다.");
-            });
+//            // 승인된 멤버들에게 알림 전송
+//            List<Member> approvedMembers = memberRepository.findAllByGatheringId(gatheringId).stream()
+//                    .filter(member -> member.getStatus() == MemberStatus.APPROVED)
+//                    .collect(Collectors.toList());
+//
+//            approvedMembers.forEach(member -> {
+//                kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(), gathering.getTitle() + " 소모임이 수정되었습니다.");
+//            });
 
 
             // 업데이트된 정보를 DTO로 반환
@@ -228,11 +228,11 @@ public class GatheringService {
             // 승인된 멤버들을 조회
             List<Member> approvedMembers = memberRepository.findAllByGatheringAndStatus(gathering, MemberStatus.APPROVED);
 
-            // 승인된 멤버들에게 알림 전송
-            approvedMembers.forEach(member -> {
-                kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(),
-                        gathering.getTitle() + " 소모임이 삭제되었습니다.");
-            });
+//            // 승인된 멤버들에게 알림 전송
+//            approvedMembers.forEach(member -> {
+//                kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(),
+//                        gathering.getTitle() + " 소모임이 삭제되었습니다.");
+//            });
 
             // 호스트 조회
             List<Member> hostMembers = memberRepository.findAllByGatheringId(gatheringId)
@@ -240,11 +240,11 @@ public class GatheringService {
                     .filter(member -> member.getRole() == MemberRole.HOST)
                     .collect(Collectors.toList());
 
-            // 호스트에게 알림 전송
-            hostMembers.forEach(host -> {
-                kafkaNotificationUtil.notifyHostMember(host.getUser().getId(),
-                        gathering.getTitle() + " 소모임이 삭제되었습니다.");
-            });
+//            // 호스트에게 알림 전송
+//            hostMembers.forEach(host -> {
+//                kafkaNotificationUtil.notifyHostMember(host.getUser().getId(),
+//                        gathering.getTitle() + " 소모임이 삭제되었습니다.");
+//            });
 
             // 모임과 관련된 멤버 삭제
             memberRepository.deleteByGathering(gathering); // 모임에 속한 멤버를 삭제하는 메서드
@@ -382,6 +382,14 @@ public class GatheringService {
             if (size == null || size > 3) {
             redisTemplate.opsForZSet().removeRange(TODAY_RANKING_KEY, 3, size - 1);
         }
+    }
+
+    public List<GatheringResponseDto> findGatheringsByOwner(Long userId) {
+        List<Gathering> gatherings = gatheringRepository.findByUserId(userId);
+
+        return gatherings.stream()
+                .map(GatheringResponseDto::of)
+                .collect(Collectors.toList());
     }
 
 }
