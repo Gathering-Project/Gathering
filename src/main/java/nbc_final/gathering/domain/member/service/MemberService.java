@@ -121,6 +121,7 @@ public class MemberService {
 
         // 인원이 초과되지 않았으면 멤버 승인
         member.approve();
+        gathering.updateGatheirngCount(gathering.getGatheringCount() + 1);
 
         // 게스트와 호스트에게 알림 메시지 전송
         String guestMessage = gathering.getTitle() + " 소모임에 가입이 승인되었습니다."; // 소모임 이름과 함께 게스트에게 전송
