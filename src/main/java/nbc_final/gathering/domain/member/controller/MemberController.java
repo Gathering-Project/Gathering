@@ -3,6 +3,7 @@ package nbc_final.gathering.domain.member.controller;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
+import nbc_final.gathering.domain.member.dto.MemberElasticDto;
 import nbc_final.gathering.domain.member.dto.request.MessageRequestDto;
 import nbc_final.gathering.domain.member.dto.response.MemberResponseDto;
 import nbc_final.gathering.domain.member.service.MemberService;
@@ -18,6 +19,18 @@ import java.util.List;
 public class MemberController {
 
     private final MemberService memberService;
+
+    /**
+     * 소모임 기반 멤버 검색
+     * @param gatheringId
+     * @return
+     */
+    @GetMapping("/v1/members/gathering/{gatheringId}/search")
+    public ResponseEntity<ApiResponse<List<MemberElasticDto>>> searchMembersByGathering(
+            @PathVariable Long gatheringId) {
+        List<MemberElasticDto> members = memberService.searchMembersByGathering(gatheringId);
+        return ResponseEntity.ok(ApiResponse.createSuccess(members));
+    }
 
     /**
      * 멤버 가입 신청

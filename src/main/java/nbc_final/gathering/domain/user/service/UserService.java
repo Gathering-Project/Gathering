@@ -29,6 +29,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -100,6 +102,12 @@ public class UserService {
         userElasticSearchRepository.save(userElasticDto); //엘라스틱 서치 추가
 
         return new SignUpResponseDto(bearerToken); // 토큰 반환
+    }
+    // 사용자 검색 (닉네임, 위치)
+    public List<UserElasticDto> searchUsers(String keyword) {
+        List<UserElasticDto> results = userElasticSearchRepository.findByNicknameContainingOrLocationContaining(keyword, keyword);
+        log.info("Found {} users matching keyword: {}", results.size(), keyword);
+        return results;
     }
 
     // 유저 로그인

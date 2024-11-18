@@ -84,6 +84,11 @@ public class MemberService {
         return MemberResponseDto.from(newMember);
     }
 
+    //엘라스틱 서치 호출 메서드
+    public List<MemberElasticDto> searchMembersByGathering(Long gatheringId) {
+        return memberElasticSearchRepository.findByGatheringId(gatheringId);
+    }
+
     @Transactional
     public MemberResponseDto approveMember(AuthUser authUser, Long memberId) {
 
