@@ -15,8 +15,7 @@ management:
 spring:
   thymeleaf:
     cache: false
-  main:
-    allow-bean-definition-overriding: true
+
 
   # AWS S3 설정
   cloud:
