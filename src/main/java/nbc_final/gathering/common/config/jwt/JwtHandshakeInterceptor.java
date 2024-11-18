@@ -2,7 +2,6 @@ package nbc_final.gathering.common.config.jwt;
 
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.config.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;

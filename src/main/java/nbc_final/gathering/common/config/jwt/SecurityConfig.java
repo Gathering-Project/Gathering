@@ -1,6 +1,5 @@
 package nbc_final.gathering.common.config.jwt;
 
-import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import org.springframework.beans.factory.annotation.Value;
