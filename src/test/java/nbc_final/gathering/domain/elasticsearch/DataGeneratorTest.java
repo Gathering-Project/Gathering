@@ -20,7 +20,7 @@ public class DataGeneratorTest {
     void test_dataGenerator() {
         int testCount = 100;
 
-        dataGenerator.generateRandomData(testCount);
+        dataGenerator.generateAndSaveData(testCount);
 
         for (GatheringElasticDto gatheringElasticDto : gatheringElasticSearchRepository.findAll()) {
             System.out.println("gatheringElasticDto = " + gatheringElasticDto);

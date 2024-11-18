@@ -32,20 +32,23 @@ public class MemberElasticDto {
     @Field(type = FieldType.Keyword)
     private MemberStatus status;
 
+    @Field(type = FieldType.Text, analyzer = "nori_analyzer")
+    private String roleDescription; // 역할 설명 필드 (예: "관리자", "참여자")
 
-    public MemberElasticDto(Long userId, Long gatheringId, MemberRole role) {
+    public MemberElasticDto(Long userId, Long gatheringId, MemberRole role, String roleDescription) {
         this.userId = userId;
         this.gatheringId = gatheringId;
         this.role = role;
+        this.roleDescription = roleDescription;
         this.status = MemberStatus.PENDING;
     }
 
-
-    public MemberElasticDto(Long userId, Long gatheringId, MemberRole role, MemberStatus status) {
+    public MemberElasticDto(Long userId, Long gatheringId, MemberRole role, MemberStatus status, String roleDescription) {
         this.userId = userId;
         this.gatheringId = gatheringId;
         this.role = role;
         this.status = status;
+        this.roleDescription = roleDescription;
     }
 
     public static MemberElasticDto of(Member member) {
@@ -54,7 +57,9 @@ public class MemberElasticDto {
                 member.getGathering().getUserId(),
                 member.getGathering().getId(),
                 member.getRole(),
-                member.getStatus()
+                member.getStatus(),
+                member.getRole().name() // roleDescription에 역할 이름 추가
         );
     }
 }
+

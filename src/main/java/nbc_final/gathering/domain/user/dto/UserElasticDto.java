@@ -34,10 +34,10 @@ public class UserElasticDto {
     @Field(type = FieldType.Keyword)
     private String naverId;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Text, analyzer = "nori_analyzer") // nori_analyzer 적용
     private String location;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Text, analyzer = "nori_analyzer") // nori_analyzer 적용
     private String nickname;
 
     @Field(type = FieldType.Keyword)
@@ -73,10 +73,6 @@ public class UserElasticDto {
         this.email = email;
         this.isDeleted = isDeleted;
         this.interestType = interestType;
-        this.mbtiType = mbtiType;
-        this.withdrawalDate = withdrawalDate;
-        this.userRole = userRole;
-        this.profileImagePath = profileImagePath;
     }
 
     public static UserElasticDto of(User savedUser) {
@@ -96,3 +92,4 @@ public class UserElasticDto {
                 .build();
     }
 }
+

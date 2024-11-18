@@ -23,16 +23,16 @@ public class EventElasticDto {
     @Id
     private Long id;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Text, analyzer = "nori_analyzer")
     private String title;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Text, analyzer = "nori_analyzer")
     private String description;
 
     @Field(type = FieldType.Keyword)
     private String date;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Text, analyzer = "nori_analyzer")
     private String location;
 
     @Field(type = FieldType.Integer)

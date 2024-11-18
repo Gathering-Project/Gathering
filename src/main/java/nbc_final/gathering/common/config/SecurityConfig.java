@@ -44,7 +44,9 @@ public class SecurityConfig {
                                 "/api/v1/auth/kakao-url",
                                 "/api/v1/users/kakao/callback",
                                 "/api/v1/auth/naver-url",
-                                "/api/v1/users/naver/callback"
+                                "/api/v1/users/naver/callback",
+                                "/actuator/prometheus",
+                                "/actuator/health"
 //                                "/api/v1/gatherings/{gatheringId}",
 //                                "/api/v1/gatherings"
                                 ).permitAll()

@@ -39,7 +39,7 @@ public class GatheringElasticDto {
   @Field(type = FieldType.Keyword)
   private List<Long> attachmentIds = new ArrayList<>();
 
-  @Field(type = FieldType.Text, analyzer = "standard")
+  @Field(type = FieldType.Text, analyzer = "nori_analyzer")
   private String title;
 
   @Field(type = FieldType.Text, analyzer = "standard")
@@ -57,7 +57,7 @@ public class GatheringElasticDto {
   @Field(type = FieldType.Double)
   private BigDecimal rating;
 
-  @Field(type = FieldType.Text, analyzer = "standard")
+  @Field(type = FieldType.Text, analyzer = "nori_analyzer")
   private String location;
 
   @Field(type = FieldType.Long)

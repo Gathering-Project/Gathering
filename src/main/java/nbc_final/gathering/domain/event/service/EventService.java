@@ -57,6 +57,16 @@ public class EventService {
     private final RedissonClient redissonClient;
     private final EventElasticSearchRepository eventElasticSearchRepository;
 
+
+    //이벤트 검색(형태소 기반)
+    public List<EventResponseDto> searchEvents(String keyword) {
+        List<EventElasticDto> searchResults = eventElasticSearchRepository.findByTitleContainingOrDescriptionContaining(keyword, keyword);
+        return searchResults.stream()
+                .map(EventResponseDto::of)
+                .collect(Collectors.toList());
+    }
+
+
     // 이벤트 생성 (권한: 소모임 멤버 또는 어드민)
     @Transactional(rollbackFor = {ResponseCodeException.class, CannotAcquireLockException.class, InterruptedException.class})
     public EventResponseDto createEvent(Long userId, Long gatheringId, EventCreateRequestDto requestDto) {
