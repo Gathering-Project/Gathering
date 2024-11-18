@@ -12,7 +12,4 @@ import nbc_final.gathering.domain.user.enums.InterestType;
 public class MatchingResponseDto {
     private Long userId1;
     private Long userId2;
-    private MatchingStatus matchingStatus;
-    //    private String matchingResult;
-
 }

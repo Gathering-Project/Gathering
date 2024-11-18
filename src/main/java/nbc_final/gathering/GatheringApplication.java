@@ -12,18 +12,38 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @SpringBootApplication
 @EnableJpaAuditing
-//@EnableJpaRepositories(basePackages = {"nbc_final.gathering.domain.attachment.repository","nbc_final.gathering.domain.comment.repository","nbc_final.gathering.domain.event.repository",
-//"nbc_final.gathering.domain.gathering.repository","nbc_final.gathering.domain.member.repository","nbc_final.gathering.domain.user.repository"}
-//        )
-@EnableJpaRepositories(excludeFilters = @ComponentScan.Filter(
-        type = FilterType.ASSIGNABLE_TYPE,
-        classes = { EventElasticSearchRepository.class, GatheringElasticSearchRepository.class, MemberElasticSearchRepository.class, UserElasticSearchRepository.class}))
+@EnableJpaRepositories(
+        basePackages = {
+                "nbc_final.gathering.domain.attachment.repository",
+                "nbc_final.gathering.domain.comment.repository",
+                "nbc_final.gathering.domain.event.repository",
+                "nbc_final.gathering.domain.gathering.repository",
+                "nbc_final.gathering.domain.member.repository",
+                "nbc_final.gathering.domain.user.repository",
+                "nbc_final.gathering.domain.chatting.chatroom.repository",
+                "nbc_final.gathering.domain.chatting.chatuser.repository",
+                "nbc_final.gathering.domain.ad.repository",
+                "nbc_final.gathering.domain.payment.repository"
+        },
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = {
+                        EventElasticSearchRepository.class,
+                        GatheringElasticSearchRepository.class,
+                        MemberElasticSearchRepository.class,
+                        UserElasticSearchRepository.class
+                }
+        )
+)
 public class GatheringApplication {
     public static void main(String[] args) {
         SpringApplication.run(GatheringApplication.class, args);
     }
-
 }
+
+
+

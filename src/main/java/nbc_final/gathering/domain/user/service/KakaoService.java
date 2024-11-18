@@ -3,7 +3,8 @@ package nbc_final.gathering.domain.user.service;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.config.JwtUtil;
+import nbc_final.gathering.common.config.jwt.JwtUtil;
+import nbc_final.gathering.common.config.common.WebSocketSessionManager;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.user.dto.KakaoUserInfoDto;
@@ -37,6 +38,7 @@ public class KakaoService {
     private final RestTemplate restTemplate;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final WebSocketSessionManager webSocketSessionManager;
 
     @Value("${KAKAO_CLIENT_ID}")
     private String clientId;
@@ -59,7 +61,15 @@ public class KakaoService {
         String accessToken = getAccessToken(code);
         KakaoUserInfoDto userInfo = getUserInfo(accessToken);
         String jwtToken = registerOrLoginKakaoUser(userInfo, response);
-        return new LoginResponseDto(jwtToken);
+
+        // WebSocket 세션 ID 생성 및 Redis 저장
+        String websocketSessionId = generateWebSocketSessionId(userInfo.getId());
+        webSocketSessionManager.addUserSession(userInfo.getId(), websocketSessionId);
+
+        // 클라이언트가 WebSocket 연결을 수행할 수 있는 URL 제공
+        String websocketUrl = "ws://localhost:8080/gathering/inbox?token=" + jwtToken;
+
+        return new LoginResponseDto(jwtToken, websocketUrl);
     }
 
     // 카카오 서버에서 액세스 토큰을 받기 위한 메서드
@@ -156,5 +166,9 @@ public class KakaoService {
             log.error("카카오 계정 연결 해제 중 오류 발생: " + e.getMessage());
             throw new ResponseCodeException(ResponseCode.UNLINK_FAILED);
         }
+    }
+
+    private String generateWebSocketSessionId(Long userId) {
+        return "ws-session-" + userId;
     }
 }

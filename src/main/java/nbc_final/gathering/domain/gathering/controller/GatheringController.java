@@ -148,4 +148,12 @@ public class GatheringController {
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 
+    // 소유한 소모임 조회
+    @GetMapping("/v2/users/owned-gatherings")
+    public ResponseEntity<ApiResponse<List<GatheringResponseDto>>> getUserOwnedGatherings(
+            @AuthenticationPrincipal AuthUser authUser) {
+        Long userId = authUser.getUserId();
+        List<GatheringResponseDto> gatherings = gatheringService.findGatheringsByOwner(userId);
+        return ResponseEntity.ok(ApiResponse.createSuccess(gatherings));
+    }
 }
