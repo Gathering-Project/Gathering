@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.config.jwt.JwtUtil;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
+import nbc_final.gathering.domain.user.dto.UserElasticDto;
 import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,6 +34,17 @@ public class UserController {
     private final UserService userService;
     private final KakaoService kakaoService;
     private final NaverService naverService;
+
+    /**
+     * 유저 검색
+     * @param keyword 검색 키워드
+     * @return 검색된 유저 리스트
+     */
+    @GetMapping("users/search")
+    public ResponseEntity<ApiResponse<List<UserElasticDto>>> searchUsers(@RequestParam String keyword) {
+        List<UserElasticDto> users = userService.searchUsers(keyword);
+        return ResponseEntity.ok(ApiResponse.createSuccess(users));
+    }
 
     /**
      * 유저 회원가입

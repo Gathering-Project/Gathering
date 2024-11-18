@@ -29,6 +29,19 @@ public class EventController {
     private final EventService eventService;
 
     /**
+     * 이벤트 검색
+     *
+     * @param keyword 검색 키워드
+     * @return 검색 결과 목록
+     */
+    @GetMapping("/v1/events/search")
+    public ResponseEntity<ApiResponse<List<EventResponseDto>>> searchEvents(
+            @RequestParam String keyword) {
+        List<EventResponseDto> searchResults = eventService.searchEvents(keyword);
+        return ResponseEntity.ok(ApiResponse.createSuccess(searchResults));
+    }
+
+    /**
      * 이벤트 생성
      *
      * @param authUser    인증 사용자

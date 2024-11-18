@@ -1,12 +1,18 @@
 package nbc_final.gathering.domain.user.service;
 
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nbc_final.gathering.common.config.jwt.*;
 import nbc_final.gathering.common.config.common.WebSocketSessionManager;
 import nbc_final.gathering.common.config.jwt.JwtUtil;
+import nbc_final.gathering.common.elasticsearch.UserElasticSearchRepository;
+import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
+import nbc_final.gathering.domain.user.dto.UserElasticDto;
+import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
@@ -24,6 +30,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -38,6 +46,8 @@ public class UserService {
     private final SimpMessagingTemplate messagingTemplate;
     private final WebSocketSessionManager webSocketSessionManager;
     private final JwtUtil jwtUtil;
+    private final UserElasticSearchRepository userElasticSearchRepository;
+
 
     @Value("${ADMIN_TOKEN}")
     private String ADMIN_TOKEN; // 관리자가 맞는지 확인 토큰
@@ -91,7 +101,17 @@ public class UserService {
         User savedUser = userRepository.save(newUser); //회원 저장
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserRole(), savedUser.getNickname());
 
+        //엘라스틱 서치
+        UserElasticDto userElasticDto = UserElasticDto.of(savedUser);
+        userElasticSearchRepository.save(userElasticDto); //엘라스틱 서치 추가
+
         return new SignUpResponseDto(bearerToken); // 토큰 반환
+    }
+    // 사용자 검색 (닉네임, 위치)
+    public List<UserElasticDto> searchUsers(String keyword) {
+        List<UserElasticDto> results = userElasticSearchRepository.findByNicknameContainingOrLocationContaining(keyword, keyword);
+        log.info("Found {} users matching keyword: {}", results.size(), keyword);
+        return results;
     }
 
     // 유저 로그인

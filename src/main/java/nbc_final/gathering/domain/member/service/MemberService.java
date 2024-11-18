@@ -3,11 +3,13 @@ package nbc_final.gathering.domain.member.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.dto.AuthUser;
+import nbc_final.gathering.common.elasticsearch.MemberElasticSearchRepository;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
+import nbc_final.gathering.domain.member.dto.MemberElasticDto;
 import nbc_final.gathering.domain.member.dto.response.MemberResponseDto;
 import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
@@ -32,6 +34,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final GatheringRepository gatheringRepository;
     private final UserRepository userRepository;
+    private final MemberElasticSearchRepository memberElasticSearchRepository;
 //    private final KafkaNotificationUtil kafkaNotificationUtil;
 
     @Transactional
@@ -69,12 +72,21 @@ public class MemberService {
         memberRepository.save(newMember);
 
 //        kafkaNotificationUtil.notifyGuestMember(newMember.getId(), "게스트 님, 가입 신청이 완료되었습니다.");
+        //엘라스틱 서치 추가
+        MemberElasticDto memberElasticDto = MemberElasticDto.of(newMember);
+        memberElasticSearchRepository.save(memberElasticDto);
+
 
 //        savedGathering.getMembers().stream()
 //                .filter(m -> m.getRole() == MemberRole.HOST)
 //                .forEach(hostMember -> kafkaNotificationUtil.notifyHostMember(hostMember.getId(), "호스트 님, 새로운 가입 신청이 들어왔습니다."));
 
         return MemberResponseDto.from(newMember);
+    }
+
+    //엘라스틱 서치 호출 메서드
+    public List<MemberElasticDto> searchMembersByGathering(Long gatheringId) {
+        return memberElasticSearchRepository.findByGatheringId(gatheringId);
     }
 
     @Transactional
