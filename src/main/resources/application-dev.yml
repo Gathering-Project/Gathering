@@ -5,7 +5,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: prometheus
+        include: "*"
   prometheus:
     metrics:
       export:
@@ -173,7 +173,7 @@ admin:
 
 logging:
   level:
-#    root: DEBUG
+    #    root: DEBUG
     root: INFO
     nbc_final.gathering.domain.payment.service: INFO
     org:
@@ -188,3 +188,9 @@ logging:
             bind: info
 frontend:
   url: ${FRONTEND_URL}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

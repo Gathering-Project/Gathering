@@ -122,6 +122,12 @@ dependencies {
     implementation 'org.json:json:20210307'
 
     implementation 'org.springframework:spring-context'
+
+    //Swagger
+//    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+
+
 }
 
 tasks.named('test') {
