@@ -3,7 +3,7 @@ package nbc_final.gathering.domain.user.service;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.config.JwtUtil;
+import nbc_final.gathering.common.config.jwt.JwtUtil;
 import nbc_final.gathering.common.config.common.WebSocketSessionManager;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;

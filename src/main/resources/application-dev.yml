@@ -1,3 +1,5 @@
+server:
+  port: 8080
 
 management:
   endpoints:
@@ -9,8 +11,6 @@ management:
       export:
         enabled: true
 
-server:
-  port: 8080
 
 spring:
   thymeleaf:

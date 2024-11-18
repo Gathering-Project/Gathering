@@ -1,7 +1,7 @@
 package nbc_final.gathering.common.config.chatconfig;
 
 import lombok.RequiredArgsConstructor;
-import nbc_final.gathering.common.config.JwtUtil;
+import nbc_final.gathering.common.config.jwt.JwtUtil;
 import nbc_final.gathering.common.config.jwt.JwtHandshakeInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
