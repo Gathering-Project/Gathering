@@ -1,5 +1,7 @@
 package nbc_final.gathering.domain.chatting.chatmessage.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import nbc_final.gathering.common.config.chatconfig.ChatDto;
@@ -15,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "ChatMessage API", description = "채팅 메세지 관련 API 모음입니다.")
 public class ChatMessageController {
 
     private final ChatMessageService chatMessageService;
@@ -37,6 +40,7 @@ public class ChatMessageController {
      * @param chatRoomId 조회할 채팅방의 ID
      * @return ResponseEntity에 감싸진 List<ChatMessageRes>로, 지정된 채팅방 ID의 모든 메시지 정보를 반환합니다.
      */
+    @Operation(summary = "특정 채팅방 메세지 조회", description = "특정 채팅방의 모든 메시지를 조회합니다.")
     @GetMapping("/api/v1/chat-messages/chat-room/{chatRoomId}")
     public ResponseEntity getChatMessages(@PathVariable Long chatRoomId) {
         List<ChatMessageRes> chatMessageResList = chatMessageService.getChatMessagesByChatRoomId(chatRoomId);

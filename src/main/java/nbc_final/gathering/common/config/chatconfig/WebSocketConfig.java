@@ -3,6 +3,7 @@ package nbc_final.gathering.common.config.chatconfig;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.config.jwt.JwtUtil;
 import nbc_final.gathering.common.config.jwt.JwtHandshakeInterceptor;
+import nbc_final.gathering.common.config.jwt.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
