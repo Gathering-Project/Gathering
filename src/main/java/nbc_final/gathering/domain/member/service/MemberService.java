@@ -32,7 +32,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final GatheringRepository gatheringRepository;
     private final UserRepository userRepository;
-    private final KafkaNotificationUtil kafkaNotificationUtil;
+//    private final KafkaNotificationUtil kafkaNotificationUtil;
 
     @Transactional
     public MemberResponseDto requestToJoin(AuthUser authUser, Long gatheringId) {
@@ -68,11 +68,11 @@ public class MemberService {
         Member newMember = new Member(user, savedGathering, MemberRole.GUEST, MemberStatus.PENDING);
         memberRepository.save(newMember);
 
-        kafkaNotificationUtil.notifyGuestMember(newMember.getId(), "게스트 님, 가입 신청이 완료되었습니다.");
+//        kafkaNotificationUtil.notifyGuestMember(newMember.getId(), "게스트 님, 가입 신청이 완료되었습니다.");
 
-        savedGathering.getMembers().stream()
-                .filter(m -> m.getRole() == MemberRole.HOST)
-                .forEach(hostMember -> kafkaNotificationUtil.notifyHostMember(hostMember.getId(), "호스트 님, 새로운 가입 신청이 들어왔습니다."));
+//        savedGathering.getMembers().stream()
+//                .filter(m -> m.getRole() == MemberRole.HOST)
+//                .forEach(hostMember -> kafkaNotificationUtil.notifyHostMember(hostMember.getId(), "호스트 님, 새로운 가입 신청이 들어왔습니다."));
 
         return MemberResponseDto.from(newMember);
     }
@@ -123,10 +123,10 @@ public class MemberService {
 
         // 게스트와 호스트에게 알림 메시지 전송
         String guestMessage = gathering.getTitle() + " 소모임에 가입이 승인되었습니다."; // 소모임 이름과 함께 게스트에게 전송
-        kafkaNotificationUtil.notifyGuestMember(memberId, guestMessage);
+//        kafkaNotificationUtil.notifyGuestMember(memberId, guestMessage);
 
         String hostMessage = member.getUser().getNickname() + "이(가) " + gathering.getTitle() + " 소모임에 가입했습니다."; // 가입 신청한 멤버의 이름과 소모임 제목을 호스트에게 전송
-        kafkaNotificationUtil.notifyHostMember(currentMember.getId(), hostMessage);
+//        kafkaNotificationUtil.notifyHostMember(currentMember.getId(), hostMessage);
 
         return MemberResponseDto.from(member);
     }
@@ -247,10 +247,10 @@ public class MemberService {
         String gatheringTitle = memberToDelete.getGathering().getTitle();
         String memberName = memberToDelete.getUser().getNickname(); // User 객체의 이름을 가져와서 사용
 
-        kafkaNotificationUtil.notifyGuestMember(memberToDelete.getId(), gatheringTitle + "에서 삭제되었습니다.");
-
-        // 호스트에게 알림 전송
-        kafkaNotificationUtil.notifyHostMember(currentUserMember.getId(), memberName + "이(가) 삭제되었습니다.");
+//        kafkaNotificationUtil.notifyGuestMember(memberToDelete.getId(), gatheringTitle + "에서 삭제되었습니다.");
+//
+//        // 호스트에게 알림 전송
+//        kafkaNotificationUtil.notifyHostMember(currentUserMember.getId(), memberName + "이(가) 삭제되었습니다.");
 
         // 삭제하려는 멤버는 PENDING 상태에서도 삭제 가능하므로 멤버의 상태는 체크하지 않음
         // 멤버 삭제 진행
@@ -291,7 +291,7 @@ public class MemberService {
         // 멤버 거절 처리 (상태를 REJECTED로 변경)
         memberToReject.reject();
 
-        kafkaNotificationUtil.notifyGuestMember(memberToReject.getId(), "가입 요청이 거절되었습니다.");
+//        kafkaNotificationUtil.notifyGuestMember(memberToReject.getId(), "가입 요청이 거절되었습니다.");
 
         // 거절된 멤버 정보 반환
         return MemberResponseDto.from(memberToReject);
@@ -327,13 +327,13 @@ public class MemberService {
             System.err.println("오류: 승인된 게스트 멤버가 없습니다. 소모임 ID: " + gatheringId);
             return; // 메세지를 보낼 게스트가 없으면 종료
         }
-
-        // 각 게스트 멤버에게 알림 전송
-        guestMembers.forEach(guest -> {
-            // 게스트에게 메세지 전송
-            kafkaNotificationUtil.notifyGuestMember(guest.getId(), message);
-            System.out.println("알림 전송 성공: 게스트 ID " + guest.getId() + ", 메시지: " + message);
-        });
+//
+//        // 각 게스트 멤버에게 알림 전송
+//        guestMembers.forEach(guest -> {
+//            // 게스트에게 메세지 전송
+//            kafkaNotificationUtil.notifyGuestMember(guest.getId(), message);
+//            System.out.println("알림 전송 성공: 게스트 ID " + guest.getId() + ", 메시지: " + message);
+//        });
     }
 
 

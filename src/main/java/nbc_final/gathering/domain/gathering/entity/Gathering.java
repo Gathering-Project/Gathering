@@ -12,6 +12,7 @@ import nbc_final.gathering.domain.member.enums.MemberStatus;
 import nbc_final.gathering.domain.user.entity.User;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,6 +63,8 @@ public class Gathering extends TimeStamped {
   private String location;
 
   private long totalGatheringViewCount;
+
+  private LocalDate displayDate;  // 광고 노출 희망일 필드 추가
 
   public Gathering(Long userId,
                    String title,
