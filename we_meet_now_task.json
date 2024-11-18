@@ -1,10 +1,12 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:ap-northeast-2:971422688020:task-definition/we_meet_now_task:16",
+    "taskDefinitionArn": "arn:aws:ecs:ap-northeast-2:971422688020:task-definition/we_meet_now_task:21",
     "containerDefinitions": [
         {
             "name": "we_are_meet_now_container",
-            "image": "971422688020.dkr.ecr.ap-northeast-2.amazonaws.com/wemeetnow_ecr:latest",
-            "cpu": 1024,
+            "image": "971422688020.dkr.ecr.ap-northeast-2.amazonaws.com/wemeetnow_ecr:f61f0b803aceb922d85acac3d5ffd75b16bf23b0",
+            "cpu": 2048,
+            "memory": 8192,
+            "memoryReservation": 4096,
             "portMappings": [
                 {
                     "name": "we_are_meet_now_container-80-tcp",
@@ -16,10 +18,222 @@
             ],
             "essential": true,
             "environment": [],
-            "environmentFiles": [],
             "mountPoints": [],
             "volumesFrom": [],
-            "ulimits": [],
+            "secrets": [
+                {
+                    "name": "ADMIN_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:ADMIN_TOKEN::"
+                },
+                {
+                    "name": "API_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:API_KEY::"
+                },
+                {
+                    "name": "CLOUD_AWS_S3_ACCESS_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:CLOUD_AWS_S3_ACCESS_KEY::"
+                },
+                {
+                    "name": "CLOUD_AWS_S3_BUCKET",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:CLOUD_AWS_S3_BUCKET::"
+                },
+                {
+                    "name": "CLOUD_AWS_S3_REGION_STATIC",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:CLOUD_AWS_S3_REGION_STATIC::"
+                },
+                {
+                    "name": "CLOUD_AWS_S3_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:CLOUD_AWS_S3_SECRET_KEY::"
+                },
+                {
+                    "name": "FRONTEND_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:FRONTEND_URL::"
+                },
+                {
+                    "name": "GEOCODE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:GEOCODE_URL::"
+                },
+                {
+                    "name": "JWT_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-SW1p6F:JWT_SECRET_KEY::"
+                },
+                {
+                    "name": "KAFKA_BROKER",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:KAFKA_BROKER::"
+                },
+                {
+                    "name": "KAFKA_CONSUMER_GROUP",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:KAFKA_CONSUMER_GROUP::"
+                },
+                {
+                    "name": "KAKAO_API_UNLINK_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:KAKAO_API_UNLINK_URL::"
+                },
+                {
+                    "name": "KAKAO_CLIENT_ID",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:KAKAO_CLIENT_ID::"
+                },
+                {
+                    "name": "KAKAO_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:KAKAO_CLIENT_SECRET::"
+                },
+                {
+                    "name": "KAKAO_REDIRECT_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:KAKAO_REDIRECT_URL::"
+                },
+                {
+                    "name": "MYSQL_DATABASE",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:MYSQL_DATABASE::"
+                },
+                {
+                    "name": "MYSQL_NAME",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:MYSQL_NAME::"
+                },
+                {
+                    "name": "MYSQL_PASSWORD",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:MYSQL_PASSWORD::"
+                },
+                {
+                    "name": "NAVER_API_UNLINK_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:NAVER_API_UNLINK_URL::"
+                },
+                {
+                    "name": "NAVER_CLIENT_ID",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:NAVER_CLIENT_ID::"
+                },
+                {
+                    "name": "NAVER_CLIENT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:NAVER_CLIENT_SECRET::"
+                },
+                {
+                    "name": "NAVER_REDIRECT_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:NAVER_REDIRECT_URL::"
+                },
+                {
+                    "name": "PLACES_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:PLACES_URL::"
+                },
+                {
+                    "name": "REDIS_HOST",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:REDIS_HOST::"
+                },
+                {
+                    "name": "REDIS_PORT",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:REDIS_PORT::"
+                },
+                {
+                    "name": "REDIS_REPLICA_PORT1",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:REDIS_REPLICA_PORT1::"
+                },
+                {
+                    "name": "REDIS_SENTINEL_HOST_1",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:REDIS_SENTINEL_HOST_1::"
+                },
+                {
+                    "name": "REDIS_SENTINEL_HOST_2",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:REDIS_SENTINEL_HOST_2::"
+                },
+                {
+                    "name": "REDIS_SENTINEL_HOST_3",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:REDIS_SENTINEL_HOST_3::"
+                },
+                {
+                    "name": "REDIS_SENTINEL_PORT1",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:REDIS_SENTINEL_PORT1::"
+                },
+                {
+                    "name": "REDIS_SENTINEL_PORT2",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:REDIS_SENTINEL_PORT2::"
+                },
+                {
+                    "name": "REDIS_SENTINEL_PORT3",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:REDIS_SENTINEL_PORT3::"
+                },
+                {
+                    "name": "TOSS_PAYMENTS_CANCEL_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:TOSS_PAYMENTS_CANCEL_URL::"
+                },
+                {
+                    "name": "TOSS_PAYMENTS_CLIENT_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:TOSS_PAYMENTS_CLIENT_KEY::"
+                },
+                {
+                    "name": "TOSS_PAYMENTS_SECRET_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:TOSS_PAYMENTS_SECRET_KEY::"
+                },
+                {
+                    "name": "TOSS_PAYMENTS_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:TOSS_PAYMENTS_URL::"
+                },
+                {
+                    "name": "database_name",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:database_name::"
+                },
+                {
+                    "name": "mongodb_host",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:mongodb_host::"
+                },
+                {
+                    "name": "mongodb_password",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:mongodb_password::"
+                },
+                {
+                    "name": "mongodb_username",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:mongodb_username::"
+                },
+                {
+                    "name": "port",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:port::"
+                },
+                {
+                    "name": "rabbitmq_chat_exchange_name",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_chat_exchange_name::"
+                },
+                {
+                    "name": "rabbitmq_chat_queue_name",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_chat_queue_name::"
+                },
+                {
+                    "name": "rabbitmq_chat_routing_key",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_chat_routing_key::"
+                },
+                {
+                    "name": "rabbitmq_host",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_host::"
+                },
+                {
+                    "name": "rabbitmq_password",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_password::"
+                },
+                {
+                    "name": "rabbitmq_port",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_port::"
+                },
+                {
+                    "name": "rabbitmq_relay_client_login",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_relay_client_login::"
+                },
+                {
+                    "name": "rabbitmq_relay_client_passcode",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_relay_client_passcode::"
+                },
+                {
+                    "name": "rabbitmq_relay_port",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_relay_port::"
+                },
+                {
+                    "name": "rabbitmq_relay_system_login",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_relay_system_login::"
+                },
+                {
+                    "name": "rabbitmq_username",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_username::"
+                },
+                {
+                    "name": "rabbitmq_virtual_host",
+                    "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:971422688020:secret:wemeetnow/secret-8GzUEE:rabbitmq_virtual_host::"
+                }
+            ],
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
@@ -33,18 +247,30 @@
                 "secretOptions": []
             },
             "systemControls": []
+        },
+        {
+            "name": "we_meet_now_container_matching",
+            "image": "971422688020.dkr.ecr.ap-northeast-2.amazonaws.com/wemeetnow_ecr:latest",
+            "cpu": 1024,
+            "memory": 4096,
+            "memoryReservation": 2048,
+            "portMappings": [],
+            "essential": false,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "systemControls": []
         }
     ],
     "family": "we_meet_now_task",
+    "taskRoleArn": "arn:aws:iam::971422688020:role/ecsTaskExecutionRole",
     "executionRoleArn": "arn:aws:iam::971422688020:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "revision": 16,
+    "revision": 21,
     "volumes": [],
     "status": "ACTIVE",
     "requiresAttributes": [
-        {
-            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
-        },
         {
             "name": "ecs.capability.execution-role-awslogs"
         },
@@ -52,10 +278,13 @@
             "name": "com.amazonaws.ecs.capability.ecr-auth"
         },
         {
-            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.28"
         },
         {
-            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.28"
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.21"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
         },
         {
             "name": "ecs.capability.execution-role-ecr-pull"
@@ -68,6 +297,18 @@
         },
         {
             "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.secrets.asm.environment-variables"
+        },
+        {
+            "name": "ecs.capability.extensible-ephemeral-storage"
         }
     ],
     "placementConstraints": [],
@@ -78,13 +319,16 @@
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "1024",
-    "memory": "3072",
+    "cpu": "4096",
+    "memory": "8192",
+    "ephemeralStorage": {
+        "sizeInGiB": 21
+    },
     "runtimePlatform": {
         "cpuArchitecture": "ARM64",
         "operatingSystemFamily": "LINUX"
     },
-    "registeredAt": "2024-11-08T12:59:30.857Z",
+    "registeredAt": "2024-11-18T16:25:07.706Z",
     "registeredBy": "arn:aws:iam::971422688020:user/kimminju",
     "tags": []
 }
