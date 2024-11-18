@@ -1,20 +1,16 @@
 package nbc_final.gathering.domain.user.service;
 
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.config.jwt.*;
 import nbc_final.gathering.common.config.common.WebSocketSessionManager;
 import nbc_final.gathering.common.config.jwt.JwtUtil;
-import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
-import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
-import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
-import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
+import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
+import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
 import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
@@ -229,7 +225,7 @@ public class UserService {
     // 새 비밀번호 검증
     private static void validateNewPassword(UserChangePwRequestDto requestDto) {
         if (
-                // 비밀번호는 영문 + 숫자 + 특수문자를 최소 1글자 포함하고 최소 8글자 이상 최대 20글자 이하
+            // 비밀번호는 영문 + 숫자 + 특수문자를 최소 1글자 포함하고 최소 8글자 이상 최대 20글자 이하
             // 비밀번호에 알파벳 포함 여부 확인 (대소문자 포함)
                 !requestDto.getNewPassword().matches(".*[A-Za-z].*") ||
                         // 비밀번호에 숫자 포함 여부 확인
@@ -260,9 +256,3 @@ public class UserService {
     }
 
 }
-
-
-
-
-
-

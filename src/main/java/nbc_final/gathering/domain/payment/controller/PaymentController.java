@@ -1,5 +1,7 @@
 package nbc_final.gathering.domain.payment.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
+@Tag(name = "Payment API", description = "광고 결제 관련 API 모음입니다.")
 public class PaymentController {
 
     private final PaymentService paymentService;
@@ -32,6 +35,7 @@ public class PaymentController {
      * @param requestDto 결제 요청 데이터
      * @return 결제 요청 결과
      */
+    @Operation(summary = "결제 요청", description = "결제를 요청합니다.")
     @PostMapping("/v2/payments/ad")
     public ResponseEntity<ApiResponse<?>> requestAdPayment(
             @AuthenticationPrincipal AuthUser authUser,
@@ -46,6 +50,7 @@ public class PaymentController {
      * @param paymentData 결제 승인 데이터
      * @return 승인 처리 완료 메시지
      */
+    @Operation(summary = "결제 승인", description = "결제 요청을 승인합니다.")
     @PostMapping("/v2/payments/success")
     public ResponseEntity<ApiResponse<?>> paymentSuccess(@RequestBody PaymentSuccessResponseDto paymentData) {
         paymentService.approvePayment(paymentData.getPaymentKey(), paymentData.getOrderId(), paymentData.getAmount());
@@ -58,6 +63,7 @@ public class PaymentController {
      * @param failData 실패 요청 데이터 (orderId, 이유)
      * @return 실패 처리 완료 메시지
      */
+    @Operation(summary = "결제 실패 처리", description = "요청된 결제에 대한 실패 처리를 진행합니다.")
     @PostMapping("/v2/payments/fail")
     public ResponseEntity<ApiResponse<?>> paymentFail(
             @RequestBody Map<String, String> failData) {
@@ -76,6 +82,7 @@ public class PaymentController {
      * @param cancelRequestDto 결제 취소 요청 데이터
      * @return 취소 처리 완료 메시지
      */
+    @Operation(summary = "결제 취소(환불)", description = "이미 승인된 결제에 대해 환불 처리합니다.")
     @PostMapping("/v2/payments/{paymentKey}/cancel")
     public ResponseEntity<ApiResponse<?>> cancelPayment(
             @PathVariable String paymentKey,
@@ -92,6 +99,7 @@ public class PaymentController {
      * @param orderId  주문 ID
      * @return 결제 상세 정보
      */
+    @Operation(summary = "결제 단건 조회", description = "특정 결제 내역에 대해 조회합니다.")
     @GetMapping("/v2/payments/{orderId}")
     public ResponseEntity<ApiResponse<?>> getPayment(
             @AuthenticationPrincipal AuthUser authUser,
@@ -109,6 +117,7 @@ public class PaymentController {
      * @param size     페이지 크기
      * @return 결제 내역 페이지
      */
+    @Operation(summary = "모든 결제 내역 조회", description = "모든 결제 내역에 대해 조회합니다.")
     @GetMapping("/v2/payments/history")
     public ResponseEntity<ApiResponse<?>> getAllPayments(
             @AuthenticationPrincipal AuthUser authUser,
