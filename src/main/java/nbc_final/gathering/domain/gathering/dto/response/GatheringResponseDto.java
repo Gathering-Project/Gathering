@@ -38,8 +38,8 @@ public class GatheringResponseDto {
         gathering.getTitle(),
         gathering.getDescription(),
         gathering.getGatheringImage(),
-        gathering.getGatheringCount(),
-        gathering.getGatheringMaxCount()
+        gathering.getGatheringMaxCount(),
+        gathering.getGatheringCount()
     );
   }
 
