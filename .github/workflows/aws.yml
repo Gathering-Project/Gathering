@@ -8,7 +8,7 @@ env:
   AWS_REGION: ap-northeast-2                  # AWS 리전
   ECR_REPOSITORY: wemeetnow_ecr               # ECR 저장소 이름
   EC2_HOST: "43.200.205.244"              # EC2 퍼블릭 IP
-  EC2_USER: "wemeetnow"                        # EC2 사용자 이름
+  EC2_USER: "ubuntu"                        # EC2 사용자 이름
   APP_DIR: "~/app"                            # 애플리케이션 파일 저장 경로
   IMAGE_TAG: ${{ github.sha }}                # 이미지 태그 (커밋 해시 사용)
 
