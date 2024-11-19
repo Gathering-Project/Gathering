@@ -1,89 +1,38 @@
- name: Deploy to EC2 with ECR
+name: Deploy to EC2 with ECR
 
 on:
   push:
     branches:
       - dev
 
-env:
-  EC2_USER: ubuntu
-  EC2_HOST: 43.200.205.244  # EC2 퍼블릭 IP 주소를 입력
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v2
-      
+
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.CLOUD_AWS_S3_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.CLOUD_AWS_S3_SECRET_KEY }}
-        aws-region: ${{ secrets.CLOUD_AWS_S3_REGION_STATIC }}
-  
     - name: Build project with Gradle
       run: ./gradlew clean bootJar
 
     - name: Verify build artifacts
-       run: ls -al build/libs
+      run: ls -al build/libs
 
     - name: Login to ECR
-      id: ecr
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build Docker image
-      env:
-        IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t my-image:$IMAGE_TAG .
+        docker build -t my-image:${{ github.sha }} .
 
     - name: Push Docker image to ECR
-      env:
-        IMAGE_TAG: ${{ github.sha }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       run: |
-        docker tag my-image:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-image:$IMAGE_TAG
-        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-image:$IMAGE_TAG
-
-    - name: Deploy to EC2
-      env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-        EC2_USER: ${{ env.EC2_USER }}
-        EC2_HOST: ${{ env.EC2_HOST }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        # Create PEM file from GitHub Secret
-        echo "${{ secrets.EC2_PRIVATE_KEY }}" > ec2_key.pem
-        chmod 400 ec2_key.pem
-
-        # SSH and deploy application
-        ssh -o "StrictHostKeyChecking no" -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
-          set -e  # Exit on any error
-          
-          # Docker login to ECR
-          aws ecr get-login-password --region $AWS_REGION | sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-
-          # Stop and remove any running container
-          CONTAINER_ID=\$(sudo docker ps -q --filter "name=my-container")
-          if [ -n "\$CONTAINER_ID" ]; then
-            sudo docker stop my-container
-            sudo docker rm my-container
-          fi
-
-          # Pull and run the new image
-          sudo docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-image:$IMAGE_TAG
-          sudo docker run -d --name my-container -p 8000:8000 $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-image:$IMAGE_TAG
-        EOF
-
-        # Clean up the
+        docker tag my-image:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-image:${{ github.sha }}
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-image:${{ github.sha }}
