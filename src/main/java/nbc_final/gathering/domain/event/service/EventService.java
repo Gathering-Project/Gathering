@@ -2,6 +2,7 @@ package nbc_final.gathering.domain.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nbc_final.gathering.common.annotation.DistributedLock;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
@@ -181,62 +182,39 @@ public class EventService {
     }
 
     // 이벤트 참가 (분산락, 권한: 어드민 불가, 이벤트 생성자 불가, 게더링 멤버 가능)
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = {ResponseCodeException.class, CannotAcquireLockException.class, InterruptedException.class})
-    public void joinEventWithLock(Long userId, Long gatheringId, Long eventId) {
-        verifyMembership(userId, gatheringId);
-        RLock lock = getDistributedLock(eventId);
-
-        try {
-            acquireLock(lock);
-
-            User user = getUserOrThrow(userId);
-            Event event = getEventOrThrow(eventId);
+    @DistributedLock(key = "event:{#eventId}:lock", waitTime = 10, leaseTime = 15)
+    @Transactional(rollbackFor = ResponseCodeException.class)
+    public void joinEventWithLock(Long userId, Long eventId) {
+        User user = getUserOrThrow(userId);
+        Event event = getEventOrThrow(eventId);
 
             validateParticipation(user, event, userId);
 
-            if (isParticipantLimitExceeded(event.getMaxParticipants(), eventId)) {
-                throw new ResponseCodeException(ResponseCode.PARTICIPANT_LIMIT_EXCEEDED);
-            }
-
-            registerParticipant(user, event);
-
-        } catch (CannotAcquireLockException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new ResponseCodeException(ResponseCode.LOCK_ACQUISITION_FAILED);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {  // 현재 쓰레드가 락을 소유한 경우에만 해제
-                lock.unlock();
-            }
-
-            // 참가자에게 알림 전송
-            kafkaNotificationUtil.notifyMember(userId, "이벤트 참가 신청이 완료되었습니다.");
+        if (isParticipantLimitExceeded(event.getMaxParticipants(), eventId)) {
+            throw new ResponseCodeException(ResponseCode.PARTICIPANT_LIMIT_EXCEEDED);
         }
+
+        registerParticipant(user, event);
+
+        kafkaNotificationUtil.notifyMember(userId, "이벤트 참가 신청이 완료되었습니다.");
     }
 
     // 이벤트 취소 (분산락, 권한: 어드민 불가, 이벤트 생성자 불가)
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = {ResponseCodeException.class, CannotAcquireLockException.class, InterruptedException.class})
-    public void cancelParticipation(Long userId, Long gatheringId, Long eventId) {
-        verifyMembership(userId, gatheringId);
-        RLock lock = getDistributedLock(eventId);
+    @DistributedLock(key = "event:{#eventId}:lock", waitTime = 10, leaseTime = 15)
+    @Transactional(rollbackFor = {ResponseCodeException.class})
+    public void cancelParticipation(Long userId, Long eventId) {
+        User user = getUserOrThrow(userId);
+        Event event = getEventOrThrow(eventId);
 
-        try {
-            acquireLock(lock);
+        // 이벤트 참가 여부 확인
+        Participant participant = participantRepository.findByEventAndUserId(event, userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_PARTICIPATED));
 
-            User user = getUserOrThrow(userId);
-            Event event = getEventOrThrow(eventId);
+        // 취소 권한 확인
+        checkCancelPermission(user, event);
 
-            Participant participant = participantRepository.findByEventAndUserId(event, userId)
-                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_PARTICIPATED));
-
-            checkCancelPermission(user, event);
-            removeParticipant(participant, event);
-
-        } catch (CannotAcquireLockException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new ResponseCodeException(ResponseCode.LOCK_ACQUISITION_FAILED);
-        } finally {
-            releaseLock(lock);
-        }
+        // 참가자 제거
+        removeParticipant(participant, event);
 
         // 참가 취소 알림 전송
         kafkaNotificationUtil.notifyMember(userId, "이벤트 참가가 취소되었습니다.");
@@ -307,26 +285,6 @@ public class EventService {
         return event.getUser().getId().equals(userId);
     }
 
-// ------- 락 관리 메서드 -------
-
-    // Redis 락 관리 메서드
-    private RLock getDistributedLock(Long eventId) {
-        return redissonClient.getFairLock("event:" + eventId + ":lock");
-    }
-
-    // 분산 락 획득
-    private void acquireLock(RLock lock) throws InterruptedException {
-        if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) {
-            throw new ResponseCodeException(ResponseCode.LOCK_ACQUISITION_FAILED);
-        }
-    }
-
-    // 락 해제
-    private void releaseLock(RLock lock) {
-        if (lock.isHeldByCurrentThread()) {
-            lock.unlock();
-        }
-    }
 
 // ------- 유틸리티 메서드 -------
 

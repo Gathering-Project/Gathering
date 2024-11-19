@@ -125,7 +125,7 @@ public class EventController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId,
             @PathVariable Long eventId) {
-        eventService.joinEventWithLock(authUser.getUserId(), gatheringId, eventId);
+        eventService.joinEventWithLock(authUser.getUserId(), eventId);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 
@@ -142,7 +142,7 @@ public class EventController {
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gatheringId,
             @PathVariable Long eventId) {
-        eventService.cancelParticipation(authUser.getUserId(), gatheringId, eventId);
+        eventService.joinEventWithLock(authUser.getUserId(), eventId);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 
