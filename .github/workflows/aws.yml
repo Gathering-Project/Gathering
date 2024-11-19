@@ -38,7 +38,11 @@ jobs:
 
     - name: Build project with Gradle
       run: ./gradlew clean bootJar
-
+    - name: Debug PEM File
+      run: |
+        echo "${{ secrets.EC2_PRIVATE_KEY }}" | tr -d '\r' > debug.pem
+        cat debug.pem
+    
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -71,7 +75,7 @@ jobs:
         APP_PORT: ${{ env.APP_PORT }}
       run: |
         # Create PEM file from Secrets
-        echo "${{ secrets.EC2_PRIVATE_KEY }}" > wemeetnow.pem
+        echo "${{ secrets.EC2_PRIVATE_KEY }}" | base64 -d > wemeetnow.pem
         chmod 400 wemeetnow.pem
 
         # SSH into EC2 instance
