@@ -75,7 +75,7 @@ jobs:
         chmod 400 wemeetnow.pem
 
         # SSH into EC2 instance
-        ssh -o StrictHostKeyChecking=no -i wemeetnoe.pem $EC2_USER@$EC2_HOST << EOF
+        ssh -o StrictHostKeyChecking=no -i wemeetnow.pem $EC2_USER@$EC2_HOST << EOF
           set -e  # Exit on any error
 
           # Docker login to ECR
@@ -98,4 +98,4 @@ jobs:
         EOF
 
         # Clean up local PEM file
-        rm ec2_key.pem
+        rm wemeetnow.pem
