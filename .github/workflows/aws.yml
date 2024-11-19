@@ -2,16 +2,27 @@ name: Deploy to EC2 with ECR
 
 on:
   push:
-    branches:
-      - dev
+    branches: [ "dev" ]
+
+env:
+  AWS_REGION: ap-northeast-2                  # AWS 리전
+  ECR_REPOSITORY: wemeetnow_ecr               # ECR 저장소 이름
+  EC2_HOST: "43.200.205.244"              # EC2 퍼블릭 IP
+  EC2_USER: "ubuntu"                          # EC2 사용자 이름
+  IMAGE_TAG: ${{ github.sha }}                # Docker 이미지 태그
+  APP_PORT: "8080"                            # 애플리케이션 포트
+
+permissions:
+  contents: read
 
 jobs:
   deploy:
+    name: Deploy to EC2
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v4
 
     - name: Set up JDK 17
       uses: actions/setup-java@v3
@@ -19,20 +30,72 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Clean previous builds
+      run: ./gradlew clean
+
     - name: Build project with Gradle
       run: ./gradlew clean bootJar
 
-    - name: Verify build artifacts
-      run: ls -al build/libs
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.CLOUD_AWS_S3_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.CLOUD_AWS_S3_SECRET_KEY }}
+        aws-region: ap-northeast-2
 
-    - name: Login to ECR
+    - name: Login to Amazon ECR
+      id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build Docker image
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t my-image:${{ github.sha }} .
+        # Build a Docker container and push it to ECR
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Push Docker image to ECR
+    - name: Deploy to EC2 via SSH
+      env:
+        AWS_REGION: ${{ env.AWS_REGION }}
+        IMAGE_TAG: ${{ github.sha }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        EC2_USER: ${{ env.EC2_USER }}
+        EC2_HOST: ${{ env.EC2_HOST }}
+        APP_PORT: ${{ env.APP_PORT }}
       run: |
-        docker tag my-image:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-image:${{ github.sha }}
-        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-image:${{ github.sha }}
+        # Create PEM file from Secrets
+        echo "${{ secrets.EC2_PRIVATE_KEY }}" > ec2_key.pem
+        chmod 400 ec2_key.pem
+
+        # SSH into EC2 instance
+        ssh -o StrictHostKeyChecking=no -i ec2_key.pem $EC2_USER@$EC2_HOST << EOF
+          set -e  # Exit on any error
+
+          # Docker login to ECR
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+          # Stop and remove the existing container
+          CONTAINER_ID=\$(sudo docker ps -q --filter "name=wemeetnow_container")
+          if [ -n "\$CONTAINER_ID" ]; then
+            sudo docker stop wemeetnow_container
+            sudo docker rm wemeetnow_container
+          fi
+
+          # Pull the latest Docker image
+          sudo docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+          # Run the new container
+          sudo docker run -d --name wemeetnow_container -p $APP_PORT:$APP_PORT $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+          echo "Deployment completed: Docker container is running on port $APP_PORT."
+        EOF
+
+        # Clean up local PEM file
+        rm ec2_key.pem
