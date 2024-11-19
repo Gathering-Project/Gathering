@@ -61,17 +61,40 @@ jobs:
 
     - name: Deploy to EC2
       run: |
-        # EC2에서 Docker 실행
         ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << EOF
+          set -e  # 오류 발생 시 즉시 종료
+
+          # 권한 설정
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/authorized_keys
+
+          # Docker 및 AWS CLI 설치 확인
+          if ! command -v docker &> /dev/null; then
+            echo "Docker가 설치되어 있지 않습니다. 설치를 진행합니다."
+            sudo yum update -y
+            sudo yum install -y docker
+            sudo service docker start
+            sudo usermod -aG docker $(whoami)
+          fi
+
+          if ! command -v aws &> /dev/null; then
+            echo "AWS CLI가 설치되어 있지 않습니다. 설치를 진행합니다."
+            curl "https://awscli.amazonaws.com/aws-cli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+          fi
+
           # Docker 로그인
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
 
           # 기존 컨테이너 종료 및 삭제
-          docker ps -q --filter "name=wemeetnow_container" | grep -q . && docker stop wemeetnow_container && docker rm wemeetnow_container || true
+          docker ps -q | grep -q . && docker stop \$(docker ps -q) && docker rm \$(docker ps -aq) || true
 
           # 최신 이미지 Pull
           docker pull ${{ steps.build-image.outputs.image }}
 
-          # 컨테이너 실행
-          docker run -d --name wemeetnow_container -p 8080:8080 ${{ steps.build-image.outputs.image }}
+          # 이미지 실행
+          docker run -d -p 8080:8080 ${{ steps.build-image.outputs.image }}
+
+          echo "배포 완료: 이미지를 EC2에서 실행 중입니다."
         EOF
