@@ -1,105 +1,106 @@
-name: Deploy to EC2 with ECR
-
+name: Deploy to EC2 with ECR_v01
 on:
   push:
-    branches: [ "dev" ]
-
+    branches: [ "main" ]
+    
 env:
-  AWS_REGION: ap-northeast-2                  # AWS 리전
-  ECR_REPOSITORY: wemeetnow_ecr               # ECR 저장소 이름
+  AWS_REGION: ap-northeast-2                 # AWS 리전
+  ECR_REPOSITORY: wemeetnow_ecr              # ECR 저장소 이름
   EC2_HOST: "43.200.205.244"              # EC2 퍼블릭 IP
-  EC2_USER: "ubuntu"                          # EC2 사용자 이름
-  IMAGE_TAG: ${{ github.sha }}                # Docker 이미지 태그
-  APP_PORT: "8080"                            # 애플리케이션 포트
-
+  EC2_USER: "ubuntu"                        # EC2 사용자 이름
+  APP_DIR: "~/app"                            # 애플리케이션 파일 저장 경로
+  IMAGE_TAG: ${{ github.sha }}                # 이미지 태그 (커밋 해시 사용)
 permissions:
   contents: read
-
+  
 jobs:
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v4
-
+      
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      
-    - name: Clean previous builds
-      run: ./gradlew clean
-
+        
     - name: Build project with Gradle
       run: ./gradlew clean bootJar
-    - name: Debug PEM File
-      run: |
-        echo "${{ secrets.EC2_PRIVATE_KEY }}" | tr -d '\r' > debug.pem
-        cat debug.pem
-    
+      
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.CLOUD_AWS_S3_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.CLOUD_AWS_S3_SECRET_KEY }}
-        aws-region: ap-northeast-2
-
+        aws-region: ${{ env.AWS_REGION }}
+        
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-
+      
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build a Docker container and push it to ECR
+        # Docker 이미지 빌드 및 ECR 푸시
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+    
+    - name: Set up SSH agent
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
 
-    - name: Deploy to EC2 via SSH
-      env:
-        AWS_REGION: ${{ env.AWS_REGION }}
-        IMAGE_TAG: ${{ github.sha }}
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        EC2_USER: ${{ env.EC2_USER }}
-        EC2_HOST: ${{ env.EC2_HOST }}
-        APP_PORT: ${{ env.APP_PORT }}
+    - name: Deploy to EC2
       run: |
-        # Create PEM file from Secrets
-        echo "${{ secrets.EC2_PRIVATE_KEY }}" > wemeetnow.pem
-        chmod 400 wemeetnow.pem
-
-        # SSH into EC2 instance
-        ssh -o StrictHostKeyChecking=no -i wemeetnow.pem $EC2_USER@$EC2_HOST << EOF
-          set -e  # Exit on any error
-
-          # Docker login to ECR
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-
-          # Stop and remove the existing container
-          CONTAINER_ID=\$(sudo docker ps -q --filter "name=wemeetnow_container")
-          if [ -n "\$CONTAINER_ID" ]; then
-            sudo docker stop wemeetnow_container
-            sudo docker rm wemeetnow_container
+        ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << EOF
+          set -e  # 오류 발생 시 즉시 종료
+          # 권한 설정
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/authorized_keys
+          
+          # Docker 설치 확인 및 설치
+          if ! command -v docker &> /dev/null; then
+            echo "Docker가 설치되어 있지 않습니다. 설치를 진행합니다."
+            sudo apt update -y
+            sudo apt install -y docker.io
+            sudo systemctl start docker
+            sudo systemctl enable docker
           fi
-
-          # Pull the latest Docker image
-          sudo docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-          # Run the new container
-          sudo docker run -d --name wemeetnow_container -p $APP_PORT:$APP_PORT $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-          echo "Deployment completed: Docker container is running on port $APP_PORT."
+          
+          # AWS CLI 설치 확인 및 설치
+          if ! command -v aws &> /dev/null; then
+            echo "AWS CLI가 설치되어 있지 않습니다. 설치를 진행합니다."
+            sudo apt update -y
+            sudo apt install -y unzip curl
+            curl -O 'https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip'
+            aws --version
+            
+            # ZIP 파일 검증
+            if ! unzip -t awscliv2.zip &> /dev/null; then
+              echo "AWS CLI 설치 ZIP 파일 다운로드 실패. URL 또는 네트워크 연결을 확인하세요."
+              exit 1
+            fi
+            
+            unzip awscliv2.zip
+            sudo ./aws/install
+            echo "AWS CLI 설치 완료: $(aws --version)"
+          fi
+          
+          # Docker 로그인
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+          
+          # 기존 컨테이너 종료 및 삭제
+          docker ps -q | grep -q . && docker stop \$(docker ps -q) && docker rm \$(docker ps -aq) || true
+          
+          # 최신 이미지 Pull 및 실행
+          docker pull ${{ steps.build-image.outputs.image }}
+          docker run -d -p 8080:8080 ${{ steps.build-image.outputs.image }}
+          
+          echo "배포 완료: 이미지를 EC2에서 실행 중입니다."
         EOF
-
-        # Clean up local PEM file
-        rm wemeetnow.pem
