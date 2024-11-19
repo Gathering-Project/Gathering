@@ -54,12 +54,10 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Add SSH Key via Stdin
-      run: |
-        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/ssh_key.pem
-        chmod 600 ~/ssh_key.pem
-        eval "$(ssh-agent -s)"
-        ssh-add ~/ssh_key.pem
+    - name: Set up SSH agent
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
 
     - name: Deploy to EC2
       run: |
