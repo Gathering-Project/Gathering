@@ -108,6 +108,10 @@ services:
       memlock:
         soft: -1
         hard: -1
+    command: >
+      sh -c "
+      elasticsearch-plugin install analysis-nori && 
+      elasticsearch"
     healthcheck:
       test:
         [
