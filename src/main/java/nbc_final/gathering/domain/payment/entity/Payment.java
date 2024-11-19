@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
+import nbc_final.gathering.common.exception.ResponseCode;
+import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.ad.entity.Ad;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "payments")
 public class Payment extends TimeStamped {
 
     @Id
@@ -43,7 +46,7 @@ public class Payment extends TimeStamped {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    public static Payment create(Long amount, String orderName, Gathering gathering, LocalDate startDate, LocalDate endDate) {
+    public static Payment of(Long amount, String orderName, Gathering gathering, LocalDate startDate, LocalDate endDate) {
         Payment payment = new Payment();
         payment.amount = amount;
         payment.orderName = orderName;
@@ -59,7 +62,7 @@ public class Payment extends TimeStamped {
         this.orderName = orderName;
         this.orderId = orderId;
         this.status = PayStatus.READY;
-        updateManualTimestamp(); // 수동 타임스탬프 갱신
+        updateManualTimestamp();
     }
 
     public void completePayment(String paymentKey) {
@@ -95,8 +98,8 @@ public class Payment extends TimeStamped {
             var field = TimeStamped.class.getDeclaredField("updatedAt");
             field.setAccessible(true);
             field.set(this, LocalDateTime.now());
-        } catch (Exception e) {
-            throw new RuntimeException("타임스탬프 갱신 중 오류 발생", e);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new ResponseCodeException(ResponseCode.INTERNAL_SERVER_EXCEPTION);
         }
     }
 }

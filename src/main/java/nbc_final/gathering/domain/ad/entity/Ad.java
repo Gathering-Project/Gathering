@@ -4,16 +4,18 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.payment.entity.Payment;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "ads")
-public class Ad {
+public class Ad extends TimeStamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,15 +39,27 @@ public class Ad {
 
     private String orderName;
 
-    public static Ad create(Gathering gathering, LocalDate startDate, LocalDate endDate, Long amount) {
-        Ad ad = new Ad();
-        ad.gathering = gathering;
-        ad.startDate = startDate;
-        ad.endDate = endDate;
-        ad.status = AdStatus.PENDING;
-        ad.orderName = generateOrderName(startDate, endDate);
-        ad.totalAmount = amount;
-        return ad;
+    private Ad(Gathering gathering, LocalDate startDate, LocalDate endDate, Long amount) {
+        this.gathering = gathering;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.status = AdStatus.PENDING;
+        this.orderName = generateOrderName(startDate, endDate);
+        this.totalAmount = amount;
+    }
+
+    public static Ad of(Gathering gathering, LocalDate startDate, LocalDate endDate, Long amount) {
+        if (gathering == null) {
+            throw new IllegalArgumentException("Gathering must not be null.");
+        }
+        if (startDate == null || endDate == null || startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Invalid date range for ad.");
+        }
+        if (amount == null || amount <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero.");
+        }
+
+        return new Ad(gathering, startDate, endDate, amount);
     }
 
     public void updateStatus(AdStatus status) {
@@ -58,7 +72,7 @@ public class Ad {
     }
 
     private static String generateOrderName(LocalDate startDate, LocalDate endDate) {
-        long days = startDate.until(endDate).getDays() + 1;
+        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         return days + "일 광고";
     }
 }
