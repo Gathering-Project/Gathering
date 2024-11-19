@@ -311,7 +311,7 @@ public class EventService {
 
     // Redis 락 관리 메서드
     private RLock getDistributedLock(Long eventId) {
-        return redissonClient.getLock("event:" + eventId + ":lock");
+        return redissonClient.getFairLock("event:" + eventId + ":lock");
     }
 
     // 분산 락 획득
