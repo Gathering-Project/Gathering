@@ -1,16 +1,14 @@
 package nbc_final.gathering.domain.event.dto;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
 import nbc_final.gathering.domain.event.entity.Event;
 import nbc_final.gathering.domain.event.entity.Participant;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-
 
 import java.util.List;
 import java.util.stream.Collectors;

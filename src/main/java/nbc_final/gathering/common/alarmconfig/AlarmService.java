@@ -8,11 +8,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AlarmService {
 
-    private final RabbitTemplate rabbitTemplate;
-    private final AlarmMessageRepository alarmMessageRepository;
-
     private static final String NOTIFICATION_EXCHANGE = "notification-exchange";
     private static final String ROUTING_KEY = "user-notification-routing-key";
+    private final RabbitTemplate rabbitTemplate;
+    private final AlarmMessageRepository alarmMessageRepository;
 
     // 알람 메시지를 RabbitMQ로 전송하는 서비스 메서드
     public void sendAlarm(AlarmDto.AlarmMessageReq request) {

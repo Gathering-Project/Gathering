@@ -7,16 +7,15 @@ import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.comment.dto.request.CommentRequestDto;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
-import nbc_final.gathering.domain.comment.entity.Comment;
 import nbc_final.gathering.domain.comment.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
-@RequestMapping("/api")
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 @Tag(name = "Comment API", description = "이벤트 내의 댓글 관련 API 모음입니다.")
 public class CommentController {
     private final CommentService commentService;
@@ -25,9 +24,9 @@ public class CommentController {
      * 새로운 댓글을 저장
      *
      * @param commentRequestDto 저장할 댓글의 정보를 담은 DTO
-     * @param gatheringId            모임의 ID
-     * @param eventId                이벤트의 ID
-     * @param authUser               인증된 사용자의 정보
+     * @param gatheringId       모임의 ID
+     * @param eventId           이벤트의 ID
+     * @param authUser          인증된 사용자의 정보
      * @return 저장된 댓글의 정보를 포함한 성공 응답
      */
     @Operation(summary = "댓글 작성", description = "참여 중인 이벤트에 댓글을 작성합니다.")
@@ -68,10 +67,10 @@ public class CommentController {
     /**
      * 기존 댓글을 삭제
      *
-     * @param commentId    삭제할 댓글의 ID
-     * @param gatheringId  모임의 ID
-     * @param eventId      이벤트의 ID
-     * @param authUser     인증된 사용자의 정보
+     * @param commentId   삭제할 댓글의 ID
+     * @param gatheringId 모임의 ID
+     * @param eventId     이벤트의 ID
+     * @param authUser    인증된 사용자의 정보
      * @return 삭제 성공을 나타내는 응답
      */
     @Operation(summary = "댓글 삭제", description = "본인이 기존에 작성했던 댓글을 삭제합니다.")

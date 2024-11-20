@@ -5,9 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import nbc_final.gathering.domain.event.entity.Event;
-import nbc_final.gathering.domain.gathering.entity.Gathering;
-import nbc_final.gathering.domain.user.entity.User;
 
 @Getter
 @NoArgsConstructor

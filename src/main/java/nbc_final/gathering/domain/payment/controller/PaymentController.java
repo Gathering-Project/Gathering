@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
-import nbc_final.gathering.domain.payment.dto.request.PaymentRequestDto;
 import nbc_final.gathering.domain.payment.dto.request.PaymentCancelRequestDto;
+import nbc_final.gathering.domain.payment.dto.request.PaymentRequestDto;
 import nbc_final.gathering.domain.payment.dto.response.PaymentHistoryResponseDto;
 import nbc_final.gathering.domain.payment.dto.response.PaymentSuccessResponseDto;
 import nbc_final.gathering.domain.payment.service.PaymentService;
@@ -31,7 +31,7 @@ public class PaymentController {
     /**
      * 결제 요청
      *
-     * @param authUser  인증된 사용자 정보
+     * @param authUser   인증된 사용자 정보
      * @param requestDto 결제 요청 데이터
      * @return 결제 요청 결과
      */
@@ -78,7 +78,7 @@ public class PaymentController {
     /**
      * 결제 취소 처리
      *
-     * @param paymentKey 결제 키
+     * @param paymentKey       결제 키
      * @param cancelRequestDto 결제 취소 요청 데이터
      * @return 취소 처리 완료 메시지
      */

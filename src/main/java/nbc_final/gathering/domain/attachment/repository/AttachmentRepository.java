@@ -9,6 +9,6 @@ import java.util.List;
 
 
 public interface AttachmentRepository extends JpaRepository<Attachment, Long> {
-   List<Attachment> findByUser(User user);
-   List<Attachment> findByUserAndGathering(User user, Gathering gathering);
+    List<Attachment> findByUser(User user);
+    List<Attachment> findByUserAndGathering(User user, Gathering gathering);
 }

@@ -7,8 +7,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository("memberElasticSearchRepo")
-public interface MemberElasticSearchRepository extends ElasticsearchRepository <MemberElasticDto, Long> {
-    List<MemberElasticDto> findByGatheringId(Long gatheringId);
+public interface MemberElasticSearchRepository extends ElasticsearchRepository<MemberElasticDto, Long> {
 
+    List<MemberElasticDto> findByGatheringId(Long gatheringId);
 
 }

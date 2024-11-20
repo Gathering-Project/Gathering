@@ -155,37 +155,37 @@ public class CommentService {
         commentRepository.deleteById(commentId);
     }
 
-        // 삭제 기능 (권한: 어드민, 이벤트 생성자, 소모임 생성자)
-        private void checkAdminOrEventCreatorOrGatheringCreator (Long userId, Long eventId, Long gatheringId){
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-            if (isAdmin(user)) {
-                return;
-            }
-            Event event = eventRepository.findById(eventId)
-                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
-
-            Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
-                    .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
-
-            boolean isEventCreator = event.getUser().getId().equals(userId);
-            boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
-            boolean isHost = isHost(member);
-
-            if (!isEventCreator && !isGatheringCreator && !isHost) {
-                    throw new ResponseCodeException(ResponseCode.FORBIDDEN);
-            }
+    // 삭제 기능 (권한: 어드민, 이벤트 생성자, 소모임 생성자)
+    private void checkAdminOrEventCreatorOrGatheringCreator(Long userId, Long eventId, Long gatheringId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
+        if (isAdmin(user)) {
+            return;
         }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
 
-        private boolean isHost (Member member){
-            boolean isHost = member.getRole().equals(MemberRole.HOST);
-            return isHost;
-        }
+        Member member = memberRepository.findByUserIdAndGatheringId(userId, gatheringId)
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_MEMBER));
 
-        private boolean isAdmin (User user){
-            boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
-            return isAdmin;
+        boolean isEventCreator = event.getUser().getId().equals(userId);
+        boolean isGatheringCreator = eventRepositoryCustom.isGatheringCreator(userId, gatheringId);
+        boolean isHost = isHost(member);
+
+        if (!isEventCreator && !isGatheringCreator && !isHost) {
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
     }
+
+    private boolean isHost(Member member) {
+        boolean isHost = member.getRole().equals(MemberRole.HOST);
+        return isHost;
+    }
+
+    private boolean isAdmin(User user) {
+        boolean isAdmin = user.getUserRole().equals(UserRole.ROLE_ADMIN);
+        return isAdmin;
+    }
+}
 
 

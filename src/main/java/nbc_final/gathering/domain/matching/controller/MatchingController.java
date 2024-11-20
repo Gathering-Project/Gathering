@@ -2,22 +2,16 @@ package nbc_final.gathering.domain.matching.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.matching.dto.request.MatchingRequestDto;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.concurrent.ExecutionException;
-
-@RestController
 @Slf4j
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/matching")
 @Tag(name = "Matching API", description = "1:1 유저 매칭 관련 API 모음입니다.")
@@ -28,6 +22,7 @@ public class MatchingController {
 
     /**
      * 매칭 대기열 참가 요청
+     *
      * @param requestDto
      * @return 매칭 서버에 데이터 전송 성공 여부
      */
@@ -43,6 +38,7 @@ public class MatchingController {
 
     /**
      * 매칭 대기열 취소 요청
+     *
      * @param userId
      * @return 매칭 서버에 데이터 전송 성공 여부
      */
@@ -51,7 +47,7 @@ public class MatchingController {
     public ResponseEntity<ApiResponse<Void>> cancelMatching(@PathVariable Long userId) {
 //        kafkaTemplate.send("matching",userId);
         rabbitTemplate.convertAndSend("matching.exchange", "matching.cancel", userId);
-        log.info("매칭 취소",userId);
+        log.info("매칭 취소", userId);
 
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }

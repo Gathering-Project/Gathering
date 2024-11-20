@@ -10,9 +10,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class WebSocketSessionManager {
 
-    private final RedisTemplate<String, String> redisTemplate;
-
     private static final String WEBSOCKET_SESSION_KEY_PREFIX = "websocket:session:";
+    private final RedisTemplate<String, String> redisTemplate;
 
     // Redis에 세션 저장 (만료 시간 설정 가능)
     public void addUserSession(Long userId, String sessionId) {

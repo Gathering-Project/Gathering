@@ -12,7 +12,6 @@ import nbc_final.gathering.domain.gathering.dto.GatheringElasticDto;
 import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringWithCountResponseDto;
-import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.service.GatheringService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,12 +21,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
 @RequiredArgsConstructor
+@RequestMapping("/api")
 @Tag(name = "Gathering API", description = "소모임 관련 API 모음입니다.")
 public class GatheringController {
 
     private final GatheringService gatheringService;
+
     /**
      * 제목/위치를 기준으로 모임을 검색
      *
@@ -98,8 +98,7 @@ public class GatheringController {
      */
     @Operation(summary = "인기 소모임 조회", description = "조회수에 따른 소모임의 인기 랭킹을 조회합니다.")
     @GetMapping("/v1/gathering/top-view-list")
-    public ResponseEntity<ApiResponse<Map<String, Integer>>> getTopViewCardList(@AuthenticationPrincipal AuthUser authUser)
-    {
+    public ResponseEntity<ApiResponse<Map<String, Integer>>> getTopViewCardList(@AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.ok(ApiResponse.createSuccess(gatheringService.getTopViewGatheringList()));
     }
 

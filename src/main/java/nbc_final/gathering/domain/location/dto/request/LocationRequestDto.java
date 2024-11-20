@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LocationRequestDto {
 
-  private String address; // 사용자가 입력한 주소
+    private String address; // 사용자가 입력한 주소
 }

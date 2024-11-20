@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 @Table(name = "locations")
 public class Location {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  private String address;  // 주소
-  private Double latitude;  // 위도
-  private Double longitude; // 경도
+    private String address;  // 주소
+    private Double latitude;  // 위도
+    private Double longitude; // 경도
 
 }

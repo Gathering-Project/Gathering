@@ -62,6 +62,11 @@ public class Ad extends TimeStamped {
         return new Ad(gathering, startDate, endDate, amount);
     }
 
+    private static String generateOrderName(LocalDate startDate, LocalDate endDate) {
+        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        return days + "일 광고";
+    }
+
     public void updateStatus(AdStatus status) {
         this.status = status;
     }
@@ -69,10 +74,5 @@ public class Ad extends TimeStamped {
     public void setPayment(Payment payment) {
         this.payment = payment;
         payment.setAd(this);
-    }
-
-    private static String generateOrderName(LocalDate startDate, LocalDate endDate) {
-        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
-        return days + "일 광고";
     }
 }

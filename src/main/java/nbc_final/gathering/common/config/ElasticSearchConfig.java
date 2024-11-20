@@ -34,5 +34,4 @@ public class ElasticSearchConfig extends AbstractElasticsearchConfiguration {
     }
 
 
-
 }
