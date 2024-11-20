@@ -6,9 +6,9 @@ import lombok.NoArgsConstructor;
 import nbc_final.gathering.domain.user.enums.InterestType;
 import nbc_final.gathering.domain.user.enums.MbtiType;
 
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
 public class UserUpdateRequestDto {
 
     private String location;

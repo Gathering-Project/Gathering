@@ -22,12 +22,12 @@ public class CommentResponseDto {
     }
 
     public static CommentResponseDto of(Comment comment) {
-      return new CommentResponseDto(
-              comment.getId(),
-              comment.getContent(),
-              comment.getUser().getId(),
-              comment.getCreatedAt(),
-              comment.getUpdatedAt()
-      );
+        return new CommentResponseDto(
+                comment.getId(),
+                comment.getContent(),
+                comment.getUser().getId(),
+                comment.getCreatedAt(),
+                comment.getUpdatedAt()
+        );
     }
 }

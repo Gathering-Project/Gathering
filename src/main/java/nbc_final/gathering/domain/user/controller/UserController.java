@@ -6,8 +6,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
-import nbc_final.gathering.common.config.jwt.JwtUtil;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.user.dto.UserElasticDto;
@@ -37,6 +35,7 @@ public class UserController {
 
     /**
      * 유저 검색
+     *
      * @param keyword 검색 키워드
      * @return 검색된 유저 리스트
      */
@@ -169,7 +168,6 @@ public class UserController {
 
     /**
      * 네이버 로그인 엔드포인트
-     *
      *
      * @param code     네이버에서 전달받은 인증 코드
      * @param state    네이버에서 전달받은 state 값 (CSRF 방지용)

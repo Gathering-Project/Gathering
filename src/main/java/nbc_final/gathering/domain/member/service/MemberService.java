@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
 public class MemberService {
 
     private final MemberRepository memberRepository;
@@ -384,7 +384,6 @@ public class MemberService {
             System.out.println("알림 전송 성공: 멤버 ID " + guest.getUser().getId() + ", 메시지: " + message);
         });
     }
-
 
 
     //----------------- extracted method ------------- //

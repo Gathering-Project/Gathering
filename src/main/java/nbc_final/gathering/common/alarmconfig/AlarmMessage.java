@@ -6,12 +6,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Document("alarm_messages")
 @Getter
 @Setter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Document("alarm_messages")
 public class AlarmMessage {
     @Id
     private String id;

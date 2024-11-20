@@ -27,17 +27,14 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class UserAttachmentService {
 
-    private final AmazonS3 amazonS3;
-    private final AttachmentRepository attachmentRepository;
-    private final UserRepository userRepository;
-
-
-    @Value("${CLOUD_AWS_S3_BUCKET}")
-    private String bucketName;
-
     // 지원되는 파일 형식과 크기 제한
     private static final List<String> SUPPORTED_FILE_TYPES = Arrays.asList("image/jpeg", "image/png", "image/jpg");
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private final AmazonS3 amazonS3;
+    private final AttachmentRepository attachmentRepository;
+    private final UserRepository userRepository;
+    @Value("${CLOUD_AWS_S3_BUCKET}")
+    private String bucketName;
 
     // 유저 프로필 등록
     @Transactional
@@ -58,8 +55,7 @@ public class UserAttachmentService {
 
     // 유저 이미지 수정
     @Transactional
-    public AttachmentResponseDto userUpdateFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException
-    {
+    public AttachmentResponseDto userUpdateFile(AuthUser authUser, MultipartFile file) throws IOException, java.io.IOException {
         validateFile(file, authUser);
 
         // User 엔티티 조회

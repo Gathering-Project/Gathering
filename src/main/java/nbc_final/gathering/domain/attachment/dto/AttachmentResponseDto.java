@@ -10,7 +10,7 @@ public class AttachmentResponseDto {
     private Long id;
     private String profileImagePath;
     private Long userId;
-    
+
     public AttachmentResponseDto(Attachment attachment) {
         this.id = attachment.getId();
         this.profileImagePath = attachment.getProfileImagePath();

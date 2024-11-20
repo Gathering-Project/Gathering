@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RecommandRequestDto {
-  private String address;
-  private String type;
-  private int radius;
+    private String address;
+    private String type;
+    private int radius;
 }

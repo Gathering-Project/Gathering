@@ -7,10 +7,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository("eventElasticSearchRepo")
-public interface EventElasticSearchRepository extends ElasticsearchRepository <EventElasticDto, Long> {
+public interface EventElasticSearchRepository extends ElasticsearchRepository<EventElasticDto, Long> {
+
     List<EventElasticDto> findByTitleContainingOrDescriptionContaining(String title, String description);
-    List<EventElasticDto> findByTitleContaining(String keyword);
-    List<EventElasticDto> findByDescriptionContaining(String keyword);
-    List<EventElasticDto> findByLocationContaining(String keyword);
 
 }

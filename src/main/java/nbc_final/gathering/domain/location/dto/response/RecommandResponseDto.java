@@ -10,5 +10,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RecommandResponseDto {
-  private List<PlaceDto> places;
+    private List<PlaceDto> places;
 }

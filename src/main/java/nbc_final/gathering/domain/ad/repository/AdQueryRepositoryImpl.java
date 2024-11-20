@@ -17,17 +17,6 @@ public class AdQueryRepositoryImpl implements AdQueryRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Ad> findAdsByStatusAndDateRange(AdStatus status, LocalDate startDate, LocalDate endDate) {
-        QAd ad = QAd.ad;
-
-        return queryFactory.selectFrom(ad)
-                .where(ad.status.eq(status)
-                        .and(ad.startDate.loe(endDate))
-                        .and(ad.endDate.goe(startDate)))
-                .fetch();
-    }
-
-    @Override
     public boolean existsByGatheringIdAndDate(Long gatheringId, LocalDate date) {
         QAd ad = QAd.ad;
 

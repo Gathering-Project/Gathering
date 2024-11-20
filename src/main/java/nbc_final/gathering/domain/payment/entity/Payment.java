@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "payments")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment extends TimeStamped {
 
     @Id

@@ -1,6 +1,5 @@
 package nbc_final.gathering;
 
-import jakarta.persistence.Entity;
 import nbc_final.gathering.common.elasticsearch.EventElasticSearchRepository;
 import nbc_final.gathering.common.elasticsearch.GatheringElasticSearchRepository;
 import nbc_final.gathering.common.elasticsearch.MemberElasticSearchRepository;
@@ -9,10 +8,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @SpringBootApplication
 @EnableJpaAuditing

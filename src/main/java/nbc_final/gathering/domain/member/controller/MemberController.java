@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
-import nbc_final.gathering.domain.member.dto.MemberElasticDto;
 import nbc_final.gathering.domain.member.dto.request.MessageRequestDto;
 import nbc_final.gathering.domain.member.dto.response.MemberResponseDto;
 import nbc_final.gathering.domain.member.service.MemberService;
@@ -37,8 +36,9 @@ public class MemberController {
 
     /**
      * 멤버 가입 신청
+     *
      * @param gatheringId 가입을 요청할 소모임의 ID
-     * @param authUser 인증된 사용자 정보
+     * @param authUser    인증된 사용자 정보
      * @return 멤버 가입 요청 결과
      */
     @Operation(summary = "소모임 멤버 가입 신청", description = "특정 소모임에 멤버로 참가 신청합니다.")
@@ -53,6 +53,7 @@ public class MemberController {
 
     /**
      * 멤버 가입 거절
+     *
      * @param memberId 거절할 멤버의 ID
      * @param authUser 인증된 사용자 정보
      * @return 거절된 멤버 정보
@@ -69,6 +70,7 @@ public class MemberController {
 
     /**
      * 멤버 가입 승인
+     *
      * @param memberId 승인할 멤버의 ID
      * @param authUser 인증된 사용자 정보
      * @return 멤버 승인 결과
@@ -85,8 +87,9 @@ public class MemberController {
 
     /**
      * 소모임의 모든 멤버 조회
+     *
      * @param gatheringId 조회할 소모임의 ID
-     * @param authUser 인증된 사용자 정보
+     * @param authUser    인증된 사용자 정보
      * @return 소모임의 모든 멤버 리스트
      */
     @Operation(summary = "모든 멤버 조회", description = "특정 소모임의 모든 멤버의 목록을 조회합니다.")
@@ -101,9 +104,10 @@ public class MemberController {
 
     /**
      * 특정 멤버 정보 조회
+     *
      * @param gatheringId 조회할 소모임의 ID
-     * @param memberId 조회할 멤버의 ID
-     * @param authUser 인증된 사용자 정보
+     * @param memberId    조회할 멤버의 ID
+     * @param authUser    인증된 사용자 정보
      * @return 특정 멤버의 정보
      */
     @Operation(summary = "특정 멤버 정보 조회", description = "소모임 내 특정 멤버의 정보를 상세 조회합니다.")
@@ -119,6 +123,7 @@ public class MemberController {
 
     /**
      * 멤버 삭제
+     *
      * @param memberId 삭제할 멤버의 ID
      * @param authUser 인증된 사용자 정보
      * @return 삭제 처리 응답
@@ -134,9 +139,10 @@ public class MemberController {
 
     /**
      * 소모임 호스트가 게스트 멤버들에게 전체 알림 전송
+     *
      * @param gatheringId 알림을 전송할 소모임의 ID
-     * @param request 메시지 내용을 담은 요청 DTO
-     * @param authUser 인증된 사용자 정보
+     * @param request     메시지 내용을 담은 요청 DTO
+     * @param authUser    인증된 사용자 정보
      * @return 성공적으로 전송 시 성공 응답 반환
      */
     @Operation(summary = "소모임 멤버 전체 알림 전송", description = "소모임 주최자가 소모임 내 모든 멤버에게 공지사항 등의 알림을 전송합니다.")

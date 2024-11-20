@@ -2,7 +2,6 @@ package nbc_final.gathering.common.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.HttpStatus;
 
 @Getter
@@ -33,7 +32,7 @@ public enum ResponseCode {
     KAKAO_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "카카오 서버와의 통신 중 오류가 발생했습니다."),
     INTERNAL_SERVER_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "내부 서버 오류가 발생했습니다."),
     UNLINK_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "카카오 서버와의 통신 오류로 계정 연결 해제에 실패했습니다."),
-    NO_PERMISSION_CHANGE_PASSWORD(HttpStatus.FORBIDDEN,"SNS 로그인 사용자는 비밀번호를 변경할 수 없습니다."),
+    NO_PERMISSION_CHANGE_PASSWORD(HttpStatus.FORBIDDEN, "SNS 로그인 사용자는 비밀번호를 변경할 수 없습니다."),
 
     // 멤버 관련 예외
     NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "해당 멤버를 찾을 수 없습니다."),
@@ -60,7 +59,7 @@ public enum ResponseCode {
     EVENT_CREATOR_CANNOT_PARTICIPATE(HttpStatus.BAD_REQUEST, "이벤트 생성자는 참가할 수 없습니다."),
     INVALID_MAX_PARTICIPANTS(HttpStatus.BAD_REQUEST, "현재 참가자 수보다 적은 인원으로 설정할 수 없습니다."),
     ADMIN_CANNOT_PARTICIPATE(HttpStatus.BAD_REQUEST, "관리자 계정은 이벤트에 참가할 수 없습니다."),
-    ADMIN_CANNOT_CANCEL_PARTICIPATION(HttpStatus.BAD_REQUEST,"관리자 계정은 이벤트 참가를 취소할 수 없습니다"),
+    ADMIN_CANNOT_CANCEL_PARTICIPATION(HttpStatus.BAD_REQUEST, "관리자 계정은 이벤트 참가를 취소할 수 없습니다"),
 
     // 댓글 관련 예외
     NOT_FOUND_COMMENT(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다."),
@@ -69,9 +68,9 @@ public enum ResponseCode {
     NOT_FOUND_FILE(HttpStatus.NOT_FOUND, "해당 첨부파일을 찾을 수 없습니다."),
     NOT_SERVICE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다."),
     TOO_LARGE_SIZE_FILE(HttpStatus.PAYLOAD_TOO_LARGE, "파일 크기가 너무 큽니다."),
-    NOT_USER_OR_GATHERING(HttpStatus.NOT_FOUND,"유저나 소모임의 정보가 없습니다."),
+    NOT_USER_OR_GATHERING(HttpStatus.NOT_FOUND, "유저나 소모임의 정보가 없습니다."),
     ONLY_ONE_FILE(HttpStatus.BAD_REQUEST, "한 번에 하나의 파일만 업로드할 수 있습니다."),
-    NOT_YET_CHOOOSE_FILE(HttpStatus.BAD_REQUEST,"파일이 선택되지 않았습니다."),
+    NOT_YET_CHOOOSE_FILE(HttpStatus.BAD_REQUEST, "파일이 선택되지 않았습니다."),
 
     // 장소 관련 예외
     NOT_FOUND_LOCATION(HttpStatus.NOT_FOUND, "관련된 장소를 찾을 수 없습니다."),
@@ -82,8 +81,8 @@ public enum ResponseCode {
     LOCK_ACQUISITION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "현재 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요."),
 
     // 채팅 관련 예외
-    CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND,"채팅방을 찾을 수 없습니다."),
-    CHATMEMBER_NOT_FOUND(HttpStatus.NOT_FOUND,"채팅방에 속해있는 유저를 찾을 수 없습니다."),
+    CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
+    CHATMEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방에 속해있는 유저를 찾을 수 없습니다."),
 
     // 결제 및 광고 관련 예외
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
@@ -93,7 +92,7 @@ public enum ResponseCode {
     PAYMENT_TIMEOUT_SECONDS(HttpStatus.BAD_REQUEST, "시간이 만료되었습니다."),
     PAYMENT_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "결제 요청 처리 중 오류가 발생했습니다."),
 
-    NOT_FOUND_AD(HttpStatus.BAD_REQUEST,"광고를 찾을 수 없습니다."),
+    NOT_FOUND_AD(HttpStatus.BAD_REQUEST, "광고를 찾을 수 없습니다."),
     INVALID_START_DATE(HttpStatus.BAD_REQUEST, "광고 시작 날짜는 최소 2일 이후여야 합니다."),
     AD_INVALID_DURATION(HttpStatus.BAD_REQUEST, "광고 종료 날짜는 시작 날짜 이후여야 합니다."),
     AD_ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, "광고가 게시 중이므로 결제를 취소할 수 없습니다."),
