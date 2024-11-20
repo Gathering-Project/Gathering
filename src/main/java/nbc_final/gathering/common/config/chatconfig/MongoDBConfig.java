@@ -15,7 +15,8 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @Configuration
 @RequiredArgsConstructor
-@EnableMongoRepositories(basePackages = "nbc_final.gathering.domain.chatting.chatmessage.repository")
+@EnableMongoRepositories(basePackages = {"nbc_final.gathering.domain.chatting.chatmessage.repository",
+        "nbc_final.gathering.common.alarmconfig"})  // 두 패키지를 처리
 @EnableMongoAuditing
 public class MongoDBConfig {
 
