@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - "/etc/prometheus/alert_rules.yml"  # 알림 규칙 파일을 참조하도록 설정
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']  # Prometheus 자체 메트릭
+    metrics_path: '/metrics'
+
+  - job_name: 'api_server'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+    metrics_path: '/actuator/prometheus'

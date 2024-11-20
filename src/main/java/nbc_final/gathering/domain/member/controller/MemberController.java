@@ -28,12 +28,12 @@ public class MemberController {
      * @param gatheringId
      * @return
      */
-    @GetMapping("/v1/members/gathering/{gatheringId}/search")
-    public ResponseEntity<ApiResponse<List<MemberElasticDto>>> searchMembersByGathering(
-            @PathVariable Long gatheringId) {
-        List<MemberElasticDto> members = memberService.searchMembersByGathering(gatheringId);
-        return ResponseEntity.ok(ApiResponse.createSuccess(members));
-    }
+//    @GetMapping("/v1/members/gathering/{gatheringId}/search")
+//    public ResponseEntity<ApiResponse<List<MemberElasticDto>>> searchMembersByGathering(
+//            @PathVariable Long gatheringId) {
+//        List<MemberElasticDto> members = memberService.searchMembersByGathering(gatheringId);
+//        return ResponseEntity.ok(ApiResponse.createSuccess(members));
+//    }
 
     /**
      * 멤버 가입 신청

@@ -1,0 +1,31 @@
+# Metricbeat configuration
+
+# ============================== Metricbeat modules ===============================
+
+metricbeat.modules:
+  - module: system
+    metricsets: ["cpu", "memory", "network", "process", "filesystem"]
+    enabled: true
+    period: 10s
+    processors:
+      - add_host_metadata: ~
+
+  - module: elasticsearch
+    metricsets: ["node", "index"]
+    hosts: ["http://elasticsearch:9200"]
+    enabled: true
+
+  - module: kibana
+    metricsets: ["status"]
+    hosts: ["http://kibana:5601"]
+    enabled: true
+
+# ===================== Elasticsearch output configuration =====================
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+
+# =============================== Kibana setup ==================================
+
+setup.kibana:
+  host: "http://kibana:5601"

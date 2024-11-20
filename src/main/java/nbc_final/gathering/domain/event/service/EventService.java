@@ -3,6 +3,8 @@ package nbc_final.gathering.domain.event.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.elasticsearch.EventElasticSearchRepository;
+import nbc_final.gathering.common.alarmconfig.AlarmDto;
+import nbc_final.gathering.common.alarmconfig.AlarmService;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
@@ -52,7 +54,7 @@ public class EventService {
     private final EventRepositoryCustom eventRepositoryCustom;
     private final GatheringRepository gatheringRepository;
     private final CommentRepository commentRepository;
-    private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final AlarmService alarmService;
     private final MemberRepository memberRepository;
     private final RedissonClient redissonClient;
     private final EventElasticSearchRepository eventElasticSearchRepository;
@@ -101,8 +103,11 @@ public class EventService {
 
         // 승인된 멤버에게 알림 전송
         approvedMembers.forEach(member -> {
-            kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(), message);
-            log.info("Kafka 알림 전송: 멤버 ID={}, 메시지={}", member.getUser().getId(), message);
+            AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                    member.getUser().getId(), message
+            );
+            alarmService.sendAlarm(alarmMessageReq);  // AlarmService를 사용하여 알림 전송
+            log.info("알림 전송: 멤버 ID={}, 메시지={}", member.getUser().getId(), message);
         });
 
         return EventResponseDto.of(event, userId, currentParticipantsCount); // 초기화된 카운트 반영
@@ -139,8 +144,17 @@ public class EventService {
 
         // 각 참가자에게 이벤트 수정 알림 전송
         participants.forEach(participant -> {
-            kafkaNotificationUtil.notifyMember(participant.getUser().getId(), "이벤트가 수정되었습니다.");
+            // 알림 메시지 생성
+            String message = "이벤트 '" + event.getTitle() + "'이(가) 수정되었습니다.";
+
+            // 알림을 AlarmService를 통해 전송
+            AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                    participant.getUser().getId(), message
+            );
+            alarmService.sendAlarm(alarmMessageReq);  // AlarmService를 사용하여 알림 전송
+            log.info("알림 전송: 멤버 ID={}, 메시지={}", participant.getUser().getId(), message);
         });
+
         return EventUpdateResponseDto.of(event, currentParticipantsCount);
     }
 
@@ -188,47 +202,55 @@ public class EventService {
         // 이벤트 참가자 조회
         List<Participant> participants = participantRepository.findAllByEvent(event);
 
-
-        // 각 참가자에게 알림 전송
+        // 각 참가자에게 이벤트 삭제 알림 전송
         participants.forEach(participant -> {
-            kafkaNotificationUtil.notifyMember(participant.getUser().getId(), "이벤트가 삭제되었습니다.");
+            // 알림 메시지 생성
+            String message = "이벤트 '" + event.getTitle() + "'이(가) 삭제되었습니다.";
+
+            // 알림을 AlarmService를 통해 전송
+            AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                    participant.getUser().getId(), message
+            );
+            alarmService.sendAlarm(alarmMessageReq);  // AlarmService를 사용하여 알림 전송
+            log.info("알림 전송: 멤버 ID={}, 메시지={}", participant.getUser().getId(), message);
         });
 
         eventRepository.delete(event);
     }
 
-    // 이벤트 참가 (분산락, 권한: 어드민 불가, 이벤트 생성자 불가, 게더링 멤버 가능)
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = {ResponseCodeException.class, CannotAcquireLockException.class, InterruptedException.class})
-    public void joinEventWithLock(Long userId, Long gatheringId, Long eventId) {
-        verifyMembership(userId, gatheringId);
-        RLock lock = getDistributedLock(eventId);
+        // 이벤트 참가 (분산락, 권한: 어드민 불가, 이벤트 생성자 불가, 게더링 멤버 가능)
+        @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = {ResponseCodeException.class, CannotAcquireLockException.class, InterruptedException.class})
+        public void joinEventWithLock(Long userId, Long gatheringId, Long eventId) {
+            verifyMembership(userId, gatheringId);
+            RLock lock = getDistributedLock(eventId);
 
-        try {
-            acquireLock(lock);
+            try {
+                acquireLock(lock);
 
-            User user = getUserOrThrow(userId);
-            Event event = getEventOrThrow(eventId);
+                User user = getUserOrThrow(userId);
+                Event event = getEventOrThrow(eventId);
 
-            validateParticipation(user, event, userId);
+                validateParticipation(user, event, userId);
 
-            if (isParticipantLimitExceeded(event.getMaxParticipants(), eventId)) {
-                throw new ResponseCodeException(ResponseCode.PARTICIPANT_LIMIT_EXCEEDED);
+                if (isParticipantLimitExceeded(event.getMaxParticipants(), eventId)) {
+                    throw new ResponseCodeException(ResponseCode.PARTICIPANT_LIMIT_EXCEEDED);
+                }
+
+                registerParticipant(user, event);
+
+            } catch (CannotAcquireLockException | InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new ResponseCodeException(ResponseCode.LOCK_ACQUISITION_FAILED);
+            } finally {
+                if (lock.isHeldByCurrentThread()) {  // 현재 쓰레드가 락을 소유한 경우에만 해제
+                    lock.unlock();
+                }
+
+                // 참가자에게 알림 전송
+                String message = "이벤트 참가 신청이 완료되었습니다.";
+                AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(userId, message);
             }
-
-            registerParticipant(user, event);
-
-        } catch (CannotAcquireLockException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new ResponseCodeException(ResponseCode.LOCK_ACQUISITION_FAILED);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {  // 현재 쓰레드가 락을 소유한 경우에만 해제
-                lock.unlock();
-            }
-
-            // 참가자에게 알림 전송
-            kafkaNotificationUtil.notifyMember(userId, "이벤트 참가 신청이 완료되었습니다.");
         }
-    }
 
     // 이벤트 취소 (분산락, 권한: 어드민 불가, 이벤트 생성자 불가)
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = {ResponseCodeException.class, CannotAcquireLockException.class, InterruptedException.class})
@@ -256,7 +278,11 @@ public class EventService {
         }
 
         // 참가 취소 알림 전송
-        kafkaNotificationUtil.notifyMember(userId, "이벤트 참가가 취소되었습니다.");
+        String message = "이벤트 참가가 취소되었습니다.";
+        AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(userId, message);
+
+        // AlarmService를 사용하여 알림 전송
+        alarmService.sendAlarm(alarmMessageReq);
     }
 
     // 이벤트 참가자 조회 (권한: 소모임 멤버 또는 어드민)

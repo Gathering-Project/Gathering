@@ -6,7 +6,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.config.jwt.*;
+import nbc_final.gathering.common.alarmconfig.AlarmDto;
+import nbc_final.gathering.common.alarmconfig.AlarmService;
 import nbc_final.gathering.common.config.common.WebSocketSessionManager;
 import nbc_final.gathering.common.config.jwt.JwtUtil;
 import nbc_final.gathering.common.elasticsearch.UserElasticSearchRepository;
@@ -42,7 +43,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final KakaoService kakaoService;
     private final NaverService naverService;
-    private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final AlarmService alarmService;
     private final SimpMessagingTemplate messagingTemplate;
     private final WebSocketSessionManager webSocketSessionManager;
     private final JwtUtil jwtUtil;
@@ -130,8 +131,6 @@ public class UserService {
         String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole(), user.getNickname());
         jwtUtil.addJwtToCookie(bearerToken, response);
 
-        kafkaNotificationUtil.notifyUser(user.getId(), "로그인에 성공했습니다.");
-
         // WebSocket 세션 ID 생성 및 Redis 저장
         String websocketSessionId = generateWebSocketSessionId(user.getId());
         webSocketSessionManager.addUserSession(user.getId(), websocketSessionId);
@@ -139,6 +138,12 @@ public class UserService {
         // 클라이언트가 WebSocket 연결을 수행할 수 있는 URL 제공
         String websocketUrl = "ws://localhost:9090/gathering/inbox?token=" + bearerToken;
 
+        // 로그인한 유저 본인에게 알림 전송
+        AlarmDto.AlarmMessageReq alarmMessageReq = AlarmDto.AlarmMessageReq.builder()
+                .userId(user.getId())
+                .message("로그인에 성공했습니다.")
+                .build();
+        alarmService.sendAlarm(alarmMessageReq); // 로그인한 유저에게 RabbitMQ 알림 전송
 
         return new LoginResponseDto(bearerToken, websocketUrl);
     }
@@ -198,7 +203,8 @@ public class UserService {
         user.changePassword(passwordEncoder.encode(requestDto.getNewPassword()));
 
         // 비밀번호 변경 알림 전송
-        kafkaNotificationUtil.notifyUser(userId, "비밀번호가 변경되었습니다.");
+        AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(userId, "비밀번호가 변경되었습니다.");
+        alarmService.sendAlarm(alarmMessageReq);
     }
 
     // 내 정보 업데이트(수정)
@@ -207,7 +213,8 @@ public class UserService {
         User user = getUserById(userId);
         user.updateInfo(requestDto); // 유저 정보 갱신
 
-        kafkaNotificationUtil.notifyUser(userId, "내 정보가 수정되었습니다.");
+        AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(userId, "내 정보가 수정되었습니다.");
+        alarmService.sendAlarm(alarmMessageReq);
 
         return UserGetResponseDto.of(user);
     }

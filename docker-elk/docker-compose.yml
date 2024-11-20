@@ -1,0 +1,96 @@
+services:
+
+  # Elasticsearch 서비스
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_STACK_VERSION}
+    build:
+      context: elasticsearch/
+      args:
+        ELASTIC_VERSION: ${ELK_STACK_VERSION}
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
+      - elasticsearch:/usr/share/elasticsearch/data:Z
+    ports:
+      - 9210:9200 # 호스트 9210 -> 컨테이너 9200
+      - 9310:9300 # 호스트 9310 -> 컨테이너 9300
+    environment:
+      node.name: elasticsearch
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      ELASTIC_PASSWORD: ${ELK_ELASTIC_PASSWORD:-}
+      discovery.type: single-node
+    networks:
+      - elk_alternative
+    restart: unless-stopped
+
+  # Logstash 서비스
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${ELK_STACK_VERSION}
+    build:
+      context: logstash/
+      args:
+        ELASTIC_VERSION: ${ELK_STACK_VERSION}
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
+      - ./logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro,Z
+      - ./logstash/input:/usr/share/logstash/input:ro,Z
+    ports:
+      - 5046:5044 # 호스트 5046 -> 컨테이너 5044
+      - 50011:50000/tcp # 호스트 50011 -> 컨테이너 50000/tcp
+      - 50012:50000/udp # 호스트 50012 -> 컨테이너 50000/udp
+      - 9602:9600 # 호스트 9602 -> 컨테이너 9600
+    environment:
+      LS_JAVA_OPTS: -Xms256m -Xmx256m
+      LOGSTASH_INTERNAL_PASSWORD: ${ELK_LOGSTASH_INTERNAL_PASSWORD:-}
+    networks:
+      - elk_alternative
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+  # Kibana 서비스
+  kibana:
+    build:
+      context: kibana/
+      args:
+        ELASTIC_VERSION: ${ELK_STACK_VERSION}
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+    ports:
+      - 5603:5601 # 호스트 5603 -> 컨테이너 5601
+    environment:
+      KIBANA_SYSTEM_PASSWORD: ${ELK_KIBANA_SYSTEM_PASSWORD:-}
+    networks:
+      - elk_alternative
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+  # Metricbeat 서비스
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:${ELK_STACK_VERSION}
+    container_name: metricbeat
+    command: metricbeat -e
+    volumes:
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /proc:/hostfs/proc:ro
+      - /:/hostfs:ro
+      - ./metricbeat.yml:/usr/share/metricbeat/metricbeat.yml
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - KIBANA_HOST=http://kibana:5601
+    networks:
+      - elk_alternative
+    depends_on:
+      - elasticsearch
+      - kibana
+    restart: unless-stopped
+    privileged: true
+
+networks:
+  elk_alternative:
+    driver: bridge
+
+volumes:
+  elasticsearch:
+  mysql_data:

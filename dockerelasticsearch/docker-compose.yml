@@ -1,3 +1,4 @@
+
 #version: "3.8"
 
 volumes:
@@ -110,8 +111,11 @@ services:
         hard: -1
     command: >
       sh -c "
-      elasticsearch-plugin install analysis-nori && 
+      if [ ! -d /usr/share/elasticsearch/plugins/analysis-nori ]; then
+        elasticsearch-plugin install analysis-nori;
+      fi &&
       elasticsearch"
+
     healthcheck:
       test:
         [

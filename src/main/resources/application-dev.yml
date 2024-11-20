@@ -35,7 +35,7 @@ spring:
     import: optional:file:.env[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:gathering}?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:gathering_db}?serverTimezone=Asia/Seoul
     username: ${MYSQL_NAME:root}
     password: ${MYSQL_PASSWORD:1234}
 
@@ -46,6 +46,7 @@ spring:
     virtual-host: ${rabbitmq_virtual_host:/}
     username: ${rabbitmq_username:admin}
     password: ${rabbitmq_password:1234}
+
 
   #STOMP 설정
   messaging:
@@ -107,12 +108,16 @@ spring:
       username: ${mongodb_username:root}
       password: ${mongodb_password:1234}
 
-    elasticsearch:
-      client:
-        reactive:
-         endpoints: http://localhost:9200
-      repositories:
-        enabled: true
+    spring:
+      data:
+        elasticsearch:
+          repositories:
+            enabled: true
+          index:
+            create-on-startup: true
+            auto_create_index: true
+
+
   servlet:
     multipart:
       max-file-size: 5MB
