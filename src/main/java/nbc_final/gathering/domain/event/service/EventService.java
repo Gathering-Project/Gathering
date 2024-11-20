@@ -3,11 +3,15 @@ package nbc_final.gathering.domain.event.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.annotation.DistributedLock;
+import nbc_final.gathering.common.elasticsearch.EventElasticSearchRepository;
+import nbc_final.gathering.common.alarmconfig.AlarmDto;
+import nbc_final.gathering.common.alarmconfig.AlarmService;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
 import nbc_final.gathering.domain.comment.repository.CommentRepository;
+import nbc_final.gathering.domain.event.dto.EventElasticDto;
 import nbc_final.gathering.domain.event.dto.ParticipantResponseDto;
 import nbc_final.gathering.domain.event.dto.request.EventCreateRequestDto;
 import nbc_final.gathering.domain.event.dto.request.EventUpdateRequestDto;
@@ -42,7 +46,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class EventService {
 
     private final ParticipantRepository participantRepository;
@@ -51,9 +55,20 @@ public class EventService {
     private final EventRepositoryCustom eventRepositoryCustom;
     private final GatheringRepository gatheringRepository;
     private final CommentRepository commentRepository;
-    private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final AlarmService alarmService;
     private final MemberRepository memberRepository;
     private final RedissonClient redissonClient;
+    private final EventElasticSearchRepository eventElasticSearchRepository;
+
+
+    //이벤트 검색(형태소 기반)
+    public List<EventResponseDto> searchEvents(String keyword) {
+        List<EventElasticDto> searchResults = eventElasticSearchRepository.findByTitleContainingOrDescriptionContaining(keyword, keyword);
+        return searchResults.stream()
+                .map(EventResponseDto::of)
+                .collect(Collectors.toList());
+    }
+
 
     // 이벤트 생성 (권한: 소모임 멤버 또는 어드민)
     @Transactional(rollbackFor = {ResponseCodeException.class, CannotAcquireLockException.class, InterruptedException.class})
@@ -67,6 +82,10 @@ public class EventService {
 
         Event event = createEventInstance(requestDto, gathering, user);
         eventRepository.save(event);
+
+        //엘라스틱 서치
+        EventElasticDto eventElasticDto = EventElasticDto.of(event);
+        eventElasticSearchRepository.save(eventElasticDto); //엘라스틱 서치 추가
 
         resetParticipantCount(event); // Redis에 참가자 초기 카운트를 설정
 
@@ -85,8 +104,11 @@ public class EventService {
 
         // 승인된 멤버에게 알림 전송
         approvedMembers.forEach(member -> {
-            kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(), message);
-            log.info("Kafka 알림 전송: 멤버 ID={}, 메시지={}", member.getUser().getId(), message);
+            AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                    member.getUser().getId(), message
+            );
+            alarmService.sendAlarm(alarmMessageReq);  // AlarmService를 사용하여 알림 전송
+            log.info("알림 전송: 멤버 ID={}, 메시지={}", member.getUser().getId(), message);
         });
 
         return EventResponseDto.of(event, userId, currentParticipantsCount); // 초기화된 카운트 반영
@@ -123,8 +145,17 @@ public class EventService {
 
         // 각 참가자에게 이벤트 수정 알림 전송
         participants.forEach(participant -> {
-            kafkaNotificationUtil.notifyMember(participant.getUser().getId(), "이벤트가 수정되었습니다.");
+            // 알림 메시지 생성
+            String message = "이벤트 '" + event.getTitle() + "'이(가) 수정되었습니다.";
+
+            // 알림을 AlarmService를 통해 전송
+            AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                    participant.getUser().getId(), message
+            );
+            alarmService.sendAlarm(alarmMessageReq);  // AlarmService를 사용하여 알림 전송
+            log.info("알림 전송: 멤버 ID={}, 메시지={}", participant.getUser().getId(), message);
         });
+
         return EventUpdateResponseDto.of(event, currentParticipantsCount);
     }
 
@@ -172,10 +203,17 @@ public class EventService {
         // 이벤트 참가자 조회
         List<Participant> participants = participantRepository.findAllByEvent(event);
 
-
-        // 각 참가자에게 알림 전송
+        // 각 참가자에게 이벤트 삭제 알림 전송
         participants.forEach(participant -> {
-            kafkaNotificationUtil.notifyMember(participant.getUser().getId(), "이벤트가 삭제되었습니다.");
+            // 알림 메시지 생성
+            String message = "이벤트 '" + event.getTitle() + "'이(가) 삭제되었습니다.";
+
+            // 알림을 AlarmService를 통해 전송
+            AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                    participant.getUser().getId(), message
+            );
+            alarmService.sendAlarm(alarmMessageReq);  // AlarmService를 사용하여 알림 전송
+            log.info("알림 전송: 멤버 ID={}, 메시지={}", participant.getUser().getId(), message);
         });
 
         eventRepository.delete(event);
@@ -196,7 +234,9 @@ public class EventService {
 
         registerParticipant(user, event);
 
-        kafkaNotificationUtil.notifyMember(userId, "이벤트 참가 신청이 완료되었습니다.");
+        // 참가자에게 알림 전송
+        String message = "이벤트 참가 신청이 완료되었습니다.";
+        AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(userId, message);
     }
 
     // 이벤트 취소 (분산락, 권한: 어드민 불가, 이벤트 생성자 불가)
@@ -217,7 +257,11 @@ public class EventService {
         removeParticipant(participant, event);
 
         // 참가 취소 알림 전송
-        kafkaNotificationUtil.notifyMember(userId, "이벤트 참가가 취소되었습니다.");
+        String message = "이벤트 참가가 취소되었습니다.";
+        AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(userId, message);
+
+        // AlarmService를 사용하여 알림 전송
+        alarmService.sendAlarm(alarmMessageReq);
     }
 
     // 이벤트 참가자 조회 (권한: 소모임 멤버 또는 어드민)

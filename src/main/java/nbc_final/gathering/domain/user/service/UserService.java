@@ -6,15 +6,18 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.config.jwt.*;
+import nbc_final.gathering.common.alarmconfig.AlarmDto;
+import nbc_final.gathering.common.alarmconfig.AlarmService;
 import nbc_final.gathering.common.config.common.WebSocketSessionManager;
 import nbc_final.gathering.common.config.jwt.JwtUtil;
+import nbc_final.gathering.common.elasticsearch.UserElasticSearchRepository;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
+import nbc_final.gathering.domain.user.dto.UserElasticDto;
 import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
-import nbc_final.gathering.domain.user.dto.request.LoginRequestDto;
-import nbc_final.gathering.domain.user.dto.request.SignupRequestDto;
+import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
+import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
 import nbc_final.gathering.domain.user.dto.response.UserGetResponseDto;
@@ -28,6 +31,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -38,10 +43,12 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final KakaoService kakaoService;
     private final NaverService naverService;
-    private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final AlarmService alarmService;
     private final SimpMessagingTemplate messagingTemplate;
     private final WebSocketSessionManager webSocketSessionManager;
     private final JwtUtil jwtUtil;
+    private final UserElasticSearchRepository userElasticSearchRepository;
+
 
     @Value("${ADMIN_TOKEN}")
     private String ADMIN_TOKEN; // 관리자가 맞는지 확인 토큰
@@ -95,7 +102,17 @@ public class UserService {
         User savedUser = userRepository.save(newUser); //회원 저장
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserRole(), savedUser.getNickname());
 
+        //엘라스틱 서치
+        UserElasticDto userElasticDto = UserElasticDto.of(savedUser);
+        userElasticSearchRepository.save(userElasticDto); //엘라스틱 서치 추가
+
         return new SignUpResponseDto(bearerToken); // 토큰 반환
+    }
+    // 사용자 검색 (닉네임, 위치)
+    public List<UserElasticDto> searchUsers(String keyword) {
+        List<UserElasticDto> results = userElasticSearchRepository.findByNicknameContainingOrLocationContaining(keyword, keyword);
+        log.info("Found {} users matching keyword: {}", results.size(), keyword);
+        return results;
     }
 
     // 유저 로그인
@@ -114,8 +131,6 @@ public class UserService {
         String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUserRole(), user.getNickname());
         jwtUtil.addJwtToCookie(bearerToken, response);
 
-        kafkaNotificationUtil.notifyUser(user.getId(), "로그인에 성공했습니다.");
-
         // WebSocket 세션 ID 생성 및 Redis 저장
         String websocketSessionId = generateWebSocketSessionId(user.getId());
         webSocketSessionManager.addUserSession(user.getId(), websocketSessionId);
@@ -123,6 +138,12 @@ public class UserService {
         // 클라이언트가 WebSocket 연결을 수행할 수 있는 URL 제공
         String websocketUrl = "ws://localhost:9090/gathering/inbox?token=" + bearerToken;
 
+        // 로그인한 유저 본인에게 알림 전송
+        AlarmDto.AlarmMessageReq alarmMessageReq = AlarmDto.AlarmMessageReq.builder()
+                .userId(user.getId())
+                .message("로그인에 성공했습니다.")
+                .build();
+        alarmService.sendAlarm(alarmMessageReq); // 로그인한 유저에게 RabbitMQ 알림 전송
 
         return new LoginResponseDto(bearerToken, websocketUrl);
     }
@@ -182,7 +203,8 @@ public class UserService {
         user.changePassword(passwordEncoder.encode(requestDto.getNewPassword()));
 
         // 비밀번호 변경 알림 전송
-        kafkaNotificationUtil.notifyUser(userId, "비밀번호가 변경되었습니다.");
+        AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(userId, "비밀번호가 변경되었습니다.");
+        alarmService.sendAlarm(alarmMessageReq);
     }
 
     // 내 정보 업데이트(수정)
@@ -191,7 +213,8 @@ public class UserService {
         User user = getUserById(userId);
         user.updateInfo(requestDto); // 유저 정보 갱신
 
-        kafkaNotificationUtil.notifyUser(userId, "내 정보가 수정되었습니다.");
+        AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(userId, "내 정보가 수정되었습니다.");
+        alarmService.sendAlarm(alarmMessageReq);
 
         return UserGetResponseDto.of(user);
     }
@@ -229,7 +252,7 @@ public class UserService {
     // 새 비밀번호 검증
     private static void validateNewPassword(UserChangePwRequestDto requestDto) {
         if (
-                // 비밀번호는 영문 + 숫자 + 특수문자를 최소 1글자 포함하고 최소 8글자 이상 최대 20글자 이하
+            // 비밀번호는 영문 + 숫자 + 특수문자를 최소 1글자 포함하고 최소 8글자 이상 최대 20글자 이하
             // 비밀번호에 알파벳 포함 여부 확인 (대소문자 포함)
                 !requestDto.getNewPassword().matches(".*[A-Za-z].*") ||
                         // 비밀번호에 숫자 포함 여부 확인
@@ -260,9 +283,3 @@ public class UserService {
     }
 
 }
-
-
-
-
-
-

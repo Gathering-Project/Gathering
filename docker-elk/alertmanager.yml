@@ -1,0 +1,27 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'slack-notifications'
+  routes:
+    - matchers:
+        - severity="warning"
+      receiver: 'slack-notifications'
+    - matchers:
+        - severity="critical"
+      receiver: 'discord-notifications'
+
+receivers:
+  - name: 'slack-notifications'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/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'
+        channel: '#alerts'
+        username: 'Alertmanager'
+        title: "{{ .CommonAnnotations.summary }}"
+        text: "{{ .CommonAnnotations.description }}"
+        send_resolved: true
+
+  - name: 'discord-notifications'
+    webhook_configs:
+      - url: 'https://discord.com/api/webhooks/1306033774164705351/k7w4RPMPDZNayCWu4x-Ja1TFhmpxV7A-rWltocXCT34K5dYP4NcJXDH_IXXK3IlPm5gb'
+        send_resolved: true

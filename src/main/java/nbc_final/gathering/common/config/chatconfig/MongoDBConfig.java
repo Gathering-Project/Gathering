@@ -3,6 +3,7 @@ package nbc_final.gathering.common.config.chatconfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -14,10 +15,12 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @Configuration
 @RequiredArgsConstructor
-@EnableMongoRepositories("nbc_final.gathering.domain.chatting.chatmessage.repository")
+@EnableMongoRepositories(basePackages = {"nbc_final.gathering.domain.chatting.chatmessage.repository",
+        "nbc_final.gathering.common.alarmconfig"})  // 두 패키지를 처리
 @EnableMongoAuditing
 public class MongoDBConfig {
 
+    @Primary
     @Bean
     public MappingMongoConverter mappingMongoConverter(MongoDatabaseFactory mongoDatabaseFactory, MongoMappingContext mongoMappingContext) {
         // DbRefResolver를 생성하여 MongoDB의 DBRef 필드 해석을 처리

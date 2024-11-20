@@ -1,5 +1,7 @@
 package nbc_final.gathering.domain.user.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import java.util.Base64;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Naver, Kakao OAuth 2.0 API", description = "Naver, Kakao OAuth 관련 API 입니다.")
 public class AuthController {
 
     @Value("${KAKAO_CLIENT_ID}")
@@ -24,6 +27,7 @@ public class AuthController {
     private String redirectUrl; // 환경변수에서 리다이렉트 URL 가져오기
 
     @GetMapping("/kakao-url")
+    @Operation(summary = "Kakao-url", description = "OAuth 인증에 필요한 각 유저의 Kakao-url 출력 API입니다.")
     public ResponseEntity<String> getKakaoAuthUrl() {
         String authUrl = "https://kauth.kakao.com/oauth/authorize?client_id=" + clientId + "&redirect_uri=" + redirectUrl + "&response_type=code";
         return ResponseEntity.ok(authUrl);
@@ -36,6 +40,7 @@ public class AuthController {
     private String naverRedirectUrl;
 
     @GetMapping("/naver-url")
+    @Operation(summary = "Naver-url", description = "OAuth 인증에 필요한 각 유저의 Naver-url 출력 API입니다.")
     public ResponseEntity<String> getNaverAuthUrl() {
         log.info("네이버 Client ID: " + naverClientId);
         log.info("네이버 Redirect URL: " + naverRedirectUrl);

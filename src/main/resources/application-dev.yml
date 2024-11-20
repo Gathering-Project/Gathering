@@ -5,7 +5,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: prometheus
+        include: "*"
   prometheus:
     metrics:
       export:
@@ -15,6 +15,7 @@ management:
 spring:
   thymeleaf:
     cache: false
+
 
   # AWS S3 설정
   cloud:
@@ -34,7 +35,7 @@ spring:
     import: optional:file:.env[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:gathering}?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:gathering_db}?serverTimezone=Asia/Seoul
     username: ${MYSQL_NAME:root}
     password: ${MYSQL_PASSWORD:1234}
 
@@ -45,6 +46,7 @@ spring:
     virtual-host: ${rabbitmq_virtual_host:/}
     username: ${rabbitmq_username:admin}
     password: ${rabbitmq_password:1234}
+
 
   #STOMP 설정
   messaging:
@@ -106,6 +108,16 @@ spring:
       username: ${mongodb_username:root}
       password: ${mongodb_password:1234}
 
+    spring:
+      data:
+        elasticsearch:
+          repositories:
+            enabled: true
+          index:
+            create-on-startup: true
+            auto_create_index: true
+
+
   servlet:
     multipart:
       max-file-size: 5MB
@@ -165,7 +177,7 @@ admin:
 
 logging:
   level:
-#    root: DEBUG
+    #    root: DEBUG
     root: INFO
     nbc_final.gathering.domain.payment.service: INFO
     org:
@@ -180,3 +192,9 @@ logging:
             bind: info
 frontend:
   url: ${FRONTEND_URL}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

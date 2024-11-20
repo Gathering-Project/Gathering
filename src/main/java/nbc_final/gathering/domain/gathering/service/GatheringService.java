@@ -4,11 +4,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nbc_final.gathering.common.alarmconfig.AlarmDto;
+import nbc_final.gathering.common.alarmconfig.AlarmService;
 import nbc_final.gathering.common.config.redis.RedisLimiter;
 import nbc_final.gathering.common.dto.AuthUser;
+import nbc_final.gathering.common.elasticsearch.GatheringElasticSearchRepository;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
+import nbc_final.gathering.domain.gathering.dto.GatheringElasticDto;
 import nbc_final.gathering.domain.gathering.dto.request.GatheringRequestDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringResponseDto;
 import nbc_final.gathering.domain.gathering.dto.response.GatheringWithCountResponseDto;
@@ -42,42 +46,53 @@ public class GatheringService {
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
     private final RedisTemplate<String, Object> redisTemplate;
-//    private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final AlarmService alarmService;
+    private final KafkaNotificationUtil kafkaNotificationUtil;
+    private final GatheringElasticSearchRepository gatheringElasticSearchRepository;
 
 
     private static final String TODAY_RANKING_KEY = "todayGatheringRanking";
     private final RedisLimiter redisLimiter;
 
-    // 제목으로 모임을 검색하고 찾지 못한 경우 NOT_FOUND_GROUP 예외 처리
-    @Transactional(readOnly = true)
-    public Gathering getGatheringByTitle(String title) {
-        return gatheringRepository.findByTitle(title)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP));
-    }
+    // 제목으로 모임 검색
+    public List<GatheringElasticDto> searchGatheringsByTitle(String title) {
+        long startTime = System.currentTimeMillis(); // 시작 시간 기록
+        List<GatheringElasticDto> results = gatheringElasticSearchRepository.findByTitleContaining(title);
+        long endTime = System.currentTimeMillis(); // 종료 시간 기록
+        log.info("제목 검색 소요 시간: {} ms", (endTime - startTime)); // 소요 시간 로그 출력
 
-    // 제목을 기준으로 모임을 검색하여 결과를 반환
-    @Transactional(readOnly = true)
-    public List<Gathering> searchGatheringsByTitle(String title) {
-        return gatheringRepository.searchGatheringsByTitle(title);
-    }
+        if (results.isEmpty()) {
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP);
+        }
 
-    // 지역을 기준으로 모임을 검색하고 검색 소요 시간을 로그로 기록
-    @Transactional(readOnly = true)
-    public List<Gathering> searchGatheringsByLocation(String location) {
-        long startTime = System.currentTimeMillis();
-        List<Gathering> results = gatheringRepository.searchGatheringsByLocation(location);
-        long endTime = System.currentTimeMillis();
-        System.out.println("지역 검색 소요 시간: " + (endTime - startTime) + "ms");
         return results;
     }
 
-    // 제목과 지역을 기준으로 모임을 검색하고 검색 소요 시간을 로그로 기록
-    @Transactional(readOnly = true)
-    public List<Gathering> searchGatheringsByTitleAndLocation(String title, String location) {
-        long startTime = System.currentTimeMillis();
-        List<Gathering> results = gatheringRepository.searchGatheringsByTitleAndLocation(title, location);
-        long endTime = System.currentTimeMillis();
-        System.out.println("이름 및 지역 검색 소요 시간: " + (endTime - startTime) + "ms");
+    // 지역으로 모임 검색
+    public List<GatheringElasticDto> searchGatheringsByLocation(String location) {
+        long startTime = System.currentTimeMillis(); // 시작 시간 기록
+        List<GatheringElasticDto> results = gatheringElasticSearchRepository.findByLocationContaining(location);
+        long endTime = System.currentTimeMillis(); // 종료 시간 기록
+        log.info("지역 검색 소요 시간: {} ms", (endTime - startTime)); // 소요 시간 로그 출력
+
+        if (results.isEmpty()) {
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP);
+        }
+
+        return results;
+    }
+
+    // 제목과 지역으로 모임 검색
+    public List<GatheringElasticDto> searchGatheringsByTitleAndLocation(String title, String location) {
+        long startTime = System.currentTimeMillis(); // 시작 시간 기록
+        List<GatheringElasticDto> results = gatheringElasticSearchRepository.findByTitleContainingAndLocationContaining(title, location);
+        long endTime = System.currentTimeMillis(); // 종료 시간 기록
+        log.info("제목 및 지역 검색 소요 시간: {} ms", (endTime - startTime)); // 소요 시간 로그 출력
+
+        if (results.isEmpty()) {
+            throw new ResponseCodeException(ResponseCode.NOT_FOUND_GROUP);
+        }
+
         return results;
     }
 
@@ -98,14 +113,23 @@ public class GatheringService {
             Member member = new Member(user, savedGathering, MemberRole.HOST, MemberStatus.APPROVED);
             savedGathering.getMembers().add(member);
 
+            //엘라스틱 서치
+            GatheringElasticDto gatheringElasticDto = GatheringElasticDto.of(savedGathering);
+
             // 그룹 저장
             gatheringRepository.save(savedGathering);
+            gatheringElasticSearchRepository.save(gatheringElasticDto); //엘라스틱 서치 추가
             memberRepository.save(member);
 
-//            kafkaNotificationUtil.notifyHostMember(user.getId(), "새로운 소모임이 생성되었습니다.");
+                // 알림 요청을 위한 AlarmMessageReq 객체 생성
+                AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                        user.getId(), "새로운 소모임이 생성되었습니다."
+                );
 
-            return GatheringResponseDto.of(savedGathering);
-        }
+                // 알람 서비스 이용하여 알림 전송
+                alarmService.sendAlarm(alarmMessageReq);
+                return GatheringResponseDto.of(savedGathering);
+            }
 
         // 소모임 단 건 조회 로직
         public GatheringWithCountResponseDto getGathering (AuthUser authUser, Long gatheringId){
@@ -201,18 +225,25 @@ public class GatheringService {
             // 소모임 저장
             gatheringRepository.save(gathering);
 
-//            kafkaNotificationUtil.notifyAllMembers(gatheringId, "소모임이 수정되었습니다.");
+            // 소모임에 속한 모든 멤버에게 알림 전송
+            gathering.getMembers().forEach(member -> {
+                String message = gathering.getTitle() + " 소모임이 수정되었습니다.";
 
-//            // 승인된 멤버들에게 알림 전송
-//            List<Member> approvedMembers = memberRepository.findAllByGatheringId(gatheringId).stream()
-//                    .filter(member -> member.getStatus() == MemberStatus.APPROVED)
-//                    .collect(Collectors.toList());
-//
-//            approvedMembers.forEach(member -> {
-//                kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(), gathering.getTitle() + " 소모임이 수정되었습니다.");
-//            });
-
-
+                // 호스트에게는 동일한 메시지를 전송
+                if (member.getRole() == MemberRole.HOST) {
+                    AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                            member.getUser().getId(), message
+                    );
+                    alarmService.sendAlarm(alarmMessageReq);  // AlarmService를 사용하여 알림 전송
+                }
+                // 승인된 게스트에게는 수정된 소모임에 대한 메시지를 전송
+                else if (member.getStatus() == MemberStatus.APPROVED && member.getRole() == MemberRole.GUEST) {
+                    AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                            member.getUser().getId(), message
+                    );
+                    alarmService.sendAlarm(alarmMessageReq);  // AlarmService를 사용하여 알림 전송
+                }
+            });
             // 업데이트된 정보를 DTO로 반환
             return GatheringResponseDto.of(gathering);
         }
@@ -228,23 +259,25 @@ public class GatheringService {
             // 승인된 멤버들을 조회
             List<Member> approvedMembers = memberRepository.findAllByGatheringAndStatus(gathering, MemberStatus.APPROVED);
 
-//            // 승인된 멤버들에게 알림 전송
-//            approvedMembers.forEach(member -> {
-//                kafkaNotificationUtil.notifyGuestMember(member.getUser().getId(),
-//                        gathering.getTitle() + " 소모임이 삭제되었습니다.");
-//            });
+            // 소모임에 속한 모든 승인된 멤버에게 알림 전송
+            gathering.getMembers().forEach(member -> {
+                String message = gathering.getTitle() + " 소모임이 삭제되었습니다.";
 
-            // 호스트 조회
-            List<Member> hostMembers = memberRepository.findAllByGatheringId(gatheringId)
-                    .stream()
-                    .filter(member -> member.getRole() == MemberRole.HOST)
-                    .collect(Collectors.toList());
-
-//            // 호스트에게 알림 전송
-//            hostMembers.forEach(host -> {
-//                kafkaNotificationUtil.notifyHostMember(host.getUser().getId(),
-//                        gathering.getTitle() + " 소모임이 삭제되었습니다.");
-//            });
+                // 호스트에게 알림 전송
+                if (member.getRole() == MemberRole.HOST) {
+                    AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                            member.getUser().getId(), message
+                    );
+                    alarmService.sendAlarm(alarmMessageReq);  // AlarmService를 사용하여 알림 전송
+                }
+                // 승인된 게스트에게만 알림 전송
+                else if (member.getStatus() == MemberStatus.APPROVED && member.getRole() == MemberRole.GUEST) {
+                    AlarmDto.AlarmMessageReq alarmMessageReq = new AlarmDto.AlarmMessageReq(
+                            member.getUser().getId(), message
+                    );
+                    alarmService.sendAlarm(alarmMessageReq);  // AlarmService를 사용하여 알림 전송
+                }
+            });
 
             // 모임과 관련된 멤버 삭제
             memberRepository.deleteByGathering(gathering); // 모임에 속한 멤버를 삭제하는 메서드

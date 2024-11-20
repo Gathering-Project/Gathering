@@ -1,6 +1,8 @@
 package nbc_final.gathering.domain.attachment.controller;
 
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ApiResponse;
@@ -17,6 +19,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Tag(name = "User-Attachment API", description = "사용자 이미지 첨부 관련 API 모음입니다.")
 public class UserAttachmentController {
 
     private final UserAttachmentService attachmentService;
@@ -29,6 +32,7 @@ public class UserAttachmentController {
      * @return 업로드된 파일의 URL을 포함한 응답
      * @throws IOException 파일 처리 중 발생할 수 있는 예외
      */
+    @Operation(summary = "사용자 프로필 이미지 업로드", description = "사용자의 프로필 이미지를 업로드합니다.")
     @PostMapping("/v1/users/upload/userFile")
     public ResponseEntity<?> userUploadFile(
             @AuthenticationPrincipal AuthUser authUser,
@@ -46,6 +50,7 @@ public class UserAttachmentController {
      * @return 수정된 파일의 URL을 포함한 응답
      * @throws IOException 파일 처리 중 발생할 수 있는 예외
      */
+    @Operation(summary = "사용자 프로필 이미지 수정", description = "사용자의 프로필 이미지를 수정합니다.")
     @PutMapping("/v1/users/uploadUpdate/userFile")
     public ResponseEntity<?> userUpdateFile(
             @AuthenticationPrincipal AuthUser authUser,
@@ -61,6 +66,7 @@ public class UserAttachmentController {
      * @param authUser 인증된 사용자 정보
      * @return 응답 없이 No Content 상태 반환
      */
+    @Operation(summary = "사용자 프로필 이미지 삭제", description = "사용자의 프로필 이미지를 삭제합니다.")
     @DeleteMapping("/v1/users/delete/userFile")
     public ResponseEntity<?> userDeleteFile(
             @AuthenticationPrincipal AuthUser authUser
