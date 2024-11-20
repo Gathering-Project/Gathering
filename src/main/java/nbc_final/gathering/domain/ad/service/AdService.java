@@ -48,10 +48,11 @@ public class AdService {
         long totalAmount = adDuration * 10000L;
 
         // 광고 생성
-        Ad ad = Ad.create(gathering, requestDto.getStartDate(), requestDto.getEndDate(), totalAmount);
+        Ad ad = Ad.of(gathering, requestDto.getStartDate(), requestDto.getEndDate(), totalAmount);
+
 
         // 결제 주문서 생성
-        Payment payment = Payment.create(totalAmount, "광고 결제", gathering, requestDto.getStartDate(), requestDto.getEndDate());
+        Payment payment = Payment.of(totalAmount, "광고 결제", gathering, requestDto.getStartDate(), requestDto.getEndDate());
         payment.setAd(ad); // 광고와 결제 연결
         ad.setPayment(payment);
 
@@ -96,13 +97,16 @@ public class AdService {
     // 특정 날짜 범위 내 광고 조회
     @Transactional(readOnly = true)
     public AdListResponseDto getAdsWithinPeriod(LocalDate startDate, LocalDate endDate) {
-        // 주어진 날짜 범위 내에서 ACTIVE 상태의 광고 조회
-        List<Ad> ads = adRepository.findAdsByStatusAndDateRange(AdStatus.ACTIVE, startDate, endDate);
+        // 조회 상태 목록 설정 (ACTIVE, PENDING)
+        List<AdStatus> statuses = List.of(AdStatus.ACTIVE, AdStatus.PENDING, AdStatus.PAID, AdStatus.EXPIRED);
+
+        // QueryDSL 메서드 호출
+        List<Ad> ads = adRepository.findAdsByStatusesAndDateRange(statuses, startDate, endDate);
         List<AdDetailsDto> adDetailsList = ads.stream()
                 .map(AdDetailsDto::from)
                 .toList();
 
-        return new AdListResponseDto(adDetailsList, adDetailsList.size());
+        return AdListResponseDto.of(adDetailsList, adDetailsList.size());
     }
 
     // READY 상태 광고를 ACTIVE로 전환

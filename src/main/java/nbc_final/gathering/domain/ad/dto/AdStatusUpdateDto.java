@@ -4,13 +4,15 @@ import lombok.Getter;
 
 @Getter
 public class AdStatusUpdateDto {
-    private Long adId;
-    private boolean isActive;
+    private final Long adId;
+    private final boolean isActive;
+
+    private AdStatusUpdateDto(Long adId, boolean isActive) {
+        this.adId = adId;
+        this.isActive = isActive;
+    }
 
     public static AdStatusUpdateDto of(Long adId, boolean isActive) {
-        AdStatusUpdateDto dto = new AdStatusUpdateDto();
-        dto.adId = adId;
-        dto.isActive = isActive;
-        return dto;
+        return new AdStatusUpdateDto(adId, isActive);
     }
 }

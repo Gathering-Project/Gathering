@@ -12,4 +12,5 @@ public interface AdQueryRepository {
     long countByDate(LocalDate date);
     List<Ad> findAdsByStatusAndEndDate(AdStatus status, LocalDate endDate);
     List<Ad> findAdsByStatusAndStartDate(AdStatus status, LocalDate startDate);
+    List<Ad> findAdsByStatusesAndDateRange(List<AdStatus> statuses, LocalDate startDate, LocalDate endDate);
 }
