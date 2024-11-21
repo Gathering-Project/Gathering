@@ -1,6 +1,5 @@
 package nbc_final.gathering;
 
-import jakarta.persistence.Entity;
 import nbc_final.gathering.common.elasticsearch.EventElasticSearchRepository;
 import nbc_final.gathering.common.elasticsearch.GatheringElasticSearchRepository;
 import nbc_final.gathering.common.elasticsearch.MemberElasticSearchRepository;
