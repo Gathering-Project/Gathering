@@ -13,7 +13,7 @@ public class AdCreateResponseDto {
     private final String orderName;
     private final long adDuration;
 
-    public AdCreateResponseDto(Long adId, LocalDate startDate, LocalDate endDate, long totalAmount, String orderName, long adDuration) {
+    private AdCreateResponseDto(Long adId, LocalDate startDate, LocalDate endDate, long totalAmount, String orderName, long adDuration) {
         this.adId = adId;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -25,6 +25,4 @@ public class AdCreateResponseDto {
     public static AdCreateResponseDto of(Long adId, LocalDate startDate, LocalDate endDate, long totalAmount, String orderName, long adDuration) {
         return new AdCreateResponseDto(adId, startDate, endDate, totalAmount, orderName, adDuration);
     }
-
-
 }

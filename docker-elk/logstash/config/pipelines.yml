@@ -1,0 +1,8 @@
+- pipeline.id: main
+  path.config: "/usr/share/logstash/pipeline/logstash.conf"
+- pipeline.id: myinput
+  path.config: "/usr/share/logstash/pipeline/myinput.conf"
+- pipeline.id: error
+  path.config: "/usr/share/logstash/pipeline/error.conf"
+- pipeline.id: api_time
+  path.config: "/usr/share/logstash/pipeline/api_time.conf"

@@ -32,23 +32,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-
-    // OpenSearch Java 클라이언트
-    implementation 'org.opensearch.client:opensearch-java:2.9.0'
-
-    // elastci search
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-
-    // prometheous
+     // prometheous
     implementation 'io.micrometer:micrometer-registry-prometheus'
-
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+//    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     runtimeOnly 'com.h2database:h2'
 
     // prometheous

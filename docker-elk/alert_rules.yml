@@ -1,0 +1,40 @@
+groups:
+  - name: Response Time Alerts
+    rules:
+      - alert: HighResponseTimeWarning
+        expr: avg_over_time(http_request_duration_seconds[5m]) > 0.5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API 평균 응답 시간이 500ms 이상입니다."
+          description: "최근 5분 동안의 평균 응답 시간은 {{ $value }}s 입니다."
+
+      - alert: HighResponseTimeCritical
+        expr: avg_over_time(http_request_duration_seconds[5m]) > 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API 평균 응답 시간이 1초를 초과하였습니다!"
+          description: "최근 5분 동안의 평균 응답 시간은 {{ $value }}s 입니다."
+
+  - name: Error Rate Alerts
+    rules:
+      - alert: HighErrorRateWarning
+        expr: increase(http_requests_total{status=~"5.."}[5m]) / increase(http_requests_total[5m]) > 0.01
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "에러율이 1% 이상입니다."
+          description: "최근 5분 동안의 에러율: {{ printf \"%.2f\" $value }}"
+
+      - alert: HighErrorRateCritical
+        expr: increase(http_requests_total{status=~"5.."}[5m]) / increase(http_requests_total[5m]) > 0.03
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "에러율이 3%를 초과하였습니다!"
+          description: "최근 5분 동안의 에러율: {{ printf \"%.2f\" $value }}"

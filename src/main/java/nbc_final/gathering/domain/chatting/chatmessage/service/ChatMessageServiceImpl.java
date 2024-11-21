@@ -12,6 +12,8 @@ import nbc_final.gathering.domain.chatting.chatroom.entity.ChatRoom;
 import nbc_final.gathering.domain.chatting.chatroom.repository.ChatRoomRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
+    @Autowired
+    @Qualifier("mongoChatMessageRepository")
     private final ChatMessageRepository chatMessageRepository;
     private final SimpMessagingTemplate messagingTemplate;
     // 메시지를 관리할 큐 (크기는 100으로 제한)

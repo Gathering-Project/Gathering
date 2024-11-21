@@ -5,7 +5,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: prometheus
+        include: "*"
   prometheus:
     metrics:
       export:
@@ -15,6 +15,7 @@ management:
 spring:
   thymeleaf:
     cache: false
+
 
   # AWS S3 설정
   cloud:
@@ -34,7 +35,7 @@ spring:
     import: optional:file:.env[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:gathering}?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://${MYSQL_HOST}:3306/${MYSQL_DATABASE:gathering_db}?serverTimezone=Asia/Seoul
     username: ${MYSQL_NAME:root}
     password: ${MYSQL_PASSWORD:1234}
 
@@ -46,6 +47,7 @@ spring:
     username: ${rabbitmq_username:admin}
     password: ${rabbitmq_password:1234}
 
+
   #STOMP 설정
   messaging:
     stomp:
@@ -56,7 +58,7 @@ spring:
         system-login: ${rabbitmq_relay_system_login:guest}
         system-passcode: ${rabbitmq_relay_client_passcode:guest}
         client-login: ${rabbitmq_relay_client_login:guest}
-        client-passcode: ${rabbitmq_relay_client_passcode:guset}
+        client-passcode: ${rabbitmq_relay_client_passcode:guest}
       broker:
         topic-destination-prefix: /topic
         queue-destination-prefix: /queue
@@ -92,12 +94,12 @@ spring:
     redis:
       sentinel:
         master:
-          host: localhost
+          host: ${REDIS_HOST:localhost}
           port: 6379
         nodes:
-          - localhost:26379
-          - localhost:26380
-          - localhost:26381
+          - ${REDIS_PORT1:localhost}:26379
+          - ${REDIS_PORT2:localhost}:26380
+          - ${REDIS_PORT3:localhost}:26381
       timeout: 10000
 
     #MongoDB 설정
@@ -105,6 +107,16 @@ spring:
       uri: mongodb://${mongodb_username:root}:${mongodb_password:1234}@${mongodb_host:localhost}:${port:27017}/${database_name:gatherignmongo}?authSource=admin&authMechanism=SCRAM-SHA-1
       username: ${mongodb_username:root}
       password: ${mongodb_password:1234}
+
+    spring:
+      data:
+        elasticsearch:
+          repositories:
+            enabled: true
+          index:
+            create-on-startup: true
+            auto_create_index: true
+
 
   servlet:
     multipart:
@@ -165,7 +177,7 @@ admin:
 
 logging:
   level:
-#    root: DEBUG
+    #    root: DEBUG
     root: INFO
     nbc_final.gathering.domain.payment.service: INFO
     org:
@@ -180,3 +192,9 @@ logging:
             bind: info
 frontend:
   url: ${FRONTEND_URL}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
+import nbc_final.gathering.domain.event.dto.EventElasticDto;
 import nbc_final.gathering.domain.event.entity.Event;
 
 import java.time.LocalDateTime;
@@ -130,4 +131,19 @@ public class EventResponseDto {
     }
 
 
+    public static EventResponseDto of(EventElasticDto eventElasticDto) {
+        return new EventResponseDto(
+                eventElasticDto.getId(),
+                eventElasticDto.getUserId(),
+                eventElasticDto.getTitle(),
+                eventElasticDto.getDescription(),
+                eventElasticDto.getDate(),
+                eventElasticDto.getLocation(),
+                eventElasticDto.getMaxParticipants(),
+                eventElasticDto.getCurrentParticipants(),
+                null,
+                null,
+                null
+        );
+    }
 }

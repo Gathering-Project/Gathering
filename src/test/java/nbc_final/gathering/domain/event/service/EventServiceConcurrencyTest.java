@@ -111,7 +111,7 @@ public class EventServiceConcurrencyTest {
             executorService.submit(() -> {
                 try {
                     System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 참가 요청");
-                    eventService.joinEventWithLock(testUserId, gatheringId, eventId);
+                    eventService.joinEventWithLock(testUserId, eventId);
                     System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 참가 성공");
                 } catch (ResponseCodeException e) {
                     System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 참가 실패: " + e.getMessage());
@@ -143,7 +143,7 @@ public class EventServiceConcurrencyTest {
                 long testUserId = userIds.get(index);
                 try {
                     System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 참가 요청");
-                    eventService.joinEventWithLock(testUserId, gatheringId, eventId);
+                    eventService.cancelParticipation(testUserId, eventId);
                     System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 참가 성공");
                 } catch (ResponseCodeException e) {
                     System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 참가 실패: " + e.getMessage());
@@ -170,11 +170,11 @@ public class EventServiceConcurrencyTest {
             long testUserId = userIds.get(index);
             if (i < MAX_PARTICIPANTS) {
                 System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 참가 요청");
-                eventService.joinEventWithLock(testUserId, gatheringId, eventId);
+                eventService.cancelParticipation(testUserId, eventId);
             } else {
                 System.out.println("사용자 " + testUserId + "가 최대 참가자 수 초과로 이벤트 " + eventId + "에 참가 요청");
                 assertThrows(ResponseCodeException.class, () -> {
-                    eventService.joinEventWithLock(testUserId, gatheringId, eventId);
+                    eventService.cancelParticipation(testUserId, eventId);
                 });
                 System.out.println("사용자 " + testUserId + "가 최대 참가자 수 초과로 이벤트 " + eventId + "에 참가 거부됨");
             }
@@ -185,11 +185,11 @@ public class EventServiceConcurrencyTest {
     @DisplayName("4. 중복 참가 방지 확인")
     public void shouldPreventDuplicateParticipation() {
         long testUserId = userIds.get(0);
-        eventService.joinEventWithLock(testUserId, gatheringId, eventId);
+        eventService.cancelParticipation(testUserId, eventId);
         System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 첫 참가 성공");
 
         assertThrows(ResponseCodeException.class, () -> {
-            eventService.joinEventWithLock(testUserId, gatheringId, eventId);
+            eventService.cancelParticipation(testUserId, eventId);
         });
         System.out.println("사용자 " + testUserId + "가 중복 참가 방지로 인해 이벤트 " + eventId + "에 참가 거부됨");
 
@@ -203,7 +203,7 @@ public class EventServiceConcurrencyTest {
     @DisplayName("5. 참가자 수 감소 테스트")
     public void shouldDecreaseParticipantCountOnCancel() throws InterruptedException {
         long testUserId = userIds.get(0);
-        eventService.joinEventWithLock(testUserId, gatheringId, eventId);
+        eventService.cancelParticipation(testUserId, eventId);
         System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + "에 참가 성공");
 
         String participantCountKey = "event:" + eventId + ":currentParticipants";
@@ -211,7 +211,7 @@ public class EventServiceConcurrencyTest {
         System.out.println("참가 취소 전 이벤트 " + eventId + " 참가자 수 (Redis): " + currentParticipants.get());
         assertThat(currentParticipants.get()).isEqualTo(1);
 
-        eventService.cancelParticipation(testUserId, gatheringId, eventId);
+        eventService.cancelParticipation(testUserId, eventId);
         System.out.println("사용자 " + testUserId + "가 이벤트 " + eventId + " 참가 취소");
 
         System.out.println("참가 취소 후 이벤트 " + eventId + " 참가자 수 (Redis): " + currentParticipants.get());

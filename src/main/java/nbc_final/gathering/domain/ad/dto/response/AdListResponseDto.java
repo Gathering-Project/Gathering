@@ -10,8 +10,12 @@ public class AdListResponseDto {
     private final List<AdDetailsDto> ads;
     private final long adCount;
 
-    public AdListResponseDto(List<AdDetailsDto> ads, long adCount) {
+    private AdListResponseDto(List<AdDetailsDto> ads, long adCount) {
         this.ads = ads;
         this.adCount = adCount;
+    }
+
+    public static AdListResponseDto of(List<AdDetailsDto> ads, long adCount) {
+        return new AdListResponseDto(ads, adCount);
     }
 }

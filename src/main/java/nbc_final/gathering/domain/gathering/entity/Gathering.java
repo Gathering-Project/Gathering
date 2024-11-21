@@ -10,6 +10,7 @@ import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.member.enums.MemberRole;
 import nbc_final.gathering.domain.member.enums.MemberStatus;
 import nbc_final.gathering.domain.user.entity.User;
+import org.springframework.data.elasticsearch.annotations.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

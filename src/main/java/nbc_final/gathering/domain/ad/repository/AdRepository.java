@@ -15,6 +15,7 @@ import java.util.List;
 public interface AdRepository extends JpaRepository<Ad, Long>, AdQueryRepository {
 
     // 광고 상태와 날짜 범위에 맞는 광고 조회
-    List<Ad> findAdsByStatusAndDateRange(AdStatus status, LocalDate startDate, LocalDate endDate);
+    List<Ad> findAdsByStatusesAndDateRange(List<AdStatus> statuses, LocalDate startDate, LocalDate endDate);
+
 
 }

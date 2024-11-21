@@ -1,108 +1,106 @@
-# This workflow will build and push a new container image to Amazon ECR,
-# and then will deploy a new task definition to Amazon ECS, when there is a push to the "dev" branch.
-#
-# To use this workflow, you will need to complete the following set-up steps:
-#
-# 1. Create an ECR repository to store your images.
-#    For example: `aws ecr create-repository --repository-name my-ecr-repo --region us-east-2`.
-#    Replace the value of the `ECR_REPOSITORY` environment variable in the workflow below with your repository's name.
-#    Replace the value of the `AWS_REGION` environment variable in the workflow below with your repository's region.
-#
-# 2. Create an ECS task definition, an ECS cluster, and an ECS service.
-#    For example, follow the Getting Started guide on the ECS console:
-#      https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/firstRun
-#    Replace the value of the `ECS_SERVICE` environment variable in the workflow below with the name you set for the Amazon ECS service.
-#    Replace the value of the `ECS_CLUSTER` environment variable in the workflow below with the name you set for the cluster.
-#
-# 3. Store your ECS task definition as a JSON file in your repository.
-#    The format should follow the output of `aws ecs register-task-definition --generate-cli-skeleton`.
-#    Replace the value of the `ECS_TASK_DEFINITION` environment variable in the workflow below with the path to the JSON file.
-#    Replace the value of the `CONTAINER_NAME` environment variable in the workflow below with the name of the container
-#    in the `containerDefinitions` section of the task definition.
-#
-# 4. Store an IAM user access key in GitHub Actions secrets named `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
-#    See the documentation for each action used below for the recommended IAM policies for this IAM user,
-#    and best practices on handling the access key credentials.
-
-name: Deploy to Amazon ECS
-
+name: Deploy to EC2 with ECR_v01
 on:
   push:
-    branches: [ "feature/chatting" ]
-
+    branches: [ "dev" ]
+    
 env:
-  AWS_REGION: ap-northeast-2                  # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: wemeetnow_ecr           # set this to your Amazon ECR repository name
-  ECS_SERVICE: we_meet_now_cluster_service                # set this to your Amazon ECS service name
-  ECS_CLUSTER: we_meet_now_ecs_cluster                # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: we_meet_now_task.json # set this to the path to your Amazon ECS task definition
-                                               # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: we_are_meet_now_container           # set this to the name of the container in the
-                                               # containerDefinitions section of your task definition
-
+  AWS_REGION: ap-northeast-2                 # AWS 리전
+  ECR_REPOSITORY: wemeetnow_ecr               # ECR 저장소 이름
+  EC2_HOST: "43.200.205.244"              # EC2 퍼블릭 IP
+  EC2_USER: "ubuntu"                        # EC2 사용자 이름
+  APP_DIR: "~/app"                            # 애플리케이션 파일 저장 경로
+  IMAGE_TAG: ${{ github.sha }}                # 이미지 태그 (커밋 해시 사용)
 permissions:
   contents: read
-
+  
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy to EC2
     runs-on: ubuntu-latest
-    environment: production
-
     steps:
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v4
+      
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Clean previous builds
-      run: ./gradlew clean
-
+        
     - name: Build project with Gradle
       run: ./gradlew clean bootJar
-
+      
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.CLOUD_AWS_S3_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.CLOUD_AWS_S3_SECRET_KEY }}
-        aws-region: ap-northeast-2
-
+        aws-region: ${{ env.AWS_REGION }}
+        
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-
+      
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build a docker container and
-        # push it to ECR so that it can
-        # be deployed to ECS.
+        # Docker 이미지 빌드 및 ECR 푸시
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
+    
+    - name: Set up SSH agent
+      uses: webfactory/ssh-agent@v0.5.3
       with:
-        task-definition: ${{ env.ECS_TASK_DEFINITION }}
-        container-name: ${{ env.CONTAINER_NAME }}
-        image: ${{ steps.build-image.outputs.image }}
+        ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
 
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE }}
-        cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: true
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << EOF
+          set -e  # 오류 발생 시 즉시 종료
+          # 권한 설정
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/authorized_keys
+          
+          # Docker 설치 확인 및 설치
+          if ! command -v docker &> /dev/null; then
+            echo "Docker가 설치되어 있지 않습니다. 설치를 진행합니다."
+            sudo apt update -y
+            sudo apt install -y docker.io
+            sudo systemctl start docker
+            sudo systemctl enable docker
+          fi
+          
+          # AWS CLI 설치 확인 및 설치
+          if ! command -v aws &> /dev/null; then
+            echo "AWS CLI가 설치되어 있지 않습니다. 설치를 진행합니다."
+            sudo apt update -y
+            sudo apt install -y unzip curl
+            curl -O 'https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip'
+            aws --version
+            
+            # ZIP 파일 검증
+            if ! unzip -t awscliv2.zip &> /dev/null; then
+              echo "AWS CLI 설치 ZIP 파일 다운로드 실패. URL 또는 네트워크 연결을 확인하세요."
+              exit 1
+            fi
+            
+            unzip awscliv2.zip
+            sudo ./aws/install
+            echo "AWS CLI 설치 완료: $(aws --version)"
+          fi
+          
+          # Docker 로그인
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+          
+          # 기존 컨테이너 종료 및 삭제
+          docker ps -q | grep -q . && docker stop \$(docker ps -q) && docker rm \$(docker ps -aq) || true
+          
+          # 최신 이미지 Pull 및 실행
+          docker pull ${{ steps.build-image.outputs.image }}
+          docker run -d -p 8080:8080 ${{ steps.build-image.outputs.image }}
+          
+          echo "배포 완료: 이미지를 EC2에서 실행 중입니다."
+        EOF

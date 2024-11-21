@@ -71,4 +71,16 @@ public class AdQueryRepositoryImpl implements AdQueryRepository {
                 .fetch();
     }
 
+    @Override
+    public List<Ad> findAdsByStatusesAndDateRange(List<AdStatus> statuses, LocalDate startDate, LocalDate endDate) {
+        QAd ad = QAd.ad;
+
+        return queryFactory.selectFrom(ad)
+                .where(ad.status.in(statuses)
+                        .and(ad.startDate.loe(endDate))
+                        .and(ad.endDate.goe(startDate)))
+                .fetch();
+    }
+
+
 }

@@ -27,12 +27,16 @@ public class PaymentRequestDto {
 
     private Long adId;
 
-    public PaymentRequestDto(Long gatheringId, Long amount, String orderName, LocalDate startDate, LocalDate endDate, Long adId) {
+    private PaymentRequestDto(Long gatheringId, Long amount, String orderName, LocalDate startDate, LocalDate endDate, Long adId) {
         this.gatheringId = gatheringId;
         this.amount = amount;
         this.orderName = orderName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.adId = adId;
+    }
+
+    public static PaymentRequestDto of(Long gatheringId, Long amount, String orderName, LocalDate startDate, LocalDate endDate, Long adId) {
+        return new PaymentRequestDto(gatheringId, amount, orderName, startDate, endDate, adId);
     }
 }
