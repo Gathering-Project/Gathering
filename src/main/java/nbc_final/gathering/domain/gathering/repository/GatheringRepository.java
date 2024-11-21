@@ -11,10 +11,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface GatheringRepository extends JpaRepository<Gathering, Long>, QuerydslPredicateExecutor<Gathering>, GatheringRepositoryCustom {
-  Optional<Gathering> findByMembers(Member member);
+    Optional<Gathering> findByMembers(Member member);
 
-  Optional<Gathering> findByTitle(String title);
-
-  @Query("SELECT g FROM Gathering g WHERE g.userId = :userId") // JPQL 쿼리 설정
-  List<Gathering> findByUserId(@Param("userId") Long userId);
+    @Query("SELECT g FROM Gathering g WHERE g.userId = :userId")
+        // JPQL 쿼리 설정
+    List<Gathering> findByUserId(@Param("userId") Long userId);
 }

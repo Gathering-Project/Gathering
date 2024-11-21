@@ -9,7 +9,6 @@ import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.user.entity.User;
 
 
-
 @Entity
 @Getter
 @NoArgsConstructor
@@ -45,7 +44,7 @@ public class Comment extends TimeStamped {
 
 
     //댓글 수정 메서드
-    public void updateContent(String newContent){
+    public void updateContent(String newContent) {
         this.content = newContent;
     }
 

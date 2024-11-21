@@ -1,13 +1,9 @@
 package nbc_final.gathering.domain.user.dto;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import nbc_final.gathering.common.entity.TimeStamped;
-import nbc_final.gathering.domain.attachment.entity.Attachment;
-import nbc_final.gathering.domain.event.entity.Event;
-import nbc_final.gathering.domain.member.entity.Member;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.InterestType;
 import nbc_final.gathering.domain.user.enums.MbtiType;
@@ -17,8 +13,6 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @NoArgsConstructor

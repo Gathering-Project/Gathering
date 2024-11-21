@@ -8,7 +8,6 @@ import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.elasticsearch.MemberElasticSearchRepository;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
-import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.member.dto.MemberElasticDto;
@@ -27,17 +26,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
 public class MemberService {
 
     private final MemberRepository memberRepository;
     private final GatheringRepository gatheringRepository;
     private final UserRepository userRepository;
     private final MemberElasticSearchRepository memberElasticSearchRepository;
-    private final KafkaNotificationUtil kafkaNotificationUtil;
     private final AlarmService alarmService;
 
     @Transactional
@@ -74,7 +72,6 @@ public class MemberService {
         Member newMember = new Member(user, savedGathering, MemberRole.GUEST, MemberStatus.PENDING);
         memberRepository.save(newMember);
 
-        kafkaNotificationUtil.notifyGuestMember(newMember.getId(), "게스트 님, 가입 신청이 완료되었습니다.");
         //엘라스틱 서치 추가
         MemberElasticDto memberElasticDto = MemberElasticDto.of(newMember);
         memberElasticSearchRepository.save(memberElasticDto);
@@ -384,7 +381,6 @@ public class MemberService {
             System.out.println("알림 전송 성공: 멤버 ID " + guest.getUser().getId() + ", 메시지: " + message);
         });
     }
-
 
 
     //----------------- extracted method ------------- //

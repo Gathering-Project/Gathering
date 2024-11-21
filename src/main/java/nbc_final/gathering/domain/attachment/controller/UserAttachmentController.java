@@ -17,8 +17,8 @@ import java.io.IOException;
 
 
 @RestController
-@RequestMapping("/api")
 @RequiredArgsConstructor
+@RequestMapping("/api")
 @Tag(name = "User-Attachment API", description = "사용자 이미지 첨부 관련 API 모음입니다.")
 public class UserAttachmentController {
 
@@ -28,7 +28,7 @@ public class UserAttachmentController {
      * 사용자 프로필 이미지를 업로드
      *
      * @param authUser 인증된 사용자 정보
-     * @param file 업로드할 이미지 파일 (RequestPart로 전달)
+     * @param file     업로드할 이미지 파일 (RequestPart로 전달)
      * @return 업로드된 파일의 URL을 포함한 응답
      * @throws IOException 파일 처리 중 발생할 수 있는 예외
      */
@@ -46,7 +46,7 @@ public class UserAttachmentController {
      * 사용자 프로필 이미지를 수정
      *
      * @param authUser 인증된 사용자 정보
-     * @param file 수정할 이미지 파일 (RequestPart로 전달)
+     * @param file     수정할 이미지 파일 (RequestPart로 전달)
      * @return 수정된 파일의 URL을 포함한 응답
      * @throws IOException 파일 처리 중 발생할 수 있는 예외
      */

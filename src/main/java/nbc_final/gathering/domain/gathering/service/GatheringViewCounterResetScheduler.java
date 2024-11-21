@@ -96,7 +96,7 @@ public class GatheringViewCounterResetScheduler {
 
 
     // "gathering:snapshot:{gatheringId}"에서 gatheringId 추출 메서드
-    private Long extractGatheringIdFromKey (String key ){
+    private Long extractGatheringIdFromKey(String key) {
         return Long.valueOf(key.split(":")[2]);
     }
 }

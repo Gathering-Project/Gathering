@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository("userElasticSearchRepo")
-public interface UserElasticSearchRepository extends ElasticsearchRepository <UserElasticDto, Long> {
+public interface UserElasticSearchRepository extends ElasticsearchRepository<UserElasticDto, Long> {
 
     List<UserElasticDto> findByNicknameContainingOrLocationContaining(String nickname, String location);
 }

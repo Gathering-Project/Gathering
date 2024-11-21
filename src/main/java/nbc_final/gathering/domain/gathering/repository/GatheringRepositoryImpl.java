@@ -2,8 +2,9 @@ package nbc_final.gathering.domain.gathering.repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.List;
+
 import static nbc_final.gathering.domain.gathering.entity.QGathering.gathering;
 
 public class GatheringRepositoryImpl implements GatheringRepositoryCustom {

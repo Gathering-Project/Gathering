@@ -2,13 +2,12 @@ package nbc_final.gathering.domain.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nbc_final.gathering.common.annotation.DistributedLock;
-import nbc_final.gathering.common.elasticsearch.EventElasticSearchRepository;
 import nbc_final.gathering.common.alarmconfig.AlarmDto;
 import nbc_final.gathering.common.alarmconfig.AlarmService;
+import nbc_final.gathering.common.annotation.DistributedLock;
+import nbc_final.gathering.common.elasticsearch.EventElasticSearchRepository;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
-import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
 import nbc_final.gathering.domain.comment.dto.response.CommentResponseDto;
 import nbc_final.gathering.domain.comment.repository.CommentRepository;
 import nbc_final.gathering.domain.event.dto.EventElasticDto;
@@ -32,21 +31,18 @@ import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.redisson.api.RAtomicLong;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 public class EventService {
 
     private final ParticipantRepository participantRepository;
@@ -226,7 +222,7 @@ public class EventService {
         User user = getUserOrThrow(userId);
         Event event = getEventOrThrow(eventId);
 
-            validateParticipation(user, event, userId);
+        validateParticipation(user, event, userId);
 
         if (isParticipantLimitExceeded(event.getMaxParticipants(), eventId)) {
             throw new ResponseCodeException(ResponseCode.PARTICIPANT_LIMIT_EXCEEDED);

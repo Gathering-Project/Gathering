@@ -3,7 +3,6 @@ package nbc_final.gathering.domain.chatting.chatmessage.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-
 import nbc_final.gathering.common.config.chatconfig.ChatDto;
 import nbc_final.gathering.common.config.chatconfig.ChatMessageRes;
 import nbc_final.gathering.domain.chatting.chatmessage.service.ChatMessageService;

@@ -14,7 +14,7 @@ public class GatheringWithCountResponseDto {
     private Long todayGatheringViewCount;
     private Long totalGatheringViewCount;
 
-    public GatheringWithCountResponseDto (Gathering gathering, Long todayGatheringViewCount) {
+    public GatheringWithCountResponseDto(Gathering gathering, Long todayGatheringViewCount) {
         this.gatheringId = gathering.getId();
         this.title = gathering.getTitle();
         this.description = gathering.getDescription();

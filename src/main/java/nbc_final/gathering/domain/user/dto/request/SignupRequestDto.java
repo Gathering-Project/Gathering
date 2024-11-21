@@ -28,6 +28,6 @@ public class SignupRequestDto {
     @NotBlank
     private String userRole;
 
-    private String adminToken ="";
+    private String adminToken = "";
 
 }

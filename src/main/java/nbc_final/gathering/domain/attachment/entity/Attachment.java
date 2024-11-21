@@ -11,8 +11,8 @@ import nbc_final.gathering.domain.user.entity.User;
 @Entity
 @Getter
 @Setter
-@Table(name = "attachments")
 @NoArgsConstructor
+@Table(name = "attachments")
 public class Attachment extends TimeStamped {
 
     @Id

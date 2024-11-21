@@ -28,7 +28,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     // 채팅방 자동 생성
     @Override
     @Transactional
-    public ChatDto.ChatRoomCreateRes createChatRoomForPersonal(Long userId1, Long userId2,ChatDto.ChatRoomCreateReq chatRoomReq) {
+    public ChatDto.ChatRoomCreateRes createChatRoomForPersonal(Long userId1, Long userId2, ChatDto.ChatRoomCreateReq chatRoomReq) {
         log.info("채팅방 생성 user1: {}, user2: {}", userId1, userId2);
 
         // 새로운 ChatRoom 생성

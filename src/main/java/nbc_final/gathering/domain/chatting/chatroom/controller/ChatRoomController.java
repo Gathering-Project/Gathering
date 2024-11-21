@@ -3,19 +3,23 @@ package nbc_final.gathering.domain.chatting.chatroom.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-
 import nbc_final.gathering.common.config.chatconfig.ChatDto;
 import nbc_final.gathering.domain.chatting.chatroom.service.ChatRoomServiceImpl;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
 @RequiredArgsConstructor
+@RequestMapping("/api")
 @Tag(name = "ChatRoom API", description = "유저간 매칭 후 자동 연결되는 채팅방 관련 API 모음입니다.")
 public class ChatRoomController {
+
+    private final ChatRoomServiceImpl chatRoomService;
 
     /**
      * 특정 채팅방 정보를 조회합니다.
@@ -28,8 +32,6 @@ public class ChatRoomController {
     public ResponseEntity<ChatDto.ChatRoomDto> getChatRoom(@PathVariable Long chatRoomId) {
         return ResponseEntity.ok(chatRoomService.getChatRoom(chatRoomId));
     }
-
-    private final ChatRoomServiceImpl chatRoomService;
 
     /**
      * 모든 채팅방의 정보를 조회합니다.

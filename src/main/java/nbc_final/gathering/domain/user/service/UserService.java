@@ -11,12 +11,9 @@ import nbc_final.gathering.common.alarmconfig.AlarmService;
 import nbc_final.gathering.common.config.common.WebSocketSessionManager;
 import nbc_final.gathering.common.config.jwt.JwtUtil;
 import nbc_final.gathering.common.elasticsearch.UserElasticSearchRepository;
-import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
-import nbc_final.gathering.domain.user.dto.UserElasticDto;
-import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
-import nbc_final.gathering.common.kafka.util.KafkaNotificationUtil;
+import nbc_final.gathering.domain.user.dto.UserElasticDto;
 import nbc_final.gathering.domain.user.dto.request.*;
 import nbc_final.gathering.domain.user.dto.response.LoginResponseDto;
 import nbc_final.gathering.domain.user.dto.response.SignUpResponseDto;
@@ -56,6 +53,23 @@ public class UserService {
     @PersistenceContext // EntityManager 주입
     private EntityManager entityManager;
 
+    // 새 비밀번호 검증
+    private static void validateNewPassword(UserChangePwRequestDto requestDto) {
+        if (
+            // 비밀번호는 영문 + 숫자 + 특수문자를 최소 1글자 포함하고 최소 8글자 이상 최대 20글자 이하
+            // 비밀번호에 알파벳 포함 여부 확인 (대소문자 포함)
+                !requestDto.getNewPassword().matches(".*[A-Za-z].*") ||
+                        // 비밀번호에 숫자 포함 여부 확인
+                        !requestDto.getNewPassword().matches(".*\\d.*") ||
+                        // 비밀번호에 특수 문자 포함 여부 확인
+                        !requestDto.getNewPassword().matches(".*[\\p{Punct}].*") ||
+                        // 비밀번호 길이가 8자 이상 20자 이하인지 확인
+                        requestDto.getNewPassword().length() < 8 ||
+                        requestDto.getNewPassword().length() > 20
+        ) {
+            throw new ResponseCodeException(ResponseCode.VIOLATION_PASSWORD);
+        }
+    }
 
     // 유저 회원가입
     @Transactional
@@ -108,6 +122,7 @@ public class UserService {
 
         return new SignUpResponseDto(bearerToken); // 토큰 반환
     }
+
     // 사용자 검색 (닉네임, 위치)
     public List<UserElasticDto> searchUsers(String keyword) {
         List<UserElasticDto> results = userElasticSearchRepository.findByNicknameContainingOrLocationContaining(keyword, keyword);
@@ -173,6 +188,7 @@ public class UserService {
             throw new ResponseCodeException(ResponseCode.UNLINK_FAILED);
         }
     }
+
     // 유저 정보 조회
     public UserGetResponseDto getUser(Long userId) {
         User user = getUserById(userId);
@@ -219,6 +235,8 @@ public class UserService {
         return UserGetResponseDto.of(user);
     }
 
+    //----------------- extracted method ------------- //
+
     // 내 정보 조회
     public UserGetResponseDto getMyInfo(Long myId) {
         User user = getUserById(myId);
@@ -226,8 +244,6 @@ public class UserService {
         return UserGetResponseDto.of(user);
 
     }
-
-    //----------------- extracted method ------------- //
 
     private User getUserById(Long myId) {
         User user = userRepository.findById(myId)
@@ -249,28 +265,10 @@ public class UserService {
         }
     }
 
-    // 새 비밀번호 검증
-    private static void validateNewPassword(UserChangePwRequestDto requestDto) {
-        if (
-            // 비밀번호는 영문 + 숫자 + 특수문자를 최소 1글자 포함하고 최소 8글자 이상 최대 20글자 이하
-            // 비밀번호에 알파벳 포함 여부 확인 (대소문자 포함)
-                !requestDto.getNewPassword().matches(".*[A-Za-z].*") ||
-                        // 비밀번호에 숫자 포함 여부 확인
-                        !requestDto.getNewPassword().matches(".*\\d.*") ||
-                        // 비밀번호에 특수 문자 포함 여부 확인
-                        !requestDto.getNewPassword().matches(".*[\\p{Punct}].*") ||
-                        // 비밀번호 길이가 8자 이상 20자 이하인지 확인
-                        requestDto.getNewPassword().length() < 8 ||
-                        requestDto.getNewPassword().length() > 20
-        ) {
-            throw new ResponseCodeException(ResponseCode.VIOLATION_PASSWORD);
-        }
-    }
-
     // 관리자 계정 생성 인증
     public void validateAdminToken(SignupRequestDto requestDto, String userRole) {
         if (requestDto.getUserRole().equals("ROLE_ADMIN") && !(ADMIN_TOKEN.equals(requestDto.getAdminToken()))) {
-            throw  new ResponseCodeException(ResponseCode.INVALID_ADMIN_TOKEN);
+            throw new ResponseCodeException(ResponseCode.INVALID_ADMIN_TOKEN);
         }
     }
 

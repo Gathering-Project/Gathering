@@ -11,58 +11,58 @@ import nbc_final.gathering.domain.member.enums.MemberStatus;
 import nbc_final.gathering.domain.user.entity.User;
 
 @Entity
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
 @Table(name = "members")
 public class Member extends TimeStamped {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "gathering_id", nullable = false)
-  private Gathering gathering;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "gathering_id", nullable = false)
+    private Gathering gathering;
 
-  @Enumerated(EnumType.STRING)
-  private MemberRole role;
+    @Enumerated(EnumType.STRING)
+    private MemberRole role;
 
-  @Enumerated(EnumType.STRING)
-  private MemberStatus status;
+    @Enumerated(EnumType.STRING)
+    private MemberStatus status;
 
-  public Member(User user, Gathering gathering, MemberRole role) {
-    this.user = user;
-    this.gathering = gathering;
-    this.role = role;
-    this.status = MemberStatus.PENDING;
-  }
-
-  // 네 가지 인자를 받는 기존 생성자
-  public Member(User user, Gathering gathering, MemberRole role, MemberStatus status) {
-    this.user = user;
-    this.gathering = gathering;
-    this.role = role;
-    this.status = status;
-  }
-
-  public void approve() {
-    this.status = MemberStatus.APPROVED;
-  }
-
-  public void setRole(MemberRole role) {
-    this.role = role;
-  }
-
-  public void reject() {
-    if (this.status == MemberStatus.PENDING) {
-      this.status = MemberStatus.REJECTED;
-    } else {
-      throw new IllegalStateException("Only pending members can be rejected.");
+    public Member(User user, Gathering gathering, MemberRole role) {
+        this.user = user;
+        this.gathering = gathering;
+        this.role = role;
+        this.status = MemberStatus.PENDING;
     }
-  }
+
+    // 네 가지 인자를 받는 기존 생성자
+    public Member(User user, Gathering gathering, MemberRole role, MemberStatus status) {
+        this.user = user;
+        this.gathering = gathering;
+        this.role = role;
+        this.status = status;
+    }
+
+    public void approve() {
+        this.status = MemberStatus.APPROVED;
+    }
+
+    public void setRole(MemberRole role) {
+        this.role = role;
+    }
+
+    public void reject() {
+        if (this.status == MemberStatus.PENDING) {
+            this.status = MemberStatus.REJECTED;
+        } else {
+            throw new IllegalStateException("Only pending members can be rejected.");
+        }
+    }
 }

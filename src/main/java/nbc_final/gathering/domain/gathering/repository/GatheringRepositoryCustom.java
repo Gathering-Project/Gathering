@@ -6,6 +6,8 @@ import java.util.List;
 
 public interface GatheringRepositoryCustom {
     List<Gathering> searchGatheringsByTitle(String title);
+
     List<Gathering> searchGatheringsByLocation(String location);
+
     List<Gathering> searchGatheringsByTitleAndLocation(String title, String location);
 }

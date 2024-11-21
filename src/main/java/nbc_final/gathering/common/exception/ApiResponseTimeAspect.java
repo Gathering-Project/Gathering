@@ -1,7 +1,7 @@
 package nbc_final.gathering.common.exception;
 
-import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,8 @@ public class ApiResponseTimeAspect {
     private static final Logger logger = LoggerFactory.getLogger(ApiResponseTimeAspect.class);
 
     @Pointcut("execution(public * nbc_final.gathering..*Controller.*(..))")  // 컨트롤러의 모든 메서드에 적용
-    public void controllerMethods() {}
+    public void controllerMethods() {
+    }
 
     @Around("controllerMethods()")
     public Object logExecutionTime(org.aspectj.lang.ProceedingJoinPoint joinPoint) throws Throwable {

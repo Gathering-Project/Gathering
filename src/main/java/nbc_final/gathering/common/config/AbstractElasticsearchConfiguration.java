@@ -40,7 +40,7 @@ public abstract class AbstractElasticsearchConfiguration extends ElasticsearchCo
         return new ElasticsearchClient(transport);
     }
 
-    @Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
+    @Bean(name = {"elasticsearchOperations", "elasticsearchTemplate"})
     public ElasticsearchOperations elasticsearchOperations(ElasticsearchConverter elasticsearchConverter,
                                                            ElasticsearchClient elasticsearchClient) {
         ElasticsearchTemplate template = new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);

@@ -1,6 +1,6 @@
 package nbc_final.gathering.domain.member.dto;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

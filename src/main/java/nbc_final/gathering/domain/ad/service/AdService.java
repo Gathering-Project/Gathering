@@ -33,10 +33,10 @@ public class AdService {
     @Transactional
     public AdCreateResponseDto requestAd(Long userId, Long gatheringId, AdCreateRequestDto requestDto) {
         Gathering gathering = gatheringRepository.findById(gatheringId)
-                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING, "소모임을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
 
         if (!gathering.getUserId().equals(userId)) {
-            throw new ResponseCodeException(ResponseCode.FORBIDDEN, "소모임 소유자만 광고를 생성할 수 있습니다.");
+            throw new ResponseCodeException(ResponseCode.FORBIDDEN);
         }
 
         validateStartDate(requestDto.getStartDate());
@@ -161,7 +161,6 @@ public class AdService {
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_AD));
         return AdDetailsDto.from(ad);
     }
-
 
 
 // ------- 유틸 메서드 -------

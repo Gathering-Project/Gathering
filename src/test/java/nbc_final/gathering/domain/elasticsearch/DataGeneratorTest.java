@@ -1,7 +1,6 @@
 package nbc_final.gathering.domain.elasticsearch;
 
 import nbc_final.gathering.common.elasticsearch.GatheringElasticSearchRepository;
-import nbc_final.gathering.common.elasticsearch.datagenerator.DataGenerator;
 import nbc_final.gathering.domain.gathering.dto.GatheringElasticDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
