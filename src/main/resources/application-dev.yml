@@ -108,15 +108,18 @@ spring:
       username: ${mongodb_username:root}
       password: ${mongodb_password:1234}
 
-    spring:
-      data:
-        elasticsearch:
-          repositories:
-            enabled: true
-          index:
-            create-on-startup: true
-            auto_create_index: true
-
+    data:
+      elasticsearch:
+        repositories:
+          enabled: true
+        index:
+          create-on-startup: true
+          auto_create_index: true
+        client:
+          rest:
+            uris: http://13.125.17.9:9200 # Elasticsearch의 IP 주소와 포트를 정확히 입력
+            username: root # 인증 사용자 이름 (기본: elastic)
+            password: 1234 # Elasticsearch 설정 시 생성한 패스워드
 
   servlet:
     multipart:
