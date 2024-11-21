@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.user.entity.User;

@@ -2,7 +2,6 @@ package nbc_final.gathering.domain.attachment.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import io.jsonwebtoken.io.IOException;
 import lombok.RequiredArgsConstructor;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCode;
@@ -46,16 +45,15 @@ public class GatheringAttachmentService {
 
   // 모임 프로필 등록
   @Transactional
-  public AttachmentResponseDto gatheringUploadFile(AuthUser authUser, Long gatheringId, MultipartFile file) throws IOException, java.io.IOException {
+  public AttachmentResponseDto gatheringUploadFile(AuthUser authUser, Long gatheringId, MultipartFile file) throws java.io.IOException {
     // 파일 체크
     validateFile(file, authUser);
 
     Gathering gathering = gatheringRepository.findById(gatheringId)
         .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
-//------
+
     // 멤버인지, 유저라면 Host인지 체크
     validateMemberAndHost(authUser, gathering);
-//------
 
     // S3에 파일 업로드 후 URL 반환
     String fileUrl = uploadToS3(file);
@@ -71,7 +69,7 @@ public class GatheringAttachmentService {
 
   // 모임 이미지 수정
   @Transactional
-  public AttachmentResponseDto gatheringUpdateFile(AuthUser authUser, Long gatheringId, MultipartFile file) throws IOException, java.io.IOException {
+  public AttachmentResponseDto gatheringUpdateFile(AuthUser authUser, Long gatheringId, MultipartFile file) throws java.io.IOException {
     validateFile(file, authUser);
 
     // Gathering 객체를 조회
@@ -177,7 +175,7 @@ public class GatheringAttachmentService {
   }
 
   // s3업로드 메서드
-  private String uploadToS3(MultipartFile file) throws IOException, java.io.IOException {
+  private String uploadToS3(MultipartFile file) throws java.io.IOException {
     String fileName = file.getOriginalFilename();
     String fileUrl = "https://" + bucketName + "/profile-images/" + fileName;
 
