@@ -79,9 +79,9 @@ public class GatheringAttachmentService {
     // AuthUser에서 User 엔티티 조회
     User user = userRepository.findById(authUser.getUserId())
         .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-//-----
+
     validateMemberAndHost(authUser, gathering);
-//-----
+
     // 유저와 소모임으로 올려진 파일 찾기
     List<Attachment> existingAttachment = attachmentRepository.findByUserAndGathering(user, gathering);
     for (Attachment attachment : existingAttachment) {
@@ -105,9 +105,9 @@ public class GatheringAttachmentService {
     // AuthUser에서 User 엔티티 조회
     User user = userRepository.findById(authUser.getUserId())
         .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
-//-----
+
     validateHostAndAdmin(user, gathering);
-//-----
+
     // 기존 파일 찾기
     List<Attachment> existingAttachment = attachmentRepository.findByUserAndGathering(user, gathering);
     for (Attachment attachment : existingAttachment) {
@@ -115,9 +115,7 @@ public class GatheringAttachmentService {
       attachmentRepository.delete(attachment);
     }
 
-//-----
     gathering.setGatheringImage(null);
-//-----
 
   }
 
