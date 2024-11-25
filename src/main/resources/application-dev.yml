@@ -1,5 +1,5 @@
 server:
-  port: 7070
+  port: 8080
 
 management:
   endpoints:
@@ -35,7 +35,7 @@ spring:
     import: optional:file:.env[.properties]
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:gathering}?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://${MYSQL_HOST}:3306/${MYSQL_DATABASE:gathering_db}?serverTimezone=Asia/Seoul
     username: ${MYSQL_NAME:root}
     password: ${MYSQL_PASSWORD:1234}
 
@@ -94,13 +94,13 @@ spring:
     redis:
       sentinel:
         master:
-          host: localhost
+          host: ${REDIS_HOST:localhost}
           port: 6379
         nodes:
-         - localhost:26379
-         - localhost:26380
-         - localhost:26381
-        timeout: 10000
+          - ${REDIS_PORT1:localhost}:26379
+          - ${REDIS_PORT2:localhost}:26380
+          - ${REDIS_PORT3:localhost}:26381
+      timeout: 10000
 
     #MongoDB 설정
     mongodb:
@@ -108,15 +108,18 @@ spring:
       username: ${mongodb_username:root}
       password: ${mongodb_password:1234}
 
-
     data:
       elasticsearch:
-        client:
-          reactive:
-            endpoints: http://localhost:9200
         repositories:
           enabled: true
-
+        index:
+          create-on-startup: true
+          auto_create_index: true
+        client:
+          rest:
+            uris: http://13.125.17.9:9200 # Elasticsearch의 IP 주소와 포트를 정확히 입력
+            username: root # 인증 사용자 이름 (기본: elastic)
+            password: 1234 # Elasticsearch 설정 시 생성한 패스워드
 
   servlet:
     multipart:

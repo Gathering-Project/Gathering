@@ -13,13 +13,15 @@ import org.springframework.stereotype.Component;
 public class AlarmMessageReceiver {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final ObjectMapper objectMapper;
 
     @RabbitListener(queues = "${RABBITMQ_NOTIFICATION_QUEUE}")
-    public void receiveAlarmMessage(byte[] message) {
+//    public void receiveAlarmMessage(byte[] message) {
+    public void receiveAlarmMessage(AlarmDto.AlarmMessageRes alarmMessageRes) {
         try {
             // byte[] 메시지를 AlarmMessageRes 객체로 변환
-            ObjectMapper objectMapper = new ObjectMapper();
-            AlarmDto.AlarmMessageRes alarmMessageRes = objectMapper.readValue(message, AlarmDto.AlarmMessageRes.class);
+//            AlarmDto.AlarmMessageRes alarmMessageRes = objectMapper.readValue(message, AlarmDto.AlarmMessageRes.class);
+//            alarmMessageRes = objectMapper.readValue(message, AlarmDto.AlarmMessageRes.class);
 
             // RabbitMQ에서 메시지를 정상적으로 수신한 경우
             log.info("RabbitMQ에서 수신한 알람 메시지: {}", alarmMessageRes);
