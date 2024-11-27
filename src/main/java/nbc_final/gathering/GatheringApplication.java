@@ -24,7 +24,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
                 "nbc_final.gathering.domain.chatting.chatroom.repository",
                 "nbc_final.gathering.domain.chatting.chatuser.repository",
                 "nbc_final.gathering.domain.ad.repository",
-                "nbc_final.gathering.domain.payment.repository"
+                "nbc_final.gathering.domain.payment.repository",
+                "nbc_final.gathering.domain.poll.repository"
         },
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,

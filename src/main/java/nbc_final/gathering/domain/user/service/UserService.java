@@ -101,6 +101,7 @@ public class UserService {
                 .userRole(userRole)
                 .build();
 
+        // 닉네임 미입력시 랜덤 닉네임 부여
         while (newUser.getNickname() == null) {
             try {
                 String randomNickname = GenerateRandomNickname.generateNickname();
@@ -108,7 +109,7 @@ public class UserService {
                     throw new ResponseCodeException(ResponseCode.DUPLICATE_NICKNAME);
                 }
                 newUser.setRandomNickname(randomNickname);
-            } catch (ResponseCodeException e) {
+            } catch (ResponseCodeException e) { // 이미 존재하는 중복된 닉네임 랜덤 부여시
                 log.info("중복되는 닉네임이 생성되어 닉네임을 재부여합니다");
             }
         }

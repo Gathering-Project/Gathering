@@ -60,6 +60,7 @@ public enum ResponseCode {
     INVALID_MAX_PARTICIPANTS(HttpStatus.BAD_REQUEST, "현재 참가자 수보다 적은 인원으로 설정할 수 없습니다."),
     ADMIN_CANNOT_PARTICIPATE(HttpStatus.BAD_REQUEST, "관리자 계정은 이벤트에 참가할 수 없습니다."),
     ADMIN_CANNOT_CANCEL_PARTICIPATION(HttpStatus.BAD_REQUEST, "관리자 계정은 이벤트 참가를 취소할 수 없습니다"),
+    EVENT_CREATOR_ONLY(HttpStatus.FORBIDDEN, "이벤트 생성자만 가능한 권한입니다"),
 
     // 댓글 관련 예외
     NOT_FOUND_COMMENT(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다."),
@@ -96,7 +97,11 @@ public enum ResponseCode {
     INVALID_START_DATE(HttpStatus.BAD_REQUEST, "광고 시작 날짜는 최소 2일 이후여야 합니다."),
     AD_INVALID_DURATION(HttpStatus.BAD_REQUEST, "광고 종료 날짜는 시작 날짜 이후여야 합니다."),
     AD_ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, "광고가 게시 중이므로 결제를 취소할 수 없습니다."),
-    AD_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "광고를 취소할 수 있는 상태가 아닙니다.");
+    AD_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "광고를 취소할 수 있는 상태가 아닙니다."),
+
+    // 투표 관련 예외
+    NOT_FOUND_POLL(HttpStatus.NOT_FOUND, "존재하지 않은 투표 안건입니다"),
+    DEACTIVATED_POLL(HttpStatus.BAD_REQUEST, "이미 종료된 투표입니다");
 
     private final HttpStatus httpStatus;
     private final String message;
