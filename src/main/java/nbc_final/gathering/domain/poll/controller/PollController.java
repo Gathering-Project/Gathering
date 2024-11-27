@@ -11,6 +11,7 @@ import nbc_final.gathering.domain.poll.dto.request.PollCreateRequestDto;
 import nbc_final.gathering.domain.poll.dto.response.PollResponseDto;
 import nbc_final.gathering.domain.poll.service.PollService;
 import org.apache.kafka.shaded.com.google.protobuf.Api;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -67,19 +68,38 @@ public class PollController {
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 
-//    @Operation(summary = "투표 현황 조회", description = "진행 중 혹은 마감된 해당 투표의 정보를 확인할 수 있습니다.")
-//    @GetMapping("/v1/gatherings/{gatheringId}/events/{eventId}/polls/{pollId}")
-//    public ResponseEntity<ApiResponse<PollResponseDto>> getPoll(
-//            @AuthenticationPrincipal AuthUser authUser,
-//            @PathVariable Long gatheringId,
-//            @PathVariable Long eventId,
-//            @PathVariable Long pollId
-//    ) {
-//        PollResponseDto res = pollService.getPoll(gatheringId, eventId, authUser.getUserId(), pollId);
-//        return ResponseEntity.ok(ApiResponse.createSuccess(res));
-//    }
+    /**
+     * 투표 단건 조회
+     *
+     * @param authUser
+     * @param gatheringId
+     * @param eventId
+     * @param pollId
+     * @return 투표 정보 반환
+     */
+    @Operation(summary = "특정 투표 현황 조회", description = "진행 중 혹은 마감된 해당 투표의 정보를 확인할 수 있습니다.")
+    @GetMapping("/v1/gatherings/{gatheringId}/events/{eventId}/polls/{pollId}")
+    public ResponseEntity<ApiResponse<PollResponseDto>> getPoll(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long gatheringId,
+            @PathVariable Long eventId,
+            @PathVariable Long pollId
+    ) {
+        PollResponseDto res = pollService.getPoll(gatheringId, eventId, authUser.getUserId(), pollId);
+        return ResponseEntity.ok(ApiResponse.createSuccess(res));
+    }
 
-
+    @GetMapping("/v1/gatherings/{gatheringId}/events/{eventId}/polls")
+    public ResponseEntity<ApiResponse<Page<PollResponseDto>>> getPolls(
+            @PathVariable Long gatheringId,
+            @PathVariable Long eventId,
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<PollResponseDto> res = pollService.getPolls(gatheringId, eventId, authUser.getUserId(), page, size);
+        return ResponseEntity.ok(ApiResponse.createSuccess(res));
+    }
 
     /**
      * 투표 마감
@@ -101,7 +121,6 @@ public class PollController {
         pollService.finishPoll(gatheringId, eventId, pollId, authUser.getUserId());
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
-
 
     /**
      * 투표 삭제

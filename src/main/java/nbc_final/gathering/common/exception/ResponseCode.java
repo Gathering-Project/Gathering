@@ -100,7 +100,7 @@ public enum ResponseCode {
     AD_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "광고를 취소할 수 있는 상태가 아닙니다."),
 
     // 투표 관련 예외
-    NOT_FOUND_POLL(HttpStatus.NOT_FOUND, "존재하지 않은 투표 안건입니다"),
+    NOT_FOUND_POLL(HttpStatus.NOT_FOUND, "존재하지 않는 투표 안건입니다"),
     DEACTIVATED_POLL(HttpStatus.BAD_REQUEST, "이미 종료된 투표입니다");
 
     private final HttpStatus httpStatus;

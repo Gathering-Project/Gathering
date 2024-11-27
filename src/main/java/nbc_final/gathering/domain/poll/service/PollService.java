@@ -1,5 +1,6 @@
 package nbc_final.gathering.domain.poll.service;
 
+import io.lettuce.core.output.ScanOutput;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.exception.ResponseCode;
@@ -18,6 +19,9 @@ import nbc_final.gathering.domain.poll.repository.PollRepository;
 import nbc_final.gathering.domain.poll.repository.VoteRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -124,26 +128,40 @@ public class PollService {
 
     }
 
-//    // 투표 현황 조회(단건 조회)
-//    public PollResponseDto getPoll(Long gatheringId, Long eventId, Long pollId, Long userId) {
-//
-//        // 소모임 존재 확인
-//        Gathering gathering = getGathering(gatheringId);
-//
-//        // 이벤트 존재 확인
-//        Event event = getEvent(eventId);
-//
-//        // 이벤트 참가자인지 확인
-////        isParticipated(userId, event);
-//
-//        // 투표 존재 확인
-//        Poll poll = getPoll(pollId);
-//
-//        List<Option> options = optionRepository.findAllById_PollId(pollId);
-//        poll.setOptions(options);
-//
-//        return PollResponseDto.of(poll);
-//    }
+    // 투표 현황 조회(단건 조회)
+    public PollResponseDto getPoll(Long gatheringId, Long eventId, Long userId, Long pollId) {
+
+        // 소모임 존재 확인
+        Gathering gathering = getGathering(gatheringId);
+
+        // 이벤트 존재 확인
+        Event event = getEvent(eventId);
+
+        // 이벤트 참가자인지 확인
+        isParticipated(userId, event);
+
+        // 투표 존재 확인
+        Poll poll = getPoll(pollId);
+
+        return PollResponseDto.of(poll);
+    }
+
+    // 이벤트 내 모든 투표 조회
+    public Page<PollResponseDto> getPolls(Long gatheringId, Long eventId, Long userId, int page, int size) {
+
+        // 소모임 존재 확인
+        Gathering gathering = getGathering(gatheringId);
+
+        // 이벤트 존재 확인
+        Event event = getEvent(eventId);
+
+        // 이벤트 참가자인지 확인
+        isParticipated(userId, event);
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Poll> allPoll = pollRepository.findAllByEventId(eventId, pageable);
+        return allPoll.map(PollResponseDto::of);
+    }
 
     // 투표 마감
     @Transactional
@@ -234,9 +252,8 @@ public class PollService {
 
     // 투표 존재 확인
     private Poll getPoll(Long pollId) {
-        Poll poll = pollRepository.findById(pollId)
+        return pollRepository.findById(pollId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_POLL));
-        return poll;
     }
 
     // 이벤트 확인
