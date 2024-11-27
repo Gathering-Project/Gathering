@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
+import nbc_final.gathering.domain.poll.entity.Poll;
 import nbc_final.gathering.domain.user.entity.User;
 
 import java.util.ArrayList;
@@ -40,7 +41,11 @@ public class Event extends TimeStamped {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
 
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Poll> polls = new ArrayList<>();
+
     public static Event of(String title, String description, String date, String location, Integer maxParticipants, Gathering gathering, User user) {
+
         Event event = new Event();
         event.title = title;
         event.description = description;

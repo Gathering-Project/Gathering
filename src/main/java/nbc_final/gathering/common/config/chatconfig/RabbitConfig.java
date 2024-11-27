@@ -143,26 +143,8 @@ public class RabbitConfig {
         return new Jackson2JsonMessageConverter(objectMapper);
     }
 
-//    // RabbitTemplate을 구성하여 메시지 발송 처리
-//    @Bean
-//    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
-//                                         MessageConverter messageConverter) {
-//        var rabbitTemplate = new RabbitTemplate(connectionFactory);
-//        rabbitTemplate.setMessageConverter(messageConverter); // 커스텀 메시지 변환기 설정
-//        rabbitTemplate.setExchange(chatExchangeName); // 기본 익스체인지 설정
-////        rabbitTemplate.setMessageConverter(jsonMessageConverter()); // JSON 직렬화 보장
-//        return rabbitTemplate;
-//    }
-//
-//    // 메시지를 JSON 형식으로 직렬화/역직렬화하는 메시지 변환기를 설정
-//    @Bean
-//    public MessageConverter messageConverter(ObjectMapper objectMapper) {
-//        return new Jackson2JsonMessageConverter(objectMapper);
-//    }
-//
-
     // RabbitMQ 리스너 관리를 위한 팩토리를 구성
-//    @Bean
+    @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory,
                                                                                MessageConverter messageConverter) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();

@@ -25,7 +25,6 @@ public class Participant extends TimeStamped {
     @JoinColumn(name = "user_id")
     private User user;
 
-
     public static Participant of(Event event, User user) {
         Participant participant = new Participant();
         participant.event = event;
