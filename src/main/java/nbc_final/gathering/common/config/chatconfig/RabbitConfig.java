@@ -127,14 +127,13 @@ public class RabbitConfig {
         return new DirectExchange("matching.exchange");
     }
 
-    // RabbitTemplate을 구성하여 메시지 발송 처리
     @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
-                                         MessageConverter messageConverter) {
+    public RabbitTemplate rabbitTemplate(
+            ConnectionFactory connectionFactory,
+            MessageConverter messageConverter
+    ) {
         var rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setMessageConverter(messageConverter); // 커스텀 메시지 변환기 설정
-        rabbitTemplate.setExchange(chatExchangeName); // 기본 익스체인지 설정
-        rabbitTemplate.setMessageConverter(jsonMessageConverter()); // JSON 직렬화 보장
+        rabbitTemplate.setMessageConverter(messageConverter);
         return rabbitTemplate;
     }
 
@@ -144,26 +143,19 @@ public class RabbitConfig {
         return new Jackson2JsonMessageConverter(objectMapper);
     }
 
-    // LocalDateTime 직렬화를 처리할 Jackson2JsonMessageConverter를 정의
-    @Bean
-    public Jackson2JsonMessageConverter jsonMessageConverter() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true); // 날짜를 타임스탬프로 사용
-        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
-        return converter;
-    }
-
     // RabbitMQ 리스너 관리를 위한 팩토리를 구성
     @Bean
-    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory,
+                                                                               MessageConverter messageConverter) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setAcknowledgeMode(AcknowledgeMode.AUTO); // 메시지 자동 인식 설정
         factory.setPrefetchCount(10); // QoS: 한 번에 가져올 메시지 수 제한
+        factory.setMessageConverter(messageConverter); // Jackson2JsonMessageConverter
         return factory;
     }
-
-    // RabbitMQ 연결 관리를 위한 팩토리를 구성
+//
+//    // RabbitMQ 연결 관리를 위한 팩토리를 구성
     @Bean
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory factory = new CachingConnectionFactory();
