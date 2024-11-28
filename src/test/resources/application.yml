@@ -25,9 +25,9 @@ spring:
   config:
     import: optional:file:.env[.properties]
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.h2.Driver
     #    url: jdbc:mysql://mysql_container:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
-    url: jdbc:mysql://localhost:3306/${MYSQL_DB_NAME}?serverTimezone=Asia/Seoul
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MYSQL
     username: ${MYSQL_NAME}
     password: ${MYSQL_PASSWORD}
 
@@ -115,6 +115,17 @@ jwt:
 admin:
   token: ${ADMIN_TOKEN}
 
+payment:
+  toss:
+    url: ${TOSS_PAYMENTS_URL}
+    cancel:
+      url: ${TOSS_PAYMENTS_CANCEL_URL}
+    secret:
+      key: ${TOSS_PAYMENTS_SECRET_KEY}
+    client:
+      key: ${TOSS_PAYMENTS_CLIENT_KEY}
+
+
 logging:
   level:
     org:
@@ -124,3 +135,5 @@ logging:
         orm:
           jdbc:
             bind: info
+frontend:
+  url: ${FRONTEND_URL}
