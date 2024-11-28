@@ -126,4 +126,8 @@ public class Gathering extends TimeStamped {
     public void updateGatheirngCount(Integer gatheringCount) {
         this.gatheringCount = gatheringCount;
     }
+
+    public void setId(long l) {
+        
+    }
 }

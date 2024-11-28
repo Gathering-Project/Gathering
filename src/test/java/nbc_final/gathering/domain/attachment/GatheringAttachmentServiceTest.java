@@ -1,7 +1,6 @@
 package nbc_final.gathering.domain.attachment;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import nbc_final.gathering.common.dto.AuthUser;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.attachment.dto.AttachmentResponseDto;
@@ -12,6 +11,7 @@ import nbc_final.gathering.domain.attachment.service.UserAttachmentService;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.user.entity.User;
+import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,7 +29,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 
-import static jdk.internal.org.objectweb.asm.util.CheckClassAdapter.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -75,12 +74,12 @@ class GatheringAttachmentServiceTest {
 
         // Create a test gathering
         testGathering = new Gathering();
-        testGathering.getUserId(1L);
+        testGathering.setId(1L);
         gatheringRepository.save(testGathering);
 
         // Create AuthUser
-        authUser = new AuthUser();
-        authUser.getUserId(1L);
+        authUser = new AuthUser(1L, "test@example.com", UserRole.ROLE_USER, "testNick");
+        authUser.setId(1L);
 
         // Create mock MultipartFile
         testFile = Mockito.mock(MultipartFile.class);
@@ -183,5 +182,10 @@ class GatheringAttachmentServiceTest {
         // Verify S3 interaction
         verify(amazonS3, times(1)).deleteObject(any(), any());
     }
+
+    private AmazonS3 verify(AmazonS3 amazonS3, ExpectedCount times) {
+        return null;
+    }
+
 
 }

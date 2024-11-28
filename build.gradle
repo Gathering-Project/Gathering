@@ -19,6 +19,8 @@ configurations {
     }
 }
 
+
+
 bootJar {
     archiveFileName = 'Gathering-0.0.1-SNAPSHOT.jar' // Docker에서 사용할 JAR 이름 설정
 }
@@ -110,6 +112,8 @@ dependencies {
     implementation 'org.springframework:spring-messaging' // @MessageMapping 기능처럼 메시지 처리 기능
     implementation 'org.springframework.boot:spring-boot-starter-reactor-netty:3.0.0' // 서버 <-> rabbitmq의 비동기 네트워크 처리
 
+    // ASM 라이브러리
+    implementation 'org.ow2.asm:asm-util:9.4'
 
     implementation 'org.springframework.kafka:spring-kafka:3.2.4'
     implementation 'org.apache.kafka:kafka-clients:3.8.0' // 이 부분은 원하는 Kafka 클라이언트 버전으로 설정
