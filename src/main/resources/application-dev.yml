@@ -86,7 +86,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-#        format_sql: true
+        format_sql: true
 
   # Redis 설정
   data:

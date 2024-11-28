@@ -28,7 +28,7 @@ public class PollResponseDto {
                 poll.getGathering().getId(),
                 poll.getEvent().getId(),
                 poll.getAgenda(),
-                poll.getOptions()
+                poll.getOptions() // (Option을 조회하기 위해 페이지에 존재하는 Poll 숫자만큼 N + 1 문제 발생해서 Batch Size 설정으로 해결)
         );
     }
 }

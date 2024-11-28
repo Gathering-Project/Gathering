@@ -159,7 +159,8 @@ public class PollService {
         isParticipated(userId, event);
 
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Poll> allPoll = pollRepository.findAllByEventId(eventId, pageable);
+        Page<Poll> allPoll = pollRepository.findAllByEventId(eventId, pageable); // ( Option을 조회하기 위해 페이지에 존재하는 Poll 숫자만큼 N + 1 문제 발생) => BatchSize 설정으로 해결
+//        Page<Poll> allPoll = pollRepository.findAllWithOptionsByEventId(eventId, pageable); // Fetch Join으로 N + 1 문제 해결 => OOM 발생 가능성으로 보류
         return allPoll.map(PollResponseDto::of);
     }
 
