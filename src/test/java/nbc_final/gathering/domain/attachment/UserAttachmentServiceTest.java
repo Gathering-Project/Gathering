@@ -27,9 +27,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -52,6 +55,7 @@ public class UserAttachmentServiceTest {
 
     private AuthUser authUser;
     private User testUser;
+    private MultipartFile testFile;
 
     @BeforeEach
     void setUp() {
@@ -67,126 +71,178 @@ public class UserAttachmentServiceTest {
         // AuthUser 생성
         authUser = new AuthUser(testUser.getId(), testUser.getEmail(), testUser.getUserRole(), "testNick");
         authUser.setId(1L);
+
+        // mock MultipartFile 생성
+        testFile = Mockito.mock(MultipartFile.class);
+        when(testFile.getOriginalFilename()).thenReturn("test-image.jpg");
+        when(testFile.getContentType()).thenReturn("image/jpeg");
+        when(testFile.getSize()).thenReturn(1024L);
+        try {
+            when(testFile.getInputStream()).thenReturn(new ByteArrayInputStream("test-content".getBytes()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
     void testUserUploadFile() throws IOException {
-        // MockMultipartFile 생성
-        MockMultipartFile mockFile = new MockMultipartFile(
-                "file",
-                "test-image.jpg",
-                "image/jpeg",
-                "Test Image Content".getBytes()
-        );
+        String bucketName = "wearemeetnow";
+        String fileName = "test-image.jpg";
+        String fileUrl = "https://" + bucketName + "/profile-images/" + fileName;
 
-        // S3 Bucket 정보 및 Mock 동작 정의
-        String bucketName = "bucket-name";
-        String fileName = "profile-images/test-image.jpg";
-        String fileUrl = "https://" + bucketName + "/" + fileName;
-
-        // Mock AmazonS3 동작
-        PutObjectResult mockPutObjectResult = new PutObjectResult();
+        // Mock S3 동작 정의
         when(amazonS3.putObject(
                 eq(bucketName),
                 eq(fileName),
                 any(InputStream.class),
                 any(ObjectMetadata.class)
-        )).thenReturn(mockPutObjectResult); // 반환값 정의
+        )).thenReturn(new PutObjectResult());
 
-        // getUrl 동작 정의
-        when(amazonS3.getUrl(eq(bucketName), eq(fileName)))
-                .thenReturn(new URL(fileUrl)); // 반환 URL 정의
+        when(amazonS3.getUrl(eq(bucketName), eq("profile-images/" + fileName)))
+                .thenReturn(new URL(fileUrl));
 
-        // Act: 테스트 메서드 실행
-        AttachmentResponseDto responseDto = userAttachmentService.userUploadFile(authUser, mockFile);
+        // Act
+        AttachmentResponseDto responseDto = userAttachmentService.userUploadFile(authUser, testFile);
 
         // Assert
-        // 반환된 URL 검증
         assertNotNull(responseDto);
         assertEquals(fileUrl, responseDto.getProfileImagePath());
 
-        // 저장된 Attachment 엔티티 검증
-        Attachment savedAttachment = attachmentRepository.findById(responseDto.getId()).orElse(null);
-        assertNotNull(savedAttachment);
-        assertEquals(fileUrl, savedAttachment.getProfileImagePath());
-        assertEquals(testUser.getId(), savedAttachment.getUser().getId());
+        // Repository 검증
+        List<Attachment> savedAttachments = attachmentRepository.findByUser(testUser);
+        assertEquals(1, savedAttachments.size());
+        assertEquals(fileUrl, savedAttachments.get(0).getProfileImagePath());
 
-        // AmazonS3 동작 검증
+        // S3 동작 검증
         verify(amazonS3, times(1)).putObject(
                 eq(bucketName),
                 eq(fileName),
                 any(InputStream.class),
                 any(ObjectMetadata.class)
         );
-        verify(amazonS3, times(1)).getUrl(eq(bucketName), eq(fileName));
     }
 
     @Test
     void testUserUpdateFile() throws IOException {
+        String bucketName = "wearemeetnow";
+        String initialFileName = "initial-image.jpg";
+        String initialFileUrl = "https://" + bucketName + "/profile-images/" + initialFileName;
+
+        String newFileName = "new-image.jpg";
+        String newFileUrl = "https://" + bucketName + "/profile-images/" + newFileName;
+
         MockMultipartFile initialFile = new MockMultipartFile(
                 "file",
-                "initial-image.jpg",
+                initialFileName,
                 "image/jpeg",
                 "Initial Content".getBytes()
         );
 
         MockMultipartFile newFile = new MockMultipartFile(
                 "file",
-                "new-image.jpg",
+                newFileName,
                 "image/jpeg",
                 "New Content".getBytes()
         );
 
-        /// Mock AmazonS3 behavior
-        doNothing().when(amazonS3).putObject(eq("bucket-name"), anyString(), any(ByteArrayInputStream.class), any(ObjectMetadata.class));
-        doNothing().when(amazonS3).deleteObject(eq("bucket-name"), anyString());
+        // Mock S3
+        when(amazonS3.putObject(
+                eq(bucketName),
+                eq(initialFileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        )).thenReturn(new PutObjectResult());
 
-        // Upload initial file
+        when(amazonS3.putObject(
+                eq(bucketName),
+                eq(newFileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        )).thenReturn(new PutObjectResult());
+
+        when(amazonS3.getUrl(eq(bucketName), eq("profile-images/" +initialFileName)))
+                .thenReturn(new URL(initialFileUrl));
+
+        when(amazonS3.getUrl(eq(bucketName), eq("profile-images/"+newFileName)))
+                .thenReturn(new URL(newFileUrl));
+
+        // Act: Upload initial file
         AttachmentResponseDto initialResponse = userAttachmentService.userUploadFile(authUser, initialFile);
 
-        // Assert initial upload
+        // Assert: 검증 initial upload
         assertNotNull(initialResponse);
-        assertTrue(initialResponse.getProfileImagePath().contains("initial-image.jpg"));
+        assertEquals(initialFileUrl, initialResponse.getProfileImagePath());
 
-        // Act: Update with new file
+        // Act: new file 수정
         AttachmentResponseDto updatedResponse = userAttachmentService.userUpdateFile(authUser, newFile);
 
-        // Assert new upload
+        // Assert: update 검증
         assertNotNull(updatedResponse);
-        assertTrue(updatedResponse.getProfileImagePath().contains("new-image.jpg"));
+        assertEquals(newFileUrl, updatedResponse.getProfileImagePath());
 
-        // Verify repository update
-        Attachment updatedAttachment = attachmentRepository.findById(updatedResponse.getId()).orElse(null);
-        assertNotNull(updatedAttachment);
-        assertTrue(updatedAttachment.getProfileImagePath().contains("new-image.jpg"));
+        // repository 검증
+        List<Attachment> savedAttachments = attachmentRepository.findByUser(testUser);
+        assertEquals(1, savedAttachments.size());
+        assertEquals(newFileUrl, savedAttachments.get(0).getProfileImagePath());
 
-        // Verify S3 interactions
-        verify(amazonS3, times(2)).putObject(eq("bucket-name"), anyString(), any(ByteArrayInputStream.class), any(ObjectMetadata.class));
-        verify(amazonS3, times(1)).deleteObject(eq("bucket-name"), contains("initial-image.jpg"));
+        // S3 상호작용 검증
+        verify(amazonS3, times(1)).putObject(
+                eq(bucketName),
+                eq(initialFileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        );
+        verify(amazonS3, times(1)).deleteObject(eq(bucketName), eq(initialFileName));
+        verify(amazonS3, times(1)).putObject(
+                eq(bucketName),
+                eq(newFileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        );
     }
 
     @Test
     void testUserDeleteFile() throws IOException {
+        String bucketName = "wearemeetnow";
+        String fileName = "test-image.jpg";
+        String fileUrl = "https://" + bucketName + "/profile-images/" + fileName;
+
         MockMultipartFile mockFile = new MockMultipartFile(
                 "file",
-                "test-image.jpg",
+                fileName,
                 "image/jpeg",
                 "Test Image Content".getBytes()
         );
 
-        // Mock AmazonS3 behavior
-        doNothing().when(amazonS3).putObject(eq("bucket-name"), anyString(), any(ByteArrayInputStream.class), any(ObjectMetadata.class));
-        doNothing().when(amazonS3).deleteObject(eq("bucket-name"), anyString());
+        // Mock AmazonS3
+        when(amazonS3.putObject(
+                eq(bucketName),
+                eq(fileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        )).thenReturn(new PutObjectResult());
 
-        // Upload file
+        when(amazonS3.getUrl(eq(bucketName), eq(fileName)))
+                .thenReturn(new URL(fileUrl));
+
+        doNothing().when(amazonS3).deleteObject(eq(bucketName), eq(fileName));
+
+        // Act: Upload file
         AttachmentResponseDto responseDto = userAttachmentService.userUploadFile(authUser, mockFile);
 
-        // Act: Delete file
+        // Assert: upload 검증
+        assertNotNull(responseDto);
+        assertEquals(fileUrl, responseDto.getProfileImagePath());
+
+        // Act: file 삭제
         userAttachmentService.userDeleteFile(authUser);
 
-        // Assert
+        // Assert: repository 삭제 검증
         Optional<Attachment> deletedAttachment = attachmentRepository.findById(responseDto.getId());
         assertTrue(deletedAttachment.isEmpty());
+
+        // S3 삭제 검증
+        verify(amazonS3, times(1)).deleteObject(eq(bucketName), eq(fileName));
     }
 
     @Test
@@ -217,7 +273,7 @@ public class UserAttachmentServiceTest {
         // Act & Assert
         ResponseCodeException exception = assertThrows(ResponseCodeException.class,
                 () -> userAttachmentService.userUploadFile(authUser, largeFile));
-        assertEquals("TOO_LARGE_SIZE_FILE", exception);
+        assertEquals("파일 크기가 너무 큽니다.", exception.getMessage());
     }
 }
 

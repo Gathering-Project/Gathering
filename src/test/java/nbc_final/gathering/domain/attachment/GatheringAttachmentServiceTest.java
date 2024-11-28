@@ -1,9 +1,9 @@
 package nbc_final.gathering.domain.attachment;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import nbc_final.gathering.common.dto.AuthUser;
-import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.attachment.dto.AttachmentResponseDto;
 import nbc_final.gathering.domain.attachment.entity.Attachment;
@@ -21,26 +21,24 @@ import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -123,23 +121,117 @@ class GatheringAttachmentServiceTest {
 
     @Test
     void testGatheringProfileUpload() throws IOException {
-        // Mock S3 업로드
-        PutObjectResult mockPutObjectResult = Mockito.mock(PutObjectResult.class);
-        when(amazonS3.putObject(any(), any(), any(), any())).thenReturn(mockPutObjectResult);
+        String bucketName = "wearemeetnow";
+        String fileName = "test-image.jpg";
+        String fileUrl = "https://" + bucketName + "/profile-images/" + fileName; // S3 URL
 
-        // gatheringUploadFile 조회
+        // Mock S3 업로드 동작 설정
+        when(amazonS3.putObject(
+                eq(bucketName),
+                eq(fileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        )).thenReturn(new PutObjectResult());
+        when(amazonS3.getUrl(eq(bucketName), eq(fileName))).thenReturn(new URL(fileUrl));
+
+        // Act: 소모임 프로필 이미지 업로드 호출
         AttachmentResponseDto responseDto = gatheringAttachmentService.gatheringUploadFile(authUser, testGathering.getId(), testFile);
 
-        // response 검증
-        assertThat(responseDto).isNotNull();
-        assertThat(responseDto.getProfileImagePath()).contains("test-image.jpg");
+        // Assert: 반환값 검증
+        assertNotNull(responseDto);
+        assertEquals(fileUrl, responseDto.getProfileImagePath());
 
-        // S3 상호작용 검증
-        verify(amazonS3, Mockito.times(1)).putObject(any(), any(), any(), any());
+        // Repository 저장 검증
+        List<Attachment> savedAttachments = attachmentRepository.findByUserAndGathering(testUser, testGathering);
+        assertEquals(1, savedAttachments.size());
+        assertEquals(fileUrl, savedAttachments.get(0).getProfileImagePath());
+
+        // S3 업로드 호출 검증
+        verify(amazonS3, times(1)).putObject(
+                eq(bucketName),
+                eq(fileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        );
+    }
+
+    @Test
+    void testUserUpdateFile() throws IOException {
+        String bucketName = "wearemeetnow";
+        String initialFileName = "initial-image.jpg";
+        String initialFileUrl = "https://" + bucketName + "/profile-images/" + initialFileName;
+
+        String newFileName = "new-image.jpg";
+        String newFileUrl = "https://" + bucketName + "/profile-images/" + newFileName;
+
+        MockMultipartFile initialFile = new MockMultipartFile(
+                "file",
+                initialFileName,
+                "image/jpeg",
+                "Initial Content".getBytes()
+        );
+
+        MockMultipartFile newFile = new MockMultipartFile(
+                "file",
+                newFileName,
+                "image/jpeg",
+                "New Content".getBytes()
+        );
+
+        // Mock S3
+        when(amazonS3.putObject(
+                eq(bucketName),
+                eq(initialFileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        )).thenReturn(new PutObjectResult());
+
+        when(amazonS3.putObject(
+                eq(bucketName),
+                eq(newFileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        )).thenReturn(new PutObjectResult());
+
+        when(amazonS3.getUrl(eq(bucketName), eq(initialFileName)))
+                .thenReturn(new URL(initialFileUrl));
+
+        when(amazonS3.getUrl(eq(bucketName), eq(newFileName)))
+                .thenReturn(new URL(newFileUrl));
+
+        // Act: Upload initial file
+        AttachmentResponseDto initialResponse = userAttachmentService.userUploadFile(authUser, initialFile);
+
+        // Assert: 검증 initial upload
+        assertNotNull(initialResponse);
+        assertEquals(initialFileUrl, initialResponse.getProfileImagePath());
+
+        // Act: new file 수정
+        AttachmentResponseDto updatedResponse = userAttachmentService.userUpdateFile(authUser, newFile);
+
+        // Assert: update 검증
+        assertNotNull(updatedResponse);
+        assertEquals(newFileUrl, updatedResponse.getProfileImagePath());
 
         // repository 검증
-        List<Attachment> savedAttachments = attachmentRepository.findByUserAndGathering(testUser, testGathering);
-        assertThat(savedAttachments).hasSize(1);
+        List<Attachment> savedAttachments = attachmentRepository.findByUser(testUser);
+        assertEquals(1, savedAttachments.size());
+        assertEquals(newFileUrl, savedAttachments.get(0).getProfileImagePath());
+
+        // S3 상호작용 검증
+        verify(amazonS3, times(1)).putObject(
+                eq(bucketName),
+                eq(initialFileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        );
+        verify(amazonS3, times(1)).deleteObject(eq(bucketName), eq(initialFileName)); // 기존 파일 삭제
+        verify(amazonS3, times(1)).putObject(
+                eq(bucketName),
+                eq(newFileName),
+                any(InputStream.class),
+                any(ObjectMetadata.class)
+        );
     }
 
     @Test
@@ -157,23 +249,26 @@ class GatheringAttachmentServiceTest {
 
     @Test
     void testGatheringProfileDelete() {
+        String bucketName = "wearemeetnow";
+        String fileName = "test-image.jpg";
+//        String filePath = "profile-images/" + fileName;
+
         // 존재하는 첨부파일 준비
-        Attachment attachment = new Attachment(testUser, testGathering, "test-image-path.jpg");
-        attachmentRepository.save(attachment);
+        Attachment attachment = new Attachment(testUser, testGathering, "https://" + bucketName + "/profile-images/" + fileName);
+        attachmentRepository.saveAndFlush(attachment);
 
-        // Mock S3 삭제
-        doNothing().when(amazonS3).deleteObject(any(), any());
+        // Mock S3 삭제 동작 설정
+        doNothing().when(amazonS3).deleteObject(eq(bucketName), eq(fileName));
 
-        // gatheringDeleteFile 조회
+        // Act: 소모임 프로필 이미지 삭제 호출
         gatheringAttachmentService.gatheringDeleteFile(authUser, testGathering.getId());
 
-        // deletion 검증
+        // Assert: Repository에서 첨부파일이 삭제되었는지 확인
         List<Attachment> savedAttachments = attachmentRepository.findByUserAndGathering(testUser, testGathering);
         assertThat(savedAttachments).isEmpty();
 
-        // S3 상호작용 검증
-        verify(amazonS3, Mockito.times(1)).deleteObject(any(), any());
+        // S3 삭제 호출 검증
+        verify(amazonS3, times(1)).deleteObject(eq(bucketName), eq(fileName));
     }
-
 
 }

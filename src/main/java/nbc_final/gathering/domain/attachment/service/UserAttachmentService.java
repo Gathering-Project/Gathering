@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -40,7 +41,7 @@ public class UserAttachmentService {
 
     // 유저 프로필 등록
     @Transactional
-    public AttachmentResponseDto userUploadFile(AuthUser authUser, MultipartFile file) throws java.io.IOException {
+    public AttachmentResponseDto userUploadFile(AuthUser authUser, MultipartFile file) throws IOException {
         validateFile(file, authUser);
 
         User user = userRepository.findById(authUser.getUserId())
@@ -51,13 +52,13 @@ public class UserAttachmentService {
         user.setProfileImagePath(fileUrl);
         userRepository.save(user);
 
-        Attachment attachment = saveUserAttachment(authUser, file);
+        Attachment attachment = saveUserAttachment(authUser, fileUrl);
         return new AttachmentResponseDto(attachment);
     }
 
     // 유저 이미지 수정
     @Transactional
-    public AttachmentResponseDto userUpdateFile(AuthUser authUser, MultipartFile file) throws java.io.IOException
+    public AttachmentResponseDto userUpdateFile(AuthUser authUser, MultipartFile file) throws IOException
     {
         validateFile(file, authUser);
 
@@ -131,7 +132,7 @@ public class UserAttachmentService {
     }
 
     // s3 업로드 메서드
-    private String uploadToS3(MultipartFile file) throws java.io.IOException {
+    private String uploadToS3(MultipartFile file) throws IOException {
         String fileName = file.getOriginalFilename();
         String fileUrl = "https://" + bucketName + "/profile-images/" + fileName;
 
@@ -144,7 +145,7 @@ public class UserAttachmentService {
     }
 
     // 유저 첨부파일 저장 메서드
-    private Attachment saveUserAttachment(AuthUser authUser, MultipartFile fileUrl) {
+    private Attachment saveUserAttachment(AuthUser authUser, String fileUrl) {
 
         // userId를 이용해 User 엔티티를 조회
         User user = userRepository.findById(authUser.getUserId())
@@ -152,7 +153,7 @@ public class UserAttachmentService {
 
         Attachment attachment = new Attachment();
         attachment.setUser(user);
-        attachment.setProfileImagePath(String.valueOf(fileUrl));
+        attachment.setProfileImagePath(fileUrl);
         attachmentRepository.save(attachment);
         return attachment;
     }
