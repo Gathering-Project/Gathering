@@ -13,6 +13,7 @@ import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
@@ -27,12 +28,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -85,6 +84,7 @@ public class UserAttachmentServiceTest {
     }
 
     @Test
+    @DisplayName("유저 프로필 이미지 업로드 테스트")
     void testUserUploadFile() throws IOException {
         String bucketName = "wearemeetnow";
         String fileName = "test-image.jpg";
@@ -123,6 +123,7 @@ public class UserAttachmentServiceTest {
     }
 
     @Test
+    @DisplayName("유저 프로필 이미지 수정 테스트")
     void testUserUpdateFile() throws IOException {
         String bucketName = "wearemeetnow";
         String initialFileName = "initial-image.jpg";
@@ -202,6 +203,7 @@ public class UserAttachmentServiceTest {
     }
 
     @Test
+    @DisplayName("유저 프로필 이미지 삭제 테스트")
     void testUserDeleteFile() throws IOException {
         String bucketName = "wearemeetnow";
         String fileName = "test-image.jpg";
@@ -246,6 +248,7 @@ public class UserAttachmentServiceTest {
     }
 
     @Test
+    @DisplayName("파일타입 예외처리 테스트")
     void testUploadFile_InvalidFileType() {
         MockMultipartFile invalidFile = new MockMultipartFile(
                 "file",
@@ -261,6 +264,7 @@ public class UserAttachmentServiceTest {
     }
 
     @Test
+    @DisplayName("파일크기 예외처리 테스트")
     void testUploadFile_FileTooLarge() {
         byte[] largeContent = new byte[(int) (5 * 1024 * 1024) + 1]; // 5MB + 1 byte
         MockMultipartFile largeFile = new MockMultipartFile(

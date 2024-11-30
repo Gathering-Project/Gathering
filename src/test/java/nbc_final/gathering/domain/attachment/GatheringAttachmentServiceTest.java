@@ -20,6 +20,7 @@ import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.UserRole;
 import nbc_final.gathering.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +121,7 @@ class GatheringAttachmentServiceTest {
     }
 
     @Test
+    @DisplayName("소모임 프로필 이미지 업로드 테스트")
     void testGatheringProfileUpload() throws IOException {
         String bucketName = "wearemeetnow";
         String fileName = "test-image.jpg";
@@ -156,7 +158,8 @@ class GatheringAttachmentServiceTest {
     }
 
     @Test
-    void testUserUpdateFile() throws IOException {
+    @DisplayName("소모임 프로필 이미지 수정 테스트")
+    void testGatheringUpdateFile() throws IOException {
         String bucketName = "wearemeetnow";
         String initialFileName = "initial-image.jpg";
         String initialFileUrl = "https://" + bucketName + "/profile-images/" + initialFileName;
@@ -235,6 +238,7 @@ class GatheringAttachmentServiceTest {
     }
 
     @Test
+    @DisplayName("파일 확장명이 다를때 예외처리 테스트")
     void testInvalidFileUploadThrowsException() {
         // 무효한 Mock file type
         when(testFile.getContentType()).thenReturn("application/pdf");
@@ -248,6 +252,7 @@ class GatheringAttachmentServiceTest {
     }
 
     @Test
+    @DisplayName("소모임 프로필 이미지 삭제")
     void testGatheringProfileDelete() {
         String bucketName = "wearemeetnow";
         String fileName = "test-image.jpg";
