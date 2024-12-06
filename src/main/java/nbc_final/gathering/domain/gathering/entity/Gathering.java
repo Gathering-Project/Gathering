@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.attachment.entity.Attachment;
 import nbc_final.gathering.domain.member.entity.Member;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "gatherings",
@@ -125,5 +127,9 @@ public class Gathering extends TimeStamped {
 
     public void updateGatheirngCount(Integer gatheringCount) {
         this.gatheringCount = gatheringCount;
+    }
+
+    public void setId(long l) {
+        
     }
 }

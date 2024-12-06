@@ -18,13 +18,4 @@ public class WebSocketSessionManager {
         redisTemplate.opsForValue().set(WEBSOCKET_SESSION_KEY_PREFIX + userId, sessionId, 60, TimeUnit.MINUTES);
     }
 
-    // Redis에서 세션 제거
-    public void removeUserSession(Long userId) {
-        redisTemplate.delete(WEBSOCKET_SESSION_KEY_PREFIX + userId);
-    }
-
-    // 특정 사용자에게 메시지 전송 (세션을 Redis에서 검색)
-    public String getSessionId(Long userId) {
-        return redisTemplate.opsForValue().get(WEBSOCKET_SESSION_KEY_PREFIX + userId);
-    }
 }

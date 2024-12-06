@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GatheringService {
 
-    private static final String TODAY_RANKING_KEY = "todayGatheringRanking";
+    public static final String TODAY_RANKING_KEY = "todayGatheringRanking";
     private final GatheringRepository gatheringRepository;
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
@@ -383,7 +383,7 @@ public class GatheringService {
     }
 
     // TOP3 Gathering 업데이트 메서드
-    private void updateTopGatheringTitles(Long gatheringId, AuthUser authUser) {
+    public void updateTopGatheringTitles(Long gatheringId, AuthUser authUser) {
 
         Long userId = authUser.getUserId();
         // Key : gatheringViewSet{gatheringId}
@@ -406,7 +406,7 @@ public class GatheringService {
     }
 
     // Top Gathering 제목 가져오는 메서드
-    private void maintainTopGathering() {
+    public void maintainTopGathering() {
         // 전체 소모임 수 가져오기
         Long size = redisTemplate.opsForZSet().zCard(TODAY_RANKING_KEY);
 
