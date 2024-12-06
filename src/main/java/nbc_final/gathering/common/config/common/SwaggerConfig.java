@@ -19,8 +19,8 @@ public class SwaggerConfig {
     // Swagger에서 보여줄 API 정보를 설정
     private Info apiInfo() {
         return new Info()
-                .title("같이의 가치: OtterMeet Swagger")
-                .description("유저, 멤버, 소모임, 이벤트, 이미지 첨부 파일, 댓글, 매칭, 채팅, 광고 - 결제, 장소 추천에 관한 REST API")
+                .title("한달인턴 7기 과제: Swagger")
+                .description("유저 회원가입, 로그인 REST API")
                 .version("1.0.0");
     }
 }
