@@ -2,6 +2,8 @@ package nbc_final.gathering.domain.user.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.enums.InterestType;
 import nbc_final.gathering.domain.user.enums.MbtiType;

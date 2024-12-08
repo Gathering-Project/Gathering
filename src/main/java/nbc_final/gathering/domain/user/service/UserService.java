@@ -53,37 +53,15 @@ public class UserService {
     @PersistenceContext // EntityManager 주입
     private EntityManager entityManager;
 
-    // 새 비밀번호 검증
-    private static void validateNewPassword(UserChangePwRequestDto requestDto) {
-        if (
-            // 비밀번호는 영문 + 숫자 + 특수문자를 최소 1글자 포함하고 최소 8글자 이상 최대 20글자 이하
-            // 비밀번호에 알파벳 포함 여부 확인 (대소문자 포함)
-                !requestDto.getNewPassword().matches(".*[A-Za-z].*") ||
-                        // 비밀번호에 숫자 포함 여부 확인
-                        !requestDto.getNewPassword().matches(".*\\d.*") ||
-                        // 비밀번호에 특수 문자 포함 여부 확인
-                        !requestDto.getNewPassword().matches(".*[\\p{Punct}].*") ||
-                        // 비밀번호 길이가 8자 이상 20자 이하인지 확인
-                        requestDto.getNewPassword().length() < 8 ||
-                        requestDto.getNewPassword().length() > 20
-        ) {
-            throw new ResponseCodeException(ResponseCode.VIOLATION_PASSWORD);
-        }
-    }
-
     // 유저 회원가입
     @Transactional
     public SignUpResponseDto signup(SignupRequestDto signupRequest) {
 
         // 이미 있는 이메일인지 확인
-        if (userRepository.existsByEmail(signupRequest.getEmail())) {
-            throw new ResponseCodeException(ResponseCode.DUPLICATE_EMAIL);
-        }
+        validateDuplicateEmail(signupRequest);
 
         // 이미 있는 닉네임인지 확인
-        if (userRepository.existsByNickname(signupRequest.getNickname()) && signupRequest.getNickname() != null) {
-            throw new ResponseCodeException(ResponseCode.DUPLICATE_NICKNAME);
-        }
+        validateDuplicateNickname(signupRequest);
 
         String email = signupRequest.getEmail();
         validateDeletedEmail(email); // 이미 탈퇴한 적 있는 이메일인지 확인
@@ -102,17 +80,7 @@ public class UserService {
                 .build();
 
         // 닉네임 미입력시 랜덤 닉네임 부여
-        while (newUser.getNickname() == null) {
-            try {
-                String randomNickname = GenerateRandomNickname.generateNickname();
-                if (userRepository.existsByNickname(randomNickname)) {
-                    throw new ResponseCodeException(ResponseCode.DUPLICATE_NICKNAME);
-                }
-                newUser.setRandomNickname(randomNickname);
-            } catch (ResponseCodeException e) { // 이미 존재하는 중복된 닉네임 랜덤 부여시
-                log.info("중복되는 닉네임이 생성되어 닉네임을 재부여합니다");
-            }
-        }
+        newUserRandomNickname(newUser);
 
         User savedUser = userRepository.save(newUser); //회원 저장
         String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getUserRole(), savedUser.getNickname());
@@ -210,6 +178,7 @@ public class UserService {
 
         String inputOldPassword = requestDto.getOldPassword();
         String correctPassword = user.getPassword();
+
         validateCorrectPassword(inputOldPassword, correctPassword);
 
         if (passwordEncoder.matches(requestDto.getNewPassword(), user.getPassword())) {
@@ -238,29 +207,72 @@ public class UserService {
 
     //----------------- extracted method ------------- //
 
-    // 내 정보 조회
-    public UserGetResponseDto getMyInfo(Long myId) {
-        User user = getUserById(myId);
-
-        return UserGetResponseDto.of(user);
-
-    }
-
-    private User getUserById(Long myId) {
+    public User getUserById(Long myId) {
         User user = userRepository.findById(myId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
         return user;
     }
 
+    // 새 비밀번호 검증
+    private static void validateNewPassword(UserChangePwRequestDto requestDto) {
+        if (
+            // 비밀번호는 영문 + 숫자 + 특수문자를 최소 1글자 포함하고 최소 8글자 이상 최대 20글자 이하
+            // 비밀번호에 알파벳 포함 여부 확인 (대소문자 포함)
+                !requestDto.getNewPassword().matches(".*[A-Za-z].*") ||
+                        // 비밀번호에 숫자 포함 여부 확인
+                        !requestDto.getNewPassword().matches(".*\\d.*") ||
+                        // 비밀번호에 특수 문자 포함 여부 확인
+                        !requestDto.getNewPassword().matches(".*[\\p{Punct}].*") ||
+                        // 비밀번호 길이가 8자 이상 20자 이하인지 확인
+                        requestDto.getNewPassword().length() < 8 ||
+                        requestDto.getNewPassword().length() > 20
+        ) {
+            throw new ResponseCodeException(ResponseCode.VIOLATION_PASSWORD);
+        }
+    }
+
     // 비밀번호 검증
-    private void validateCorrectPassword(String inputPassword, String correctPassword) {
+    public void validateCorrectPassword(String inputPassword, String correctPassword) {
+        log.info("입력 비밀번호: {}", inputPassword);
+        log.info("정확한 비밀번호: {}", correctPassword);
+
         if (!passwordEncoder.matches(inputPassword, correctPassword)) {
             throw new ResponseCodeException(ResponseCode.INVALID_PASSWORD);
         }
     }
 
+    // 닉네임 미기입하여 회원가입시 랜덤 닉네임 생성 및 부여
+    public void newUserRandomNickname(User newUser) {
+        while (newUser.getNickname() == null) {
+            try {
+                String randomNickname = GenerateRandomNickname.generateNickname();
+                if (userRepository.existsByNickname(randomNickname)) {
+                    throw new ResponseCodeException(ResponseCode.DUPLICATE_NICKNAME);
+                }
+                newUser.setRandomNickname(randomNickname);
+            } catch (ResponseCodeException e) { // 이미 존재하는 중복된 닉네임 랜덤 부여시
+                log.info("중복되는 닉네임이 생성되어 닉네임을 재부여합니다");
+            }
+        }
+    }
+
+    // 이미 있는 닉네임인지 확인
+    public void validateDuplicateNickname(SignupRequestDto signupRequest) {
+        if (userRepository.existsByNickname(signupRequest.getNickname()) && signupRequest.getNickname() != null) {
+            throw new ResponseCodeException(ResponseCode.DUPLICATE_NICKNAME);
+        }
+    }
+
+    // 이미 회원가입되어 활동하고 있는 이메일인지 검증
+    public void validateDuplicateEmail(SignupRequestDto signupRequest) {
+        if (userRepository.existsByEmail(signupRequest.getEmail())) {
+            User user = userRepository.findByEmail(signupRequest.getEmail()).get();
+            if (!user.isDeleted()) throw new ResponseCodeException(ResponseCode.DUPLICATE_EMAIL);
+        }
+    }
+
     // 이미 탈퇴한 적 있는 이메일인지 검증
-    private void validateDeletedEmail(String email) {
+    public void validateDeletedEmail(String email) {
         if (userRepository.findByEmailAndIsDeletedTrue(email).isPresent()) {
             throw new ResponseCodeException(ResponseCode.USER_ALREADY_DELETED);
         }

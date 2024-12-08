@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.attachment.entity.Attachment;
 import nbc_final.gathering.domain.event.entity.Event;
