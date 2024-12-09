@@ -10,7 +10,7 @@
 //public class DataGeneratorTest {
 //
 //    @Autowired
-//    DataGenerator dataGenerator;
+//    DataGeneratorTest dataGenerator;
 //
 //    @Autowired
 //    GatheringElasticSearchRepository gatheringElasticSearchRepository;

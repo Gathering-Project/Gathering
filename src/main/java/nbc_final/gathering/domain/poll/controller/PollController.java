@@ -75,7 +75,7 @@ public class PollController {
      * @param gatheringId
      * @param eventId
      * @param pollId
-     * @return 투표 정보 반환
+     * @return 단건 투표 정보 반환
      */
     @Operation(summary = "특정 투표 현황 조회", description = "진행 중 혹은 마감된 해당 투표의 정보를 확인할 수 있습니다.")
     @GetMapping("/v1/gatherings/{gatheringId}/events/{eventId}/polls/{pollId}")
@@ -89,6 +89,16 @@ public class PollController {
         return ResponseEntity.ok(ApiResponse.createSuccess(res));
     }
 
+    /**
+     * 투표 다건 조회
+     *
+     * @param gatheringId
+     * @param eventId
+     * @param authUser
+     * @param page
+     * @param size
+     * @return 다건 투표 정보 반환
+     */
     @GetMapping("/v1/gatherings/{gatheringId}/events/{eventId}/polls")
     public ResponseEntity<ApiResponse<Page<PollResponseDto>>> getPolls(
             @PathVariable Long gatheringId,

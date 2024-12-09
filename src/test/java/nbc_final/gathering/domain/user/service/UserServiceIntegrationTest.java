@@ -440,6 +440,4 @@ class UserServiceIntegrationTest {
 
         }
     }
-
-
 }

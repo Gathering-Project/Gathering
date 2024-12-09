@@ -57,6 +57,11 @@ public class Poll extends TimeStamped {
         this.options = options;
     }
 
+    // 해당 투표에 표 목록 추가
+    public void addVotes(Vote vote) {
+        this.getVotes().add(vote);
+    }
+
     // 투표 마감
     public void finishPoll() {
         this.isActive = false;

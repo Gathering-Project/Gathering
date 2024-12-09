@@ -22,6 +22,7 @@ import java.util.List;
 @Table(name = "users")
 @NoArgsConstructor
 @Getter
+@Setter
 public class User extends TimeStamped {
 
     @Id
