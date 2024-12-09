@@ -30,6 +30,8 @@ spring:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MYSQL
     username: ${MYSQL_NAME}
     password: ${MYSQL_PASSWORD}
+#    username: sa
+#    password:
 
   kafka:
     bootstrap-servers: "localhost:19092,localhost:19093,localhost:19094"
@@ -49,7 +51,7 @@ spring:
       show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.H2Dialect
 
   data:
     redis:

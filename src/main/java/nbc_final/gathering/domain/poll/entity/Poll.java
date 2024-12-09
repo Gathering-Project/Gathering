@@ -67,6 +67,7 @@ public class Poll extends TimeStamped {
         this.isActive = false;
     }
 
+
     // 투표 생성 정적 팩토리 메서드
     public static Poll createPoll(String agenda, Gathering gathering, Event event, List<String> optionNames) {
         Poll poll = new Poll();

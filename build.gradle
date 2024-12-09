@@ -71,7 +71,7 @@ dependencies {
     // bcrypt
     implementation 'at.favre.lib:bcrypt:0.10.2'
 
-     // AWS S3
+    // AWS S3
     implementation 'software.amazon.awssdk:s3:2.20.89'
 
     // redis
@@ -139,4 +139,3 @@ tasks.named('test') {
 tasks.register('testJar', Jar) {
     exclude 'junit-platform.properties'
 }
-

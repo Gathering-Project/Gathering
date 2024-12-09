@@ -2,6 +2,7 @@ package nbc_final.gathering.common.config.chatconfig;
 
 import lombok.RequiredArgsConstructor;
 //import nbc_final.gathering.common.config.jwt.JwtHandshakeInterceptor;
+import nbc_final.gathering.common.config.jwt.JwtHandshakeInterceptor;
 import nbc_final.gathering.common.config.jwt.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -34,8 +35,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // WebSocket 연결을 위한 STOMP 엔드포인트 설정
         registry.addEndpoint("/gathering/inbox") // 클라이언트가 연결할 WebSocket 엔드포인트를 정의
-                .setAllowedOriginPatterns("*"); // CORS를 허용하기 위해 모든 오리진을 허용
-//                .addInterceptors(new JwtHandshakeInterceptor(jwtUtil)); // WebSocket 연결 시 JWT 인증 인터셉터 추가
+                .setAllowedOriginPatterns("*") // CORS를 허용하기 위해 모든 오리진을 허용
+                .addInterceptors(new JwtHandshakeInterceptor(jwtUtil)); // WebSocket 연결 시 JWT 인증 인터셉터 추가
     }
 
     @Override

@@ -10,7 +10,6 @@ import nbc_final.gathering.common.exception.ApiResponse;
 import nbc_final.gathering.domain.poll.dto.request.PollCreateRequestDto;
 import nbc_final.gathering.domain.poll.dto.response.PollResponseDto;
 import nbc_final.gathering.domain.poll.service.PollService;
-import org.apache.kafka.shaded.com.google.protobuf.Api;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
