@@ -1,5 +1,6 @@
 package nbc_final.gathering.domain.poll.service;
 
+import io.lettuce.core.output.ScanOutput;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.exception.ResponseCode;
@@ -18,6 +19,9 @@ import nbc_final.gathering.domain.poll.repository.PollRepository;
 import nbc_final.gathering.domain.poll.repository.VoteRepository;
 import nbc_final.gathering.domain.user.entity.User;
 import nbc_final.gathering.domain.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,6 +93,8 @@ public class PollService {
         // 아직 투표하지 않은 상태라면
         if (!optionalVote.isPresent()) {
             Vote vote = Vote.castVote(poll, user, gathering, event, selectedOption); // 표 엔티티 생성
+            poll.addVotes(vote);
+
             option.incrementVoteCount(); // 표 주고 싶은 선택지 득표 수 + 1
             voteRepository.save(vote); // 소모임, 이벤트, 유저, 현재 투표 참여 여부, 현재 선택지 등 저장
 
@@ -124,26 +130,41 @@ public class PollService {
 
     }
 
-//    // 투표 현황 조회(단건 조회)
-//    public PollResponseDto getPoll(Long gatheringId, Long eventId, Long pollId, Long userId) {
-//
-//        // 소모임 존재 확인
-//        Gathering gathering = getGathering(gatheringId);
-//
-//        // 이벤트 존재 확인
-//        Event event = getEvent(eventId);
-//
-//        // 이벤트 참가자인지 확인
-////        isParticipated(userId, event);
-//
-//        // 투표 존재 확인
-//        Poll poll = getPoll(pollId);
-//
-//        List<Option> options = optionRepository.findAllById_PollId(pollId);
-//        poll.setOptions(options);
-//
-//        return PollResponseDto.of(poll);
-//    }
+    // 투표 현황 조회(단건 조회)
+    public PollResponseDto getPoll(Long gatheringId, Long eventId, Long userId, Long pollId) {
+
+        // 소모임 존재 확인
+        Gathering gathering = getGathering(gatheringId);
+
+        // 이벤트 존재 확인
+        Event event = getEvent(eventId);
+
+        // 이벤트 참가자인지 확인
+        isParticipated(userId, event);
+
+        // 투표 존재 확인
+        Poll poll = getPoll(pollId);
+
+        return PollResponseDto.of(poll);
+    }
+
+    // 이벤트 내 모든 투표 조회
+    public Page<PollResponseDto> getPolls(Long gatheringId, Long eventId, Long userId, int page, int size) {
+
+        // 소모임 존재 확인
+        Gathering gathering = getGathering(gatheringId);
+
+        // 이벤트 존재 확인
+        Event event = getEvent(eventId);
+
+        // 이벤트 참가자인지 확인
+        isParticipated(userId, event);
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Poll> allPoll = pollRepository.findAllByEventId(eventId, pageable); // ( Option을 조회하기 위해 페이지에 존재하는 Poll 숫자만큼 N + 1 문제 발생) => BatchSize 설정으로 해결
+//        Page<Poll> allPoll = pollRepository.findAllWithOptionsByEventId(eventId, pageable); // Fetch Join으로 N + 1 문제 해결 => OOM 발생 가능성으로 보류
+        return allPoll.map(PollResponseDto::of);
+    }
 
     // 투표 마감
     @Transactional
@@ -191,20 +212,20 @@ public class PollService {
     // ----------- extracted method ------------- //
 
     // 투표 취소
-    private void cancelVote(Option option, Vote vote) {
+    public void cancelVote(Option option, Vote vote) {
         option.decreaseVoteCount(); // 투표 취소로 기존 선택지 득표 - 1
         vote.resetStatus(); // 투표 안한 상태로 초기화
     }
 
     // 이벤트 개최자인지 확인
-    private void validateEventHost(Long userId, Event event) {
+    public void validateEventHost(Long userId, Event event) {
         if (!event.getUser().getId().equals(userId)) {
             throw new ResponseCodeException(ResponseCode.EVENT_CREATOR_ONLY);
         }
     }
 
     // 이벤트 참가자인지 확인
-    private void isParticipated(Long userId, Event event) {
+    public void isParticipated(Long userId, Event event) {
         if (event.getParticipants().stream()
                 .noneMatch(participant -> participant.getUser().getId().equals(userId))) {
             throw new ResponseCodeException(ResponseCode.NOT_PARTICIPATED);
@@ -212,42 +233,41 @@ public class PollService {
     }
 
     // 종료되지 않고 진행 중인 투표인지 확인
-    private void validatePollActive(Poll poll) {
+    public void validatePollActive(Poll poll) {
         if (!poll.isActive()) {
             throw new ResponseCodeException(ResponseCode.DEACTIVATED_POLL);
         }
     }
 
     // 이미 투표했는지 여부 확인하고 있으면 표 가져오기
-    private Optional<Vote> getVoteIfExists(User user, Poll poll) {
+    public Optional<Vote> getVoteIfExists(User user, Poll poll) {
         return poll.getVotes().stream()
                 .filter(vote -> vote.getUser().getId().equals(user.getId()))
                 .findFirst();
     }
 
     // 유저 가져오기
-    private User getUser(Long userId) {
+    public User getUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_USER));
         return user;
     }
 
     // 투표 존재 확인
-    private Poll getPoll(Long pollId) {
-        Poll poll = pollRepository.findById(pollId)
+    public Poll getPoll(Long pollId) {
+        return pollRepository.findById(pollId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_POLL));
-        return poll;
     }
 
     // 이벤트 확인
-    private Event getEvent(Long EventId) {
+    public Event getEvent(Long EventId) {
         Event event = eventRepository.findById(EventId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_EVENT));
         return event;
     }
 
     // 소모임 확인
-    private Gathering getGathering(Long gatheringId) {
+    public Gathering getGathering(Long gatheringId) {
         Gathering gathering = gatheringRepository.findById(gatheringId)
                 .orElseThrow(() -> new ResponseCodeException(ResponseCode.NOT_FOUND_GATHERING));
         return gathering;

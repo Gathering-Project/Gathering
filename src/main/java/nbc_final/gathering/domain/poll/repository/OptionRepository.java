@@ -13,6 +13,4 @@ public interface OptionRepository extends JpaRepository<Option, OptionId> {
     @Query("SELECT o FROM Option o WHERE o.poll = :poll AND o.id.optionNum = :optionNum")
     Option findByPollAndOptionNum(Poll poll, int optionNum);
 
-    @Query("SELECT o FROM Option o WHERE o.id.pollId = :pollId")
-    List<Option> findAllById_PollId(Long pollId);
 }

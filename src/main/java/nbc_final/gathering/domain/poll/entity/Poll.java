@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.event.entity.Event;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,7 @@ public class Poll extends TimeStamped {
     private boolean isActive = true; // 투표 활성화 여부
 
     @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10) // 연관된 엔티티를 10개씩 가져옴
     private List<Option> options = new ArrayList<>(); // 투표 선택지들
 
     @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -53,6 +55,11 @@ public class Poll extends TimeStamped {
 
     public void setOptions(List<Option> options) {
         this.options = options;
+    }
+
+    // 해당 투표에 표 목록 추가
+    public void addVotes(Vote vote) {
+        this.getVotes().add(vote);
     }
 
     // 투표 마감

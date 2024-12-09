@@ -21,7 +21,6 @@ public class PollResponseDto {
     private Long eventId;
     private String agenda;
     private List<Option> options;
-//    private List<OptionDTO> options;
 
     public static PollResponseDto of(Poll poll) {
         return new PollResponseDto(
@@ -29,25 +28,8 @@ public class PollResponseDto {
                 poll.getGathering().getId(),
                 poll.getEvent().getId(),
                 poll.getAgenda(),
-                poll.getOptions()
-//                poll.getOptions().stream()
-//                        .map(OptionDTO::new)
-//                        .collect(Collectors.toList())
+                poll.getOptions() // (Option을 조회하기 위해 페이지에 존재하는 Poll 숫자만큼 N + 1 문제 발생해서 Batch Size 설정으로 해결)
         );
     }
-//
-    /* 지금처럼 @JsonIgnore 로 순환참조 끊거나 Json을 DTO로 변환하여 반환*/
-//    @Getter
-//    public static class OptionDTO {
-//        private Long id;
-//        private String name;
-//        private int voteCount;
-//
-//        public OptionDTO(Option option) {
-//            this.name = option.getName();
-//            this.voteCount = option.getVoteCount();
-//        }
-//    }
-
 }
 
