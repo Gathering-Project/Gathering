@@ -1,7 +1,7 @@
 name: Deploy to EC2 with ECR_v01
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "main" ]
     
 env:
   AWS_REGION: ap-northeast-2                 # AWS 리전
