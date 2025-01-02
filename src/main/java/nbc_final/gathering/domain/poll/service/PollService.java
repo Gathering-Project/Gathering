@@ -1,12 +1,13 @@
 package nbc_final.gathering.domain.poll.service;
 
-import io.lettuce.core.output.ScanOutput;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.event.entity.Event;
+import nbc_final.gathering.domain.event.entity.Participant;
 import nbc_final.gathering.domain.event.repository.EventRepository;
+import nbc_final.gathering.domain.event.repository.ParticipantRepository;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.gathering.repository.GatheringRepository;
 import nbc_final.gathering.domain.poll.dto.request.PollCreateRequestDto;
@@ -23,9 +24,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -83,9 +84,6 @@ public class PollService {
 
         // 종료되지 않고 진행 중인 투표가 맞는지 확인
         validatePollActive(poll);
-
-
-        /* 아래 로직은 주석 가독성 위해 공백으로 구분함*/
 
         Optional<Vote> optionalVote = getVoteIfExists(user, poll); // 이미 투표했는지 여부 확인하고 있으면 표 가져오기
         Option option = optionRepository.findByPollAndOptionNum(poll, selectedOption); // 해당 유저가 표 주고 싶은 선택지

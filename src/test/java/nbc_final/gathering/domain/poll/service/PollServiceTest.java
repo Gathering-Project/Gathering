@@ -1,21 +1,32 @@
 package nbc_final.gathering.domain.poll.service;
 
-import jakarta.transaction.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.PersistenceContextType;
 import nbc_final.gathering.common.exception.ResponseCode;
 import nbc_final.gathering.common.exception.ResponseCodeException;
 import nbc_final.gathering.domain.poll.dto.request.PollCreateRequestDto;
 import nbc_final.gathering.domain.poll.dto.response.PollResponseDto;
 import nbc_final.gathering.domain.poll.entity.Option;
 import nbc_final.gathering.domain.poll.entity.Poll;
+import nbc_final.gathering.domain.poll.entity.Vote;
+import nbc_final.gathering.domain.poll.repository.OptionRepository;
 import nbc_final.gathering.domain.poll.repository.PollRepository;
+import nbc_final.gathering.domain.poll.repository.VoteRepository;
+import org.junit.BeforeClass;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.test.annotation.Commit;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -40,6 +51,16 @@ class PollServiceTest {
 
     @Autowired
     PollRepository pollRepository;
+
+    @Autowired
+    VoteRepository voteRepository;
+
+    @Autowired
+    OptionRepository optionRepository;
+
+    //    @PersistenceContext(type = PersistenceContextType.TRANSACTION)
+    @PersistenceContext
+    EntityManager em;
 
     private static final String USERNAME = "root";
     private static final String PASSWORD = "1234";
@@ -100,15 +121,18 @@ class PollServiceTest {
 
             // when
             pollService.castVote(gatheringId1, eventId1, userId2, pollId1, selectedOption);
+            Vote vote = voteRepository.findByUserIdAndPollId(userId2, pollId1).get();
+            Option option2 = optionRepository.findByPollAndOptionNum(poll, selectedOption); // 두 번째 option
+
 
             // then
-            assertThat(poll.getVotes().get(1).isDone()).isTrue();
-            assertThat(poll.getOptions().get(selectedOption).getVoteCount()).isEqualTo(1); // 두 번째 선택지 득표 수 1 증가
-            assertThat(poll.getVotes().get(1).getSelectedOption()).isEqualTo(selectedOption);
-            assertThat(poll.getVotes().get(1).getUser().getId()).isEqualTo(userId2);
-            assertThat(poll.getVotes().get(1).getPoll().getId()).isEqualTo(pollId1);
-            assertThat(poll.getVotes().get(1).getEvent().getId()).isEqualTo(eventId1);
-            assertThat(poll.getVotes().get(1).getGathering().getId()).isEqualTo(gatheringId1);
+            assertThat(vote.isDone()).isTrue();
+            assertThat(vote.getUser().getId()).isEqualTo(userId2);
+            assertThat(vote.getPoll().getId()).isEqualTo(pollId1);
+            assertThat(vote.getEvent().getId()).isEqualTo(eventId1);
+            assertThat(vote.getGathering().getId()).isEqualTo(gatheringId1);
+            assertThat(option2.getVoteCount()).isEqualTo(1);
+//            System.out.println("확인:" + poll.getVotes().get(1).getUser().getId());
         }
 
         @Test
@@ -149,6 +173,7 @@ class PollServiceTest {
             // when
             pollService.castVote(gatheringId1, eventId1, userId1, pollId1, 0); // 옵션1(초기 데이터) 투표 취소
             pollService.castVote(gatheringId1, eventId1, userId1, pollId1, 1); // 옵션2 득표 수 + 1
+
 
             // then
             assertThat(poll1.getOptions().get(0).getVoteCount()).isEqualTo(0); // 옵션1 득표 : 0
@@ -312,4 +337,81 @@ class PollServiceTest {
                     .hasMessageContaining(ResponseCode.NOT_PARTICIPATED.getMessage());
         }
     }
+
+
+    @Nested
+    class 투표_동시성_관련_테스트 {
+
+        @Test
+        @Commit
+        void 투표_동시성_테스트를_위해_유저_100명을_기존_이벤트에_가입시킨다() {
+
+            em.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
+
+            for (int i = 101; i <= 200; i++) {
+                em.createNativeQuery("INSERT INTO users (user_id, email, password, user_role, is_deleted) " +
+                                "VALUES (:userId, :email, '123456789a!', 'ROLE_USER', false)")
+                        .setParameter("userId", i)
+                        .setParameter("email", "test" + i + "@example.com")
+                        .executeUpdate();
+
+                em.createNativeQuery("INSERT INTO participants (event_id, user_id) VALUES (:eventId, :userId)")
+                        .setParameter("eventId", 1)
+                        .setParameter("userId", i)
+                        .executeUpdate();
+            }
+
+            List<Long> userIds = em.createQuery("SELECT u.id FROM User u WHERE u.id BETWEEN :startId AND :endId", Long.class)
+                    .setParameter("startId", 101L)
+                    .setParameter("endId", 200L)
+                    .getResultList();
+
+            List<Long> participantsList = em.createQuery("SELECT p.user.id FROM Participant p WHERE p.user.id BETWEEN :startId AND :endId", Long.class)
+                    .setParameter("startId", 101L)
+                    .setParameter("endId", 200L)
+                    .getResultList();
+            
+            assertThat(userIds.size()).isEqualTo(100);
+            assertThat(participantsList.size()).isEqualTo(100);
+
+        }
+
+        @Test
+        void 이벤트_멤버_100명이_동시에_투표를_한다() throws InterruptedException {
+
+            int numberOfThreads = 100; // 동시 요청 수
+            ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+            CountDownLatch latch = new CountDownLatch(numberOfThreads);
+
+            // 여러 유저가 동시에 투표 참여
+            for (int i = 101; i <= 200; i++) {
+                Long userId = (long) i; // 각 스레드가 고유 유저 ID 사용
+                executorService.submit(() -> {
+                    try {
+
+                        pollService.castVote(gatheringId1, eventId1, userId, pollId1, 2); // 선택지 3에 투표
+                    } catch (Exception e) {
+                        System.out.println("에러 발생:" + e);
+                    } finally {
+                        latch.countDown();
+                    }
+                });
+            }
+
+            latch.await(); // 모든 스레드 작업 완료 대기
+
+            // 결과 검증
+            Poll poll = pollRepository.findById(pollId1).orElseThrow();
+            Option option3 = poll.getOptions().get(2);
+
+
+            // 선택지 1의 득표 수가 스레드 수와 동일한지 확인
+            assertThat(option3.getVoteCount()).isEqualTo(numberOfThreads);
+            assertThat(poll.getVotes().size()).isEqualTo(numberOfThreads + 1); // 초기 표 데이터 + 1
+
+        }
+
+    }
+
+
 }

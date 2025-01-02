@@ -64,7 +64,8 @@ CREATE TABLE votes (
     event_id BIGINT NOT NULL,
     gathering_id BIGINT NOT NULL,
     is_done BOOLEAN NULL,
-    selected_option INT NULL
+    selected_option INT NULL,
+    version BIGINT DEFAULT 0 -- 낙관락 적용
 );
 
 INSERT INTO votes (poll_id, user_id, event_id, gathering_id, is_done, selected_option)
