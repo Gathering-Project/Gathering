@@ -8,9 +8,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DistributedLock {
-    String key();
+    String key(); // Lock의 이름 (고유값)
 
-    long waitTime() default 10;
+    long waitTime() default 10;  // Lock획득을 시도하는 최대 시간 (ms)
 
-    long leaseTime() default 15;
+    long leaseTime() default 15; // 락을 획득한 후, 점유하는 최대 시간 (ms)
 }

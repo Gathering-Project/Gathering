@@ -8,6 +8,7 @@ import nbc_final.gathering.common.entity.TimeStamped;
 import nbc_final.gathering.domain.event.entity.Event;
 import nbc_final.gathering.domain.gathering.entity.Gathering;
 import nbc_final.gathering.domain.user.entity.User;
+import org.springframework.data.jpa.repository.Lock;
 
 /**
  * Vote : 각 개인의 표
@@ -20,6 +21,7 @@ public class Vote extends TimeStamped {
 
     @EmbeddedId
     private VoteId id; // 복합 PK: poll(투표) ID + user ID
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "poll_id")
@@ -45,6 +47,8 @@ public class Vote extends TimeStamped {
     @Column(nullable = false)
     private boolean isDone = true; // 투표 완료 여부
 
+    @Version
+    private Long version;
 
     // 투표 안한 상태로 초기화
     public void resetStatus() {
@@ -71,7 +75,6 @@ public class Vote extends TimeStamped {
         Vote vote = new Vote();
         vote.poll = poll;
         vote.user = user;
-//        vote.selectedOption = selectedOption;
         vote.gathering = gathering;
         vote.event = event;
         vote.selectedOption = selectedOption;
